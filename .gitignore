@@ -1,0 +1,6 @@
+*.dump
+*.pyc
+results/
+instances/
+*.feature
+run
