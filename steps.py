@@ -236,48 +236,30 @@ def fill_field(step, fieldname, content):
     label = get_element_from_text(world.browser, tag_name="label", text=fieldname, wait=True)
     idattr = label.get_attribute("for")
 
-    txtinput = get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait=True)
-    txtinput.send_keys((100*Keys.BACKSPACE) + convert_input(world, content))
+    my_input = get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait=True)
 
-    wait_until_no_ajax(world.browser)
-
-@step('I select "([^"]*)" within "([^"]*)"')
-def fill_field(step, content, fieldname):
-    label = get_element_from_text(world.browser, tag_name="label", text=fieldname, wait=True)
-    idattr = label.get_attribute("for")
-
-    selectinput = get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait=True)
-
-    while True:
-        selectinput.click()
+    if my_input.tag_name == "select":
+        my_input.click()
         click_on(lambda : get_element_from_text(world.browser, tag_name="option", text=content, wait=False))
-        selectinput.click()
+        my_input.click()
+    elif my_input.tag_name == "input" and my_input.get_attribute("type") == "checkbox":
 
-        break
-        #if selectinput.get_attribute("id"):
-            #value_before = world.browser.execute_script("$('#%s option:selected').text()")
+        if content.lower() not in {"yes", "no"}:
+            raise Exception("You cannot defined any value except no and yes for a checkbox")
 
-            #print value_before, " =?= ", content
-            #print value_before, " =?= ", content
-            #print value_before, " =?= ", content
-            #print value_before, " =?= ", content
-            #print value_before, " =?= ", content
-            #print value_before, " =?= ", content
-            #print value_before, " =?= ", content
-            #print value_before, " =?= ", content
-            #print value_before, " =?= ", content
-            #print value_before, " =?= ", content
-            #print value_before, " =?= ", content
+        if content.lower() == "yes":
+            if not my_input.is_selected():
+                my_input.click()
+        else:
+            if my_input.is_selected():
+                my_input.click()
+
+    elif my_input.get_attribute("autocomplete") == "off" and '_text' in idattr:
+        select_in_field_an_option(world.browser, lambda : get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait=True), content)
+    else:
+        my_input.send_keys((100*Keys.BACKSPACE) + convert_input(world, content))
 
     wait_until_no_ajax(world.browser)
-
-
-@step('I choose "([^"]*)" within "([^"]*)"')
-def choose_field(step, content, fieldname):
-    label = get_element_from_text(world.browser, tag_name="label", text=fieldname, wait=True)
-    idattr = label.get_attribute("for")
-
-    select_in_field_an_option(world.browser, lambda : get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait=True), content)
 
 #}%}
 
@@ -498,7 +480,7 @@ def save_time_difference(step, number, article, quantite):
 
     for i in xrange(number):
         step.given('I click on "New" and open the window')
-        step.given('I choose "%s" within "Product"' % article)
+        step.given('I fill "Product" with "%s"' % article)
         step.given('I fill "Quantity" with "%s"' % quantite)
         step.given('I click on "Save & Close" and close the window')
 #}%}
