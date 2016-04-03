@@ -255,7 +255,7 @@ def fill_field(step, fieldname, content):
                 my_input.click()
 
     elif my_input.get_attribute("autocomplete") == "off" and '_text' in idattr:
-        select_in_field_an_option(world.browser, lambda : get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait=True), content)
+        select_in_field_an_option(world.browser, lambda : (get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait=True), action_write_in_element, True), content)
     else:
         my_input.send_keys((100*Keys.BACKSPACE) + convert_input(world, content))
 
@@ -367,7 +367,8 @@ def see_popup(step, message_to_see):
 #}%}
 
 # Table management {%{
-@step('I choose "([^"]*)" within column "([^"]*)"')
+
+@step('I fill "([^"]*)" within column "([^"]*)"')
 def fill_column(step, content, fieldname):
     gridtable = get_element(world.browser, tag_name="table", class_attr="gridview")
     right_pos = get_column_position_in_table(gridtable, fieldname)
@@ -376,22 +377,23 @@ def fill_column(step, content, fieldname):
         row_in_edit_mode = get_element(world.browser, tag_name="tr", class_attr="editors", wait=True)
 
         td_node = get_element(row_in_edit_mode, class_attr="grid-cell", tag_name="td", position=right_pos)
+
+        # do we a select at our disposal?
+        a_select = get_elements(td_node, tag_name="select")
+
+        if a_select:
+            return a_select[0], action_select_option, False
+        else:
+            my_input = get_element(td_node, tag_name="input", attrs={'type': 'text'})
+            
+            if my_input.get_attribute("autocomplete") == "off":
+                return my_input, action_write_in_element, True
+            else:
+                return my_input, action_write_in_element, False
+
         return get_element(td_node, tag_name="input", attrs={'type': 'text'})
 
     select_in_field_an_option(world.browser, get_text_box, content)
-
-@step('I fill "([^"]*)" within column "([^"]*)"')
-def fill_field(step, content, fieldname):
-    gridtable = get_element(world.browser, tag_name="table", class_attr="gridview")
-    right_pos = get_column_position_in_table(gridtable, fieldname)
-
-    def get_text_box():
-        row_in_edit_mode = get_element(world.browser, tag_name="tr", class_attr="editors", wait=True)
-
-        td_node = get_element(row_in_edit_mode, class_attr="grid-cell", tag_name="td", position=right_pos)
-        return get_element(td_node, tag_name="input", attrs={'type': 'text'})
-
-    select_in_field_an_option(world.browser, get_text_box, content, confirm=False)
 
 @step('I click "([^"]*)" on line:')
 def click_on_line(step, action):
@@ -450,21 +452,6 @@ def choose_field(step):
     click_on(lambda : get_element(world.browser, tag_name="img", attrs={'title': 'Update'}, wait=True))
     wait_until_no_ajax(world.browser)
     wait_until_not_loading(world.browser)
-
-# I select "..." in "...."
-@step('I select "([^"]*)" within column "([^"]*)"')
-def fill_column_select(step, content, fieldname):
-    gridtable = get_element(world.browser, tag_name="table", class_attr="gridview")
-    right_pos = get_column_position_in_table(gridtable, fieldname)
-
-    def get_text_box():
-        row_in_edit_mode = get_element(world.browser, tag_name="tr", class_attr="editors", wait=True)
-
-        td_node = get_element(row_in_edit_mode, class_attr="grid-cell", tag_name="td", position=right_pos)
-
-        return get_element(td_node, tag_name="select", wait=True)
-
-    select_in_field_an_option(world.browser, get_text_box, content, confirm=False, action=action_select_option)
 
 #}%}
 

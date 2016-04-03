@@ -77,8 +77,8 @@ def get_element_from_text(browser, tag_name, text, class_attr='', wait=True):
   for my_tag in tag_name:
     data = dict(class_attr=class_attr, tagname=my_tag, text=text)
 
-    xpath1_query = "//%(tagname)s[normalize-space(.)='%(text)s'%(class_attr)s]" % data
-    xpath2_query = "//%(tagname)s//*[normalize-space(.)='%(text)s'%(class_attr)s]" % data
+    xpath1_query = ".//%(tagname)s[normalize-space(.)='%(text)s'%(class_attr)s]" % data
+    xpath2_query = ".//%(tagname)s//*[normalize-space(.)='%(text)s'%(class_attr)s]" % data
     possibilities.append(xpath1_query)
     possibilities.append(xpath2_query)
 
@@ -250,15 +250,17 @@ def action_write_in_element(txtinput, content):
     txtinput.send_keys((100*Keys.BACKSPACE) + content + Keys.TAB)
 
 def action_select_option(txtinput, content):
+    txtinput.click()
     option = get_element_from_text(txtinput, tag_name="option", text=content, wait=True)
     option.click()
+    txtinput.click()
 
-def select_in_field_an_option(browser, fieldelement, content, confirm=True, action=action_write_in_element):
+def select_in_field_an_option(browser, fieldelement, content):
     '''
     Find a field according to its label
     '''
 
-    field = fieldelement()
+    field, action, confirm = fieldelement()
     idattr = field.get_attribute("id")
 
     value_before = None
@@ -269,7 +271,7 @@ def select_in_field_an_option(browser, fieldelement, content, confirm=True, acti
         txtidinput = get_element(browser, id_attr=idvalue_before.replace('/', '\\/'), wait=True)
         value_before = txtidinput.get_attribute("value")
 
-    txtinput = fieldelement()
+    txtinput, _, _ = fieldelement()
 
     action(txtinput, content)
 
