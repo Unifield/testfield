@@ -57,6 +57,10 @@ def connect_to_db():
 def apply_monkey_patch(step):
     world.browser.execute_script(world.monkeypatch)
 
+@after.each_scenario
+def remove_iframes(scenario):
+    world.nbframes = 0
+
 @after.all
 def disconnect_to_db(total):
     #world.browser = webdriver.PhantomJS()
@@ -159,6 +163,7 @@ def restore_environment(step, env_name):
 
 @step('I synchronize "([^"]*)"')
 def synchronize_instance(step, instance_name):
+
     from oerplib.oerp import OERP
     from oerplib.error import RPCError
 
@@ -267,6 +272,7 @@ def fill_field(step, fieldname, content):
 # I click on "Search/New/Clear"
 @step('I click on "([^"]*)"$')
 def click_on_button(step, button):
+    world.take_printscren_before = True
 
     elem = get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True)
 
@@ -287,6 +293,7 @@ def click_on_button(step, button):
 # I click on "Search/New/Clear"
 @step('I click on "([^"]*)" and open the window$')
 def click_on_button_and_open(step, button):
+    world.take_printscren_before = True
 
     wait_until_not_loading(world.browser)
     wait_until_no_ajax(world.browser)
@@ -301,6 +308,8 @@ def click_on_button_and_open(step, button):
 # I click on "Save & Close"
 @step('I click on "([^"]*)" and close the window$')
 def click_on_button_and_close(step, button):
+    world.take_printscren_before = True
+
     click_on(lambda : get_element_from_text(world.browser, tag_name="button", text=button, wait=True))
     world.browser.switch_to_default_content()
     wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe"))
@@ -461,43 +470,56 @@ def selenium_sleeps(step):
     import time
     time.sleep(400)
 
-@step('I add "([^"]*)" articles "([^"]*)" with a quantite of "([^"]*)"')
-def save_time_difference(step, number, article, quantite):
-    number = int(os.environ[number])
-
-    for i in xrange(number):
-        step.given('I click on "New" and open the window')
-        step.given('I fill "Product" with "%s"' % article)
-        step.given('I fill "Quantity" with "%s"' % quantite)
-        step.given('I click on "Save & Close" and close the window')
 #}%}
 
 # Time evaluators {%{
+
 @step('I store the time difference in "([^"]*)"')
 def save_time_difference(step, counter):
+    step.need_printscreen = False
     now = datetime.datetime.now()
     total_secs = (now - world.last_measure).total_seconds()
     world.durations[counter] = total_secs
 
 @step('I save the time')
 def save_time(step):
+    step.need_printscreen = False
     world.last_measure = datetime.datetime.now()
 
 @step('I store the values for "([^"]*)" in "([^"]*)"')
 def save_time_results(step, counters, filename):
+    step.need_printscreen = False
     values = []
 
-    if 'HEADER' in os.environ:
-        values.append(os.environ['HEADER'])
+    if 'COUNT' in os.environ:
+        values.append(os.environ['COUNT'])
 
     for counter in counters.split():
         values.append(str(world.durations.get(counter, '')))
 
-    results_path = os.path.join(RESULTS_DIR, "results.csv")
+    results_path = os.path.join(RESULTS_DIR, filename)
+
+    # let's create a title
+    ret = ['COUNT'] if 'COUNT' in os.environ else []
+    ret += counters.split()
+    first_line = ';'.join(ret)
+    has_to_add_title = True
+
+    # we have to read the last line to check if a header has to be added
+    if os.path.isfile(results_path):
+        with open(results_path, 'r') as f:
+            lines = f.readlines()
+
+            if lines and lines[0].strip() == first_line.strip():
+                has_to_add_title = False
+
+    f = open(results_path, 'a')
+    if has_to_add_title:
+        f.write(first_line)
 
     line = ';'.join(values)
-    f = open(results_path, 'a')
     f.write('\r\n' + line)
     f.close()
+
 #}%}
 
