@@ -8,6 +8,8 @@ def get_elements(browser, tag_name=None, id_attr=None, class_attr=None, attrs=di
   This method fetch a node among the DOM based on its attributes.
 
   You can indicate wether this method is expected to wait for this element to appear.
+
+  Be careful: this method also returns hidden elements!
   '''
 
   css_selector = ""
@@ -51,6 +53,7 @@ def get_element(browser, tag_name=None, id_attr=None, class_attr=None, attrs=dic
 
   if position is None:
       only_visible = filter(lambda x : x.is_displayed(), elements)
+
       return only_visible[0] if only_visible else elements[0]
   else:
     return elements[position]
@@ -85,7 +88,8 @@ def get_element_from_text(browser, tag_name, text, class_attr='', wait=True):
   xpath_query = '|'.join(possibilities)
 
   if not wait:
-    return browser.find_elements_by_xpath(xpath_query)[0]
+    elems = browser.find_elements_by_xpath(xpath_query)
+    return elems[0] if elems else None
   else:
     while True:
       elems = browser.find_elements_by_xpath(xpath_query)
@@ -98,11 +102,21 @@ def get_element_from_text(browser, tag_name, text, class_attr='', wait=True):
       time.sleep(1)
 
 def get_column_position_in_table(maintable, columnname):
-    elem = get_element_from_text(maintable, tag_name="th", text=columnname)
+    elem = get_element_from_text(maintable, tag_name="th", text=columnname, wait=False)
+    if elem is None:
+        return None
+
     parent = elem.parent
     right_pos = None
 
-    for pos, children in enumerate(parent.find_elements_by_tag_name("th")):
+    idtable = maintable.get_attribute("id")
+    #FIXME: a table should always have an id, but... but who knows...
+    assert idtable is not None
+
+    data = dict(id=idtable)
+    elements = maintable.find_elements_by_css_selector('#%(id)s thead th' % data)
+
+    for pos, children in enumerate(elements):
         if children.get_attribute("id") == elem.get_attribute("id"):
             right_pos = pos
             break
@@ -112,33 +126,46 @@ def get_column_position_in_table(maintable, columnname):
 def get_table_row_from_hashes(world, keydict):
     columns = keydict.keys()
 
-    maintable = get_element(world.browser, tag_name="table", class_attr="gridview")
+    #FIXME: We should look for all the tables since the first one could be the
+    #  bad one. However, we still have to decide whether two tables strictly identical
+    #  could stand beside each other... That's something we almost see when we open
+    #  a cash register (opening/closing balance)
+    maintables = get_elements(world.browser, tag_name="table", class_attr="grid")
+    maintables = filter(lambda x : x.is_displayed(), maintables)
 
-    # Reference
-    position_per_column = {}
-    for column in columns:
-        column_normalized = to_camel_case(column)
-        pos_in_table = get_column_position_in_table(maintable, column_normalized)
-        position_per_column[column] = pos_in_table
+    rows = []
 
-    lines = get_elements(maintable, tag_name="tr", class_attr="grid-row")
+    for maintable in maintables:
+        #FIXME: We now that when a column is not found in one array, we look in the
+        #        next one. This is not good since we could detect a column in another
+        #        table...
+        position_per_column = {}
+        for column in columns:
+            column_normalized = to_camel_case(column)
+            pos_in_table = get_column_position_in_table(maintable, column_normalized)
+            position_per_column[column] = pos_in_table
 
-    # we look for the first line with the right value
-    for row_node in lines:
+        if None in position_per_column.values():
+            continue
 
-        # we have to check all the columns
-        for column, position in position_per_column.iteritems():
-            td_node = get_element(row_node, class_attr="grid-cell", tag_name="td", position=position)
+        lines = get_elements(maintable, tag_name="tr", class_attr="grid-row")
 
-            value = keydict[column]
-            new_value = convert_input(world, value)
+        # we look for the first line with the right value
+        for row_node in lines:
 
-            if td_node.text.strip() != new_value:
-                break
-        else:
-            return row_node
+            # we have to check all the columns
+            for column, position in position_per_column.iteritems():
+                td_node = get_element(row_node, class_attr="grid-cell", tag_name="td", position=position)
 
-    return None
+                value = keydict[column]
+                new_value = convert_input(world, value)
+
+                if td_node.text.strip() != new_value:
+                    break
+            else:
+                rows.append(row_node)
+
+    return rows
 
 #}%}
 

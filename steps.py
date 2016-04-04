@@ -412,15 +412,22 @@ def click_on_line(step, action):
         raise Exception("You cannot click on more than one line")
 
     def try_to_click_on_line(step, action):
-        row_node = get_table_row_from_hashes(world, step.hashes[0])
-        if row_node is None:
-            raise Exception("No line found")
+        row_nodes = get_table_row_from_hashes(world, step.hashes[0])
 
-        # we have to look for this action the user wants to execute
-        action_to_click = get_element(row_node, attrs={'title': action})
-        action_to_click.click()
-        wait_until_not_loading(world.browser)
-        wait_until_no_ajax(world.browser)
+
+        for row_node in row_nodes:
+            # we have to look for this action the user wants to execute
+            actions_to_click = get_elements(row_node, attrs={'title': action})
+
+            if not actions_to_click:
+                continue
+
+            # we choose an action with the right title randomly...
+            action_to_click = actions_to_click[0]
+            action_to_click.click()
+            wait_until_not_loading(world.browser)
+            wait_until_no_ajax(world.browser)
+            break
 
     repeat_until_no_exception(try_to_click_on_line, StaleElementReferenceException, step, action)
 
@@ -431,6 +438,7 @@ def check_line(step):
     def try_to_check_line(step):
         for hashes in values:
             #TODO: Check that we don't find twice the same row...
+            #TODO: Check that all the lines are in the same table...
             if get_table_row_from_hashes(world, hashes) is None:
                 raise Exception("I don't find: %s" % hashes)
 
