@@ -80,8 +80,8 @@ def get_element_from_text(browser, tag_name, text, class_attr='', wait=True):
   for my_tag in tag_name:
     data = dict(class_attr=class_attr, tagname=my_tag, text=text)
 
-    xpath1_query = ".//%(tagname)s[normalize-space(.)='%(text)s'%(class_attr)s]" % data
-    xpath2_query = ".//%(tagname)s//*[normalize-space(.)='%(text)s'%(class_attr)s]" % data
+    xpath1_query = "//%(tagname)s[normalize-space(.)='%(text)s'%(class_attr)s]" % data
+    xpath2_query = "//%(tagname)s//*[normalize-space(.)='%(text)s'%(class_attr)s]" % data
     possibilities.append(xpath1_query)
     possibilities.append(xpath2_query)
 
@@ -192,7 +192,7 @@ def wait_until_no_ajax(browser):
             elements = window.document.getElementsByTagName('iframe');
 
             for(var i = 0; i < elements.length; i++){
-                if(!check(elements[i].currentWindow.TOT)){
+                if(!check(elements[i].contentWindow.TOT)){
                     return "BLOCKED IN INFRAME " + i;
                 }
             }

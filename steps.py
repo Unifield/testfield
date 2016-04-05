@@ -224,7 +224,29 @@ def open_tab(step, menu_to_click_on):
 
 @step('I click on menu "([^"]*)"')
 def open_tab(step, menu_to_click_on):
-    click_on(lambda : get_element_from_text(world.browser, tag_name="a", text=menu_to_click_on, wait=True))
+
+    menus = menu_to_click_on.split("|")
+
+    after_pos = 0
+
+    for menu in menus:
+
+        while True:
+            elements = get_elements(world.browser, tag_name="tr", class_attr="row")
+            visible_elements = filter(lambda x : x.is_displayed(), elements)
+            valid_visible_elements = visible_elements[after_pos:]
+
+            text_in_menus = map(lambda x : x.text, valid_visible_elements)
+
+            if menu in text_in_menus:
+
+                pos = text_in_menus.index(menu)
+
+                valid_visible_elements[pos].click()
+
+                after_pos += pos + 1
+                break
+
     wait_until_not_loading(world.browser)
 
 # I open tab "Supplier"
@@ -430,6 +452,15 @@ def click_on_line(step, action):
             break
 
     repeat_until_no_exception(try_to_click_on_line, StaleElementReferenceException, step, action)
+
+@step('I click "([^"]*)" on line and open the window:')
+def click_on_line_and_open_the_window(step, action):
+    click_on_line(step, action)
+
+    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", wait=True))
+    world.nbframes += 1
+
+    wait_until_no_ajax(world.browser)
 
 @step('I should see in the main table the following data:')
 def check_line(step):
