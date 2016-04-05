@@ -63,7 +63,7 @@ def to_camel_case(text):
     words = map(lambda x : x[:1].upper() + x[1:].lower(), words)
     return ' '.join(words)
 
-def get_element_from_text(browser, tag_name, text, class_attr='', wait=True):
+def get_elements_from_text(browser, tag_name, text, class_attr='', wait=True):
   '''
   This method fetch a node among the DOM based on its text.
 
@@ -88,18 +88,28 @@ def get_element_from_text(browser, tag_name, text, class_attr='', wait=True):
   xpath_query = '|'.join(possibilities)
 
   if not wait:
-    elems = browser.find_elements_by_xpath(xpath_query)
-    return elems[0] if elems else None
+    ret = browser.find_elements_by_xpath(xpath_query)
+    return filter(lambda x : x.is_displayed(), ret)
   else:
     while True:
       elems = browser.find_elements_by_xpath(xpath_query)
       only_visible = filter(lambda x : x.is_displayed(), elems)
 
-      if elems:
-        return only_visible[0] if only_visible else elems[0]
+      if only_visible:
+        return only_visible
 
       print("Wait 4 '%s'" % xpath_query)
       time.sleep(1)
+
+def get_element_from_text(browser, tag_name, text, class_attr='', wait=True):
+  '''
+  This method fetch a node among the DOM based on its text.
+
+  To find it, you must provide the name of the tag and its text.
+
+  You can indicate wether this method is expected to wait for this element to appear.
+  '''
+  return get_elements_from_text(browser, tag_name, text, class_attr, wait)[0]
 
 def get_column_position_in_table(maintable, columnname):
     elem = get_element_from_text(maintable, tag_name="th", text=columnname, wait=False)

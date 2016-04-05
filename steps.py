@@ -401,7 +401,7 @@ def see_popup(step, message_to_see):
 
 @step('I fill "([^"]*)" within column "([^"]*)"')
 def fill_column(step, content, fieldname):
-    gridtable = get_element(world.browser, tag_name="table", class_attr="gridview")
+    gridtable = get_element(world.browser, tag_name="table", class_attr="grid")
     right_pos = get_column_position_in_table(gridtable, fieldname)
 
     def get_text_box():
