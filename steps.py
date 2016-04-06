@@ -562,3 +562,10 @@ def save_time_results(step, counters, filename):
 
 #}%}
 
+# Time evaluators {%{
+
+@step('I select file "([^"]*)" in "([^"]*)"')
+def import_file_in(step, filename, fieldname):
+    pass
+
+#}%}
