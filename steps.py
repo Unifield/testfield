@@ -216,15 +216,14 @@ def open_tab(step, tab_to_open):
 
     wait_until_not_loading(world.browser)
 
+#TODO: We should open the accordion if it's already open
 @step('I open accordion menu "([^"]*)"')
 def open_tab(step, menu_to_click_on):
     click_on(lambda : get_element_from_text(world.browser, tag_name="li", class_attr="accordion-title", text=menu_to_click_on, wait=True))
     # We have to wait so that the menu opens completly
     get_element(world.browser, tag_name="li", wait=True)
 
-@step('I click on menu "([^"]*)"')
-def open_tab(step, menu_to_click_on):
-
+def open_menu(menu_to_click_on):
     menus = menu_to_click_on.split("|")
 
     after_pos = 0
@@ -249,6 +248,19 @@ def open_tab(step, menu_to_click_on):
 
     wait_until_not_loading(world.browser)
 
+@step('I click on menu "([^"]*)" and open the window$')
+def open_tab(step, menu_to_click_on):
+    open_menu(menu_to_click_on)
+
+    # we have to open the window!
+    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", wait=True))
+    world.nbframes += 1
+    wait_until_no_ajax(world.browser)
+
+@step('I click on menu "([^"]*)"$')
+def open_tab(step, menu_to_click_on):
+    open_menu(menu_to_click_on)
+
 # I open tab "Supplier"
 @step('I open tab "([^"]*)"')
 def open_tab(step, tabtoopen):
@@ -269,6 +281,14 @@ def fill_field(step, fieldname, content):
         my_input.click()
         click_on(lambda : get_element_from_text(world.browser, tag_name="option", text=content, wait=False))
         my_input.click()
+    elif my_input.tag_name == "input" and my_input.get_attribute("type") == "file":
+        my_input.clear()
+        base_dir = os.path.dirname(__file__)
+        content_path = os.path.join(base_dir, "files", content)
+
+        if not os.path.isfile(content_path):
+            raise Exception("%s is not a file" % content_path)
+        my_input.send_keys(content_path)
     elif my_input.tag_name == "input" and my_input.get_attribute("type") == "checkbox":
 
         if content.lower() not in {"yes", "no"}:
@@ -426,6 +446,7 @@ def fill_column(step, content, fieldname):
 
     select_in_field_an_option(world.browser, get_text_box, content)
 
+#TODO: Raise an exception if no action is found!
 @step('I click "([^"]*)" on line:')
 def click_on_line(step, action):
     values = step.hashes
@@ -439,7 +460,10 @@ def click_on_line(step, action):
 
         for row_node in row_nodes:
             # we have to look for this action the user wants to execute
-            actions_to_click = get_elements(row_node, attrs={'title': action})
+            if action == 'checkbox':
+                actions_to_click = get_elements(row_node, tag_name="input", attrs=dict(type='checkbox'))
+            else:
+                actions_to_click = get_elements(row_node, attrs={'title': action})
 
             if not actions_to_click:
                 continue
@@ -475,7 +499,7 @@ def check_line(step):
 
     repeat_until_no_exception(try_to_check_line, StaleElementReferenceException, step)
 
-@step('I click "([^"]*)" in the side panel')
+@step('I click "([^"]*)" in the side panel$')
 def open_side_panel(step, menuname):
     wait_until_no_ajax(world.browser)
     click_on(lambda : get_element(world.browser, class_attr="closed", id_attr="a_main_sidebar", wait=True))
@@ -485,7 +509,7 @@ def open_side_panel(step, menuname):
 
     wait_until_not_loading(world.browser)
 
-@step('I click "([^"]*)" in the side panel and open the window')
+@step('I click "([^"]*)" in the side panel and open the window$')
 def open_side_panel_and_open(step, menuname):
 
     open_side_panel(step, menuname)
@@ -562,10 +586,3 @@ def save_time_results(step, counters, filename):
 
 #}%}
 
-# Time evaluators {%{
-
-@step('I select file "([^"]*)" in "([^"]*)"')
-def import_file_in(step, filename, fieldname):
-    pass
-
-#}%}
