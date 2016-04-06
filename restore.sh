@@ -12,13 +12,10 @@ do
 
     echo Restoring $DBNAME
 
-    echo DROP DATABASE IF EXISTS \"$DBNAME\" | psql -U $USERNAME  postgres > /dev/null
-    echo CREATE DATABASE \"$DBNAME\" | psql -U $USERNAME  postgres > /dev/null
+    echo DROP DATABASE IF EXISTS \"$DBNAME\" | psql -U $USERNAME  -h $SERVERNAME postgres > /dev/null
+    echo CREATE DATABASE \"$DBNAME\" | psql -U $USERNAME  -h $SERVERNAME postgres > /dev/null
 
-    pg_restore -d $DBNAME --no-owner --no-acl $FILENAME
+    pg_restore -h $SERVERNAME -U $USERNAME -d $DBNAME --no-owner --no-acl $FILENAME
+
 done
-
-
-#echo CREATE DATABASE \"lil\" | psql -U sblanc  OCG_CM1_BAT
-
 
