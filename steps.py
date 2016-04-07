@@ -15,6 +15,7 @@ import tempfile
 
 RESULTS_DIR = 'results/'
 ENV_DIR = 'instances/'
+FILE_DIR = 'files'
 
 RUN_NUMBER_FILE = 'run'
 
@@ -270,7 +271,7 @@ def open_tab(step, tabtoopen):
 #}%}
 
 # Fill fields {%{
-@step('I fill "([^"]*)" with "([^"]*)"')
+@step('I fill "([^"]*)" with "([^"]*)"$')
 def fill_field(step, fieldname, content):
     label = get_element_from_text(world.browser, tag_name="label", text=fieldname, wait=True)
     idattr = label.get_attribute("for")
@@ -284,7 +285,7 @@ def fill_field(step, fieldname, content):
     elif my_input.tag_name == "input" and my_input.get_attribute("type") == "file":
         my_input.clear()
         base_dir = os.path.dirname(__file__)
-        content_path = os.path.join(base_dir, "files", content)
+        content_path = os.path.join(base_dir, FILE_DIR, content)
 
         if not os.path.isfile(content_path):
             raise Exception("%s is not a file" % content_path)
@@ -307,6 +308,37 @@ def fill_field(step, fieldname, content):
         my_input.send_keys((100*Keys.BACKSPACE) + convert_input(world, content))
 
     wait_until_no_ajax(world.browser)
+
+@step('I fill "([^"]*)" with table:$')
+def fill_field(step, fieldname):
+    if not step.hashes:
+        raise Exception("Why don't you defined at least one row?")
+
+    TEMP_FILENAME = 'tempfile'
+
+    base_dir = os.path.dirname(__file__)
+    content_path = os.path.join(base_dir, FILE_DIR, TEMP_FILENAME)
+    f = open(content_path, 'w')
+
+    f.write('<?xml version="1.0"?>')
+    f.write('<ss:Workbook xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">')
+    f.write('<ss:Worksheet ss:Name="Sheet1">')
+    f.write('<ss:Table>')
+
+    for row in step.hashes:
+        f.write('<ss:Row>')
+        for cell in row:
+            f.write('<ss:Cell>')
+            f.write('<ss:Data ss:Type="String">%s</ss:Data>' % cell)
+            f.write('</ss:Cell>')
+        f.write('</ss:Row>')
+
+    f.write('</ss:Table>')
+    f.write('</ss:Worksheet>')
+    f.write('</ss:Workbook>')
+    f.close()
+
+    step.given('I fill "%s" with "%s"' % (fieldname, TEMP_FILENAME))
 
 #}%}
 
