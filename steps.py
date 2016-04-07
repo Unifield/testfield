@@ -80,6 +80,11 @@ def disconnect_to_db(total):
 #}%}
 
 # Log into/out of/restore an instance{%{
+
+@step('I go on the homepage')
+def go_home_page(step):
+    world.browser.get(HTTP_URL_SERVER)
+
 @step('I log into instance "([^"]*)"')
 def connect_on_database(step, database_name):
     # we would like to get back to the the login page
@@ -254,7 +259,8 @@ def open_tab(step, menu_to_click_on):
     open_menu(menu_to_click_on)
 
     # we have to open the window!
-    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", wait=True))
+    world.browser.switch_to_default_content()
+    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait=True))
     world.nbframes += 1
     wait_until_no_ajax(world.browser)
 
@@ -361,7 +367,8 @@ def click_on_button(step, button):
         wait_until_not_loading(world.browser, wait=False)
         wait_until_no_ajax(world.browser)
     else:
-        wait_until_not_loading(world.browser)
+        #FIXME: Can we skip this wait? CHECK!
+        wait_until_not_loading(world.browser, wait=False)
         wait_until_no_ajax(world.browser)
 
 # I click on "Search/New/Clear"
@@ -369,12 +376,15 @@ def click_on_button(step, button):
 def click_on_button_and_open(step, button):
     world.take_printscren_before = True
 
-    wait_until_not_loading(world.browser)
+    #FIXME: It seems that two frames block everything... tocheck...
+    wait_until_not_loading(world.browser, wait=False)
     wait_until_no_ajax(world.browser)
     click_on(lambda : get_element_from_text(world.browser, tag_name="button", text=button, wait=True))
-    wait_until_not_loading(world.browser)
+    #FIXME: It seems that two frames block everything... tocheck...
+    wait_until_not_loading(world.browser, wait=False)
 
-    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", wait=True))
+    world.browser.switch_to_default_content()
+    world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes, tag_name="iframe", wait=True))
     world.nbframes += 1
 
     wait_until_no_ajax(world.browser)
@@ -384,12 +394,17 @@ def click_on_button_and_open(step, button):
 def click_on_button_and_close(step, button):
     world.take_printscren_before = True
 
-    click_on(lambda : get_element_from_text(world.browser, tag_name="button", text=button, wait=True))
+    click_on(lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True))
+    world.nbframes -= 1
+
     world.browser.switch_to_default_content()
-    wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe"))
+    if world.nbframes > 0:
+        world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait=True))
+    else:
+        wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe"))
+
     #wait_until_not_loading(world.browser)
     wait_until_no_ajax(world.browser)
-    world.nbframes -= 1
 
 def click_if_toggle_button_is(btn_name, from_class_name):
     btn_name = to_camel_case(btn_name)
@@ -503,7 +518,7 @@ def click_on_line(step, action):
             # we choose an action with the right title randomly...
             action_to_click = actions_to_click[0]
             action_to_click.click()
-            wait_until_not_loading(world.browser)
+            wait_until_not_loading(world.browser, wait=False)
             wait_until_no_ajax(world.browser)
             break
 
@@ -513,7 +528,8 @@ def click_on_line(step, action):
 def click_on_line_and_open_the_window(step, action):
     click_on_line(step, action)
 
-    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", wait=True))
+    world.browser.switch_to_default_content()
+    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait=True))
     world.nbframes += 1
 
     wait_until_no_ajax(world.browser)
@@ -546,7 +562,8 @@ def open_side_panel_and_open(step, menuname):
 
     open_side_panel(step, menuname)
 
-    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", wait=True))
+    world.browser.switch_to_default_content()
+    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait=True))
     world.nbframes += 1
 
     wait_until_no_ajax(world.browser)

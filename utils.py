@@ -3,7 +3,7 @@ from selenium.webdriver.common.keys import Keys
 import time
 
 # Get an element {%{
-def get_elements(browser, tag_name=None, id_attr=None, class_attr=None, attrs=dict(), wait=False):
+def get_elements(browser, tag_name=None, id_attr=None, class_attr=None, attrs=dict(), wait=False, atleast=0):
   '''
   This method fetch a node among the DOM based on its attributes.
 
@@ -37,7 +37,7 @@ def get_elements(browser, tag_name=None, id_attr=None, class_attr=None, attrs=di
     while True:
       try:
         elements = browser.find_elements_by_css_selector(css_selector)
-        if elements:
+        if len(elements) > atleast:
             break
 
         print("Wait 4 '%s'" % css_selector)
@@ -49,7 +49,7 @@ def get_elements(browser, tag_name=None, id_attr=None, class_attr=None, attrs=di
   return elements
 
 def get_element(browser, tag_name=None, id_attr=None, class_attr=None, attrs=dict(), wait=False, position=None):
-  elements = get_elements(browser, tag_name, id_attr, class_attr, attrs, wait)
+  elements = get_elements(browser, tag_name, id_attr, class_attr, attrs, wait, atleast=position or 0)
 
   if position is None:
       only_visible = filter(lambda x : x.is_displayed(), elements)
