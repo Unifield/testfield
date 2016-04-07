@@ -116,6 +116,9 @@ def get_column_position_in_table(maintable, columnname):
     if elem is None:
         return None
 
+    #FIXME: This is the maintable! It doesn't work that way.
+    # The parent element is the element that generated this node but
+    # it isn't the parent element in the DOM
     parent = elem.parent
     right_pos = None
 

@@ -220,14 +220,17 @@ def open_tab(step, tab_to_open):
     button_label = get_element_from_text(elem_menu, tag_name="span", text=tab_to_open_normalized)
     button_label.click()
 
-    wait_until_not_loading(world.browser)
+    wait_until_not_loading(world.browser, wait=False)
 
-#TODO: We should open the accordion if it's already open
 @step('I open accordion menu "([^"]*)"')
 def open_tab(step, menu_to_click_on):
-    click_on(lambda : get_element_from_text(world.browser, tag_name="li", class_attr="accordion-title", text=menu_to_click_on, wait=True))
-    # We have to wait so that the menu opens completly
-    get_element(world.browser, tag_name="li", wait=True)
+
+    accordion_node = get_element_from_text(world.browser, tag_name="li", class_attr="accordion-title", text=menu_to_click_on)
+
+    block_element = accordion_node.find_elements_by_xpath("following-sibling::*[1]")[0]
+
+    if block_element.get_attribute("class") != 'accordion-content' or not block_element.is_displayed():
+        accordion_node.click()
 
 def open_menu(menu_to_click_on):
     menus = menu_to_click_on.split("|")
@@ -279,10 +282,44 @@ def open_tab(step, tabtoopen):
 # Fill fields {%{
 @step('I fill "([^"]*)" with "([^"]*)"$')
 def fill_field(step, fieldname, content):
-    label = get_element_from_text(world.browser, tag_name="label", text=fieldname, wait=True)
-    idattr = label.get_attribute("for")
 
-    my_input = get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait=True)
+    # Most of the fields use IDs, however, some of them are included in a table with strange fields.
+    #  We have to look for both
+    my_input = None
+
+    while not my_input:
+        labels = get_elements_from_text(world.browser, tag_name="label", text=fieldname, wait=False)
+
+        # we have a label!
+        if labels:
+            label = labels[0]
+            idattr = label.get_attribute("for")
+            my_input = get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait=True)
+            break
+
+        # do we have a strange table?
+        table_header = get_elements_from_text(world.browser, class_attr='separator horizontal', tag_name="div", text=fieldname, wait=False)
+
+        if not table_header:
+            continue
+
+        # => td
+        table_header = table_header[0]
+
+        table_node = table_header.find_elements_by_xpath("ancestor::tr[1]")
+        if not table_node:
+            continue
+
+        element = table_node[0].find_elements_by_xpath("following-sibling::*[1]")
+        if not element:
+            continue
+
+        # on peut maintenant trouver un input ou un select!
+        for tagname in ["select", "input", "textarea"]:
+            inputnode = element[0].find_elements_by_tag_name(tagname)
+            if inputnode:
+                my_input = inputnode[0]
+                break
 
     if my_input.tag_name == "select":
         my_input.click()
@@ -550,7 +587,13 @@ def check_line(step):
 @step('I click "([^"]*)" in the side panel$')
 def open_side_panel(step, menuname):
     wait_until_no_ajax(world.browser)
-    click_on(lambda : get_element(world.browser, class_attr="closed", id_attr="a_main_sidebar", wait=True))
+    wait_until_not_loading(world.browser)
+
+    #TODO: Check that the number of frames equal 0, otherwise it doesn't make sense
+    element = get_element(world.browser, id_attr="a_main_sidebar", wait=True)
+
+    if 'closed' in element.get_attribute("class"):
+        element.click()
 
     elem = get_element_from_text(world.browser, tag_name="a", text=menuname)
     elem.click()
