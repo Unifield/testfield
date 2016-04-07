@@ -321,6 +321,7 @@ def select_in_field_an_option(browser, fieldelement, content):
         if value_before is not None:
             value_after = value_before
             while value_after == value_before:
+                #FIXME: What happens if I change a field without changing its value?...
                 txtidinput = get_element(browser, id_attr=idvalue_before.replace('/', '\\/'), wait=True)
                 value_after = txtidinput.get_attribute("value")
 

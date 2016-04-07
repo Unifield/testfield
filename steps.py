@@ -1,4 +1,4 @@
-
+#FIXME: The resolution sometimes hides the controls
 from credentials import *
 
 from lettuce import *
@@ -322,8 +322,10 @@ def fill_field(step, fieldname, content):
                 break
 
     if my_input.tag_name == "select":
+        #FIXME: Sometimes it doesn't work... the input is not selected
+        # or the value is not saved...
         my_input.click()
-        click_on(lambda : get_element_from_text(world.browser, tag_name="option", text=content, wait=False))
+        click_on(lambda : get_element_from_text(my_input, tag_name="option", text=content, wait=False))
         my_input.click()
     elif my_input.tag_name == "input" and my_input.get_attribute("type") == "file":
         my_input.clear()
@@ -408,7 +410,7 @@ def click_on_button(step, button):
         wait_until_not_loading(world.browser, wait=False)
         wait_until_no_ajax(world.browser)
 
-# I click on "Search/New/Clear"
+#FIXME: What happens if I want to select several lines?
 @step('I click on "([^"]*)" and open the window$')
 def click_on_button_and_open(step, button):
     world.take_printscren_before = True
@@ -426,6 +428,7 @@ def click_on_button_and_open(step, button):
 
     wait_until_no_ajax(world.browser)
 
+#FIXME: What happens if I want to select several lines?
 # I click on "Save & Close"
 @step('I click on "([^"]*)" and close the window$')
 def click_on_button_and_close(step, button):
