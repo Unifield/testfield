@@ -1,4 +1,4 @@
-#FIXME: The resolution sometimes hides the controls
+#FIXME: The resolution sometimes hides the controls (if it's at the far right)
 from credentials import *
 
 from lettuce import *
@@ -23,6 +23,23 @@ RUN_NUMBER_FILE = 'run'
 @before.all
 def connect_to_db():
 
+    #world.browser = webdriver.PhantomJS()
+    world.browser = webdriver.Firefox()
+    #world.browser = webdriver.Chrome()
+    world.browser.set_window_size(1600, 1200)
+    world.nbframes = 0
+
+    world.durations = {}
+
+    with open("monkeypatch.js") as f:
+        world.monkeypatch = '\r\n'.join(f.readlines())
+
+@before.each_step
+def apply_monkey_patch(step):
+    world.browser.execute_script(world.monkeypatch)
+
+@before.each_scenario
+def update_idrun(scenario):
     world.idrun = 1
 
     if os.path.isdir(RUN_NUMBER_FILE):
@@ -42,21 +59,6 @@ def connect_to_db():
     new_f = open(RUN_NUMBER_FILE, 'w')
     new_f.write(str(world.idrun))
     new_f.close()
-
-    #world.browser = webdriver.PhantomJS()
-    world.browser = webdriver.Firefox()
-    #world.browser = webdriver.Chrome()
-    world.browser.set_window_size(1600, 1200)
-    world.nbframes = 0
-
-    world.durations = {}
-
-    with open("monkeypatch.js") as f:
-        world.monkeypatch = '\r\n'.join(f.readlines())
-
-@before.each_step
-def apply_monkey_patch(step):
-    world.browser.execute_script(world.monkeypatch)
 
 @after.each_scenario
 def remove_iframes(scenario):
@@ -247,7 +249,9 @@ def open_menu(menu_to_click_on):
             text_in_menus = map(lambda x : x.text, valid_visible_elements)
 
             if menu in text_in_menus:
-
+                #FIXME: It seems that sometimes the click doesn't work
+                #  because we wait for submenus to appear although the last
+                #  cast hasn't been done.
                 pos = text_in_menus.index(menu)
 
                 valid_visible_elements[pos].click()
@@ -406,7 +410,6 @@ def click_on_button(step, button):
         wait_until_not_loading(world.browser, wait=False)
         wait_until_no_ajax(world.browser)
     else:
-        #FIXME: Can we skip this wait? CHECK!
         wait_until_not_loading(world.browser, wait=False)
         wait_until_no_ajax(world.browser)
 
