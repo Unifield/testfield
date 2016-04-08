@@ -9,8 +9,6 @@ do
     mkdir $NEWDIR 2> /dev/null
 done
 
-
-
 for meta_out in `find meta_features/ -name "*.meta_feature"`;
 do
     META_FEATURE=$meta_out

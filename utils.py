@@ -154,8 +154,9 @@ def get_table_row_from_hashes(world, keydict):
         #        table...
         position_per_column = {}
         for column in columns:
-            column_normalized = to_camel_case(column)
-            pos_in_table = get_column_position_in_table(maintable, column_normalized)
+            # We cannot normalize columns here because some columns don't follow
+            #  the common convention
+            pos_in_table = get_column_position_in_table(maintable, column)
             position_per_column[column] = pos_in_table
 
         if None in position_per_column.values():

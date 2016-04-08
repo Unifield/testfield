@@ -1,4 +1,5 @@
-#FIXME: The resolution sometimes hides the controls (if it's at the far right)
+#FIXME: The resolution sometimes hides the controls (if it's at the far right). This is also the case on my laptop
+# The version I use at the job is 2.48.0. It doesn't have this issue.
 from credentials import *
 
 from lettuce import *
@@ -239,24 +240,25 @@ def open_menu(menu_to_click_on):
 
     after_pos = 0
 
-    for menu in menus:
+    for i, menu in enumerate(menus):
 
         while True:
             elements = get_elements(world.browser, tag_name="tr", class_attr="row")
+            # We don't know why... but some elements appear to be empty when we start using the menu
+            #  then, they disapear when we open a menu
+            elements = filter(lambda x : x.text.strip() != "", elements)
             visible_elements = filter(lambda x : x.is_displayed(), elements)
             valid_visible_elements = visible_elements[after_pos:]
 
             text_in_menus = map(lambda x : x.text, valid_visible_elements)
 
             if menu in text_in_menus:
-                #FIXME: It seems that sometimes the click doesn't work
-                #  because we wait for submenus to appear although the last
-                #  cast hasn't been done.
                 pos = text_in_menus.index(menu)
 
                 valid_visible_elements[pos].click()
 
                 after_pos += pos + 1
+
                 break
 
     wait_until_not_loading(world.browser)
@@ -327,10 +329,15 @@ def fill_field(step, fieldname, content):
 
     if my_input.tag_name == "select":
         #FIXME: Sometimes it doesn't work... the input is not selected
-        # or the value is not saved...
-        my_input.click()
-        click_on(lambda : get_element_from_text(my_input, tag_name="option", text=content, wait=False))
-        my_input.click()
+        # or the value is not saved... Is it related to the Selenium's version?
+        select = Select(my_input)
+        select.select_by_visible_text(content)
+
+        ## This version is quite the same as the previous one except that it sometimes fail
+        #   to select the right text (but the selected value is correct)
+        #my_input.click()
+        #click_on(lambda : get_element_from_text(my_input, tag_name="option", text=content, wait=False))
+        #my_input.click()
     elif my_input.tag_name == "input" and my_input.get_attribute("type") == "file":
         my_input.clear()
         base_dir = os.path.dirname(__file__)
@@ -413,7 +420,6 @@ def click_on_button(step, button):
         wait_until_not_loading(world.browser, wait=False)
         wait_until_no_ajax(world.browser)
 
-#FIXME: What happens if I want to select several lines?
 @step('I click on "([^"]*)" and open the window$')
 def click_on_button_and_open(step, button):
     world.take_printscren_before = True
@@ -536,36 +542,52 @@ def fill_column(step, content, fieldname):
 
     select_in_field_an_option(world.browser, get_text_box, content)
 
-#TODO: Raise an exception if no action is found!
 @step('I click "([^"]*)" on line:')
 def click_on_line(step, action):
-    values = step.hashes
-    #TODO: We should be allowed to use more than one value
-    if len(step.hashes) != 1:
-        raise Exception("You cannot click on more than one line")
 
-    def try_to_click_on_line(step, action):
-        row_nodes = get_table_row_from_hashes(world, step.hashes[0])
+    if not step.hashes:
+        raise Exception("You have to click on at least one line")
+
+    import collections
+    no_by_fingerprint = collections.defaultdict(lambda : 0)
+
+    for i_hash in step.hashes:
+
+        #FIXME: The key/values could be wrong, because the same hash
+        # could exist with a "_". Two different lines could have the same fingerprint.
+        key_value = map(lambda (a,b) : '%s/%s' % (str(a), str(b)), i_hash.iteritems())
+        key_value.sort()
+        hash_key_value = '_'.join(key_value)
+
+        def try_to_click_on_line(step, action):
+            row_nodes = get_table_row_from_hashes(world, i_hash)
+            
+            matched_row_to_click_on = no_by_fingerprint[hash_key_value]
+            no_matched_row = 0
+
+            for row_node in row_nodes:
+                # we have to look for this action the user wants to execute
+                if action == 'checkbox':
+                    actions_to_click = get_elements(row_node, tag_name="input", attrs=dict(type='checkbox'))
+                else:
+                    actions_to_click = get_elements(row_node, attrs={'title': action})
+
+                if not actions_to_click:
+                    continue
+
+                if no_matched_row == matched_row_to_click_on:
+                    action_to_click = actions_to_click[0]
+                    action_to_click.click()
+                    wait_until_not_loading(world.browser, wait=False)
+                    wait_until_no_ajax(world.browser)
+                    no_by_fingerprint[hash_key_value] += 1
+                    break
+                else:
+                    no_matched_row += 1
 
 
-        for row_node in row_nodes:
-            # we have to look for this action the user wants to execute
-            if action == 'checkbox':
-                actions_to_click = get_elements(row_node, tag_name="input", attrs=dict(type='checkbox'))
-            else:
-                actions_to_click = get_elements(row_node, attrs={'title': action})
 
-            if not actions_to_click:
-                continue
-
-            # we choose an action with the right title randomly...
-            action_to_click = actions_to_click[0]
-            action_to_click.click()
-            wait_until_not_loading(world.browser, wait=False)
-            wait_until_no_ajax(world.browser)
-            break
-
-    repeat_until_no_exception(try_to_click_on_line, StaleElementReferenceException, step, action)
+        repeat_until_no_exception(try_to_click_on_line, StaleElementReferenceException, step, action)
 
 @step('I click "([^"]*)" on line and open the window:')
 def click_on_line_and_open_the_window(step, action):
