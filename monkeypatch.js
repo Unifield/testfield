@@ -4,6 +4,8 @@ if(!window.MONKEY_PATCHING){
     window.TOT = {};
     console.log("DEBUT")
 
+    window.confirm = function(a){return true;}
+
     window.onChange = function(caller){
 
         if(jQuery(caller).attr("id")){

@@ -381,13 +381,28 @@ def fill_field(step, fieldname):
     f.write('<ss:Worksheet ss:Name="Sheet1">')
     f.write('<ss:Table>')
 
+    row_number = 1
+
     for row in step.hashes:
+        values = row.items()
+        values.sort()
+
+
         f.write('<ss:Row>')
-        for cell in row:
+        for header, cell in values:
             f.write('<ss:Cell>')
-            f.write('<ss:Data ss:Type="String">%s</ss:Data>' % cell)
+
+            celltype = 'String'
+            if re.match('\d{4}-\d{2}-\d{2}', cell) is not None:
+                celltype = 'DateTime'
+
+            localdict = dict(ROW=str(row_number))
+
+            f.write('<ss:Data ss:Type="%s">%s</ss:Data>' % (celltype, convert_input(world, cell, localdict)))
             f.write('</ss:Cell>')
         f.write('</ss:Row>')
+
+        row_number += 1
 
     f.write('</ss:Table>')
     f.write('</ss:Worksheet>')
@@ -542,8 +557,14 @@ def fill_column(step, content, fieldname):
 
     select_in_field_an_option(world.browser, get_text_box, content)
 
+#FIXME: Expand the table if you want to select items. It's necessary if too many
+#        rows are displayed.
 @step('I click "([^"]*)" on line:')
 def click_on_line(step, action):
+
+    # This is important because we cannot click on lines belonging
+    #  to the previous window
+    wait_until_not_loading(world.browser, wait=False)
 
     if not step.hashes:
         raise Exception("You have to click on at least one line")
@@ -561,7 +582,7 @@ def click_on_line(step, action):
 
         def try_to_click_on_line(step, action):
             row_nodes = get_table_row_from_hashes(world, i_hash)
-            
+
             matched_row_to_click_on = no_by_fingerprint[hash_key_value]
             no_matched_row = 0
 
@@ -578,16 +599,20 @@ def click_on_line(step, action):
                 if no_matched_row == matched_row_to_click_on:
                     action_to_click = actions_to_click[0]
                     action_to_click.click()
-                    wait_until_not_loading(world.browser, wait=False)
-                    wait_until_no_ajax(world.browser)
                     no_by_fingerprint[hash_key_value] += 1
-                    break
+                    return True
                 else:
                     no_matched_row += 1
 
+            return False
 
+        if not repeat_until_no_exception(try_to_click_on_line, StaleElementReferenceException, step, action):
+            raise Exception("A line hasn't been found")
 
-        repeat_until_no_exception(try_to_click_on_line, StaleElementReferenceException, step, action)
+        # we have to execute that outside the function because it cannot raise an exception
+        #  (we would do the action twice)
+        wait_until_not_loading(world.browser, wait=False)
+        wait_until_no_ajax(world.browser)
 
 @step('I click "([^"]*)" on line and open the window:')
 def click_on_line_and_open_the_window(step, action):

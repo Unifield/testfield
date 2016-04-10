@@ -1,4 +1,5 @@
 
+from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.keys import Keys
 import time
 
@@ -139,6 +140,21 @@ def get_column_position_in_table(maintable, columnname):
 def get_table_row_from_hashes(world, keydict):
     columns = keydict.keys()
 
+    #TODO: The pager is outside the table we look for above. As a result, we look
+    #  for the external table, but that's not very efficient since we have to load
+    #  them again afterwards...
+
+    pagers = get_elements(world.browser, class_attr="gridview", tag_name="table")
+    for pager in pagers:
+        elem = get_element(pager, class_attr="pager_info", tag_name="span")
+        elem.click()
+
+        element = get_element(pager, tag_name="select", attrs=dict(action="filter"))
+        select = Select(element)
+        select.select_by_visible_text("unlimited")
+
+        wait_until_not_loading(world.browser, wait=False)
+    
     #FIXME: We should look for all the tables since the first one could be the
     #  bad one. However, we still have to decide whether two tables strictly identical
     #  could stand beside each other... That's something we almost see when we open
@@ -149,6 +165,7 @@ def get_table_row_from_hashes(world, keydict):
     rows = []
 
     for maintable in maintables:
+
         #FIXME: We now that when a column is not found in one array, we look in the
         #        next one. This is not good since we could detect a column in another
         #        table...
@@ -229,6 +246,7 @@ def repeat_until_no_exception(action, exception, *params):
         try:
             return action(*params)
         except exception:
+            raise
             time.sleep(1)
 
 def wait_until_element_does_not_exist(browser, get_elem):
@@ -266,8 +284,11 @@ def wait_until_not_loading(browser, wait=True):
   wait_until_not_displayed(browser, lambda : get_element(browser, tag_name="div", id_attr="ajax_loading", wait=wait), accept_failure=not wait)
 #}%}
 
-def convert_input(world, content):
-    return content.replace("{{ID}}", str(world.idrun))
+def convert_input(world, content, localdict=dict()):
+    content = content.replace("{{ID}}", str(world.idrun))
+    for key, value in localdict.iteritems():
+        content = content.replace("{{%s}}" % key, value)
+    return content
 
 # Do something {%{
 def click_on(elem_fetcher):
