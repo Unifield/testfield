@@ -145,6 +145,7 @@ def get_table_row_from_hashes(world, keydict):
     #  them again afterwards...
 
     pagers = get_elements(world.browser, class_attr="gridview", tag_name="table")
+    pagers = filter(lambda x : x.is_displayed(), pagers)
     for pager in pagers:
         elem = get_element(pager, class_attr="pager_info", tag_name="span")
         elem.click()

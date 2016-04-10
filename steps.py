@@ -2,6 +2,7 @@
 # The version I use at the job is 2.48.0. It doesn't have this issue.
 from credentials import *
 
+import output
 from lettuce import *
 from selenium import webdriver
 from selenium.common.exceptions import StaleElementReferenceException
@@ -85,10 +86,12 @@ def disconnect_to_db(total):
 # Log into/out of/restore an instance{%{
 
 @step('I go on the homepage')
+@output.register_for_printscreen
 def go_home_page(step):
     world.browser.get(HTTP_URL_SERVER)
 
 @step('I log into instance "([^"]*)"')
+@output.register_for_printscreen
 def connect_on_database(step, database_name):
     # we would like to get back to the the login page
     world.browser.delete_all_cookies()
@@ -105,6 +108,7 @@ def connect_on_database(step, database_name):
     get_element(world.browser, tag_name="button", attrs={'type': 'submit'}).click()
 
 @step('I log out')
+@output.register_for_printscreen
 def log_out(step):
     world.browser.get("%(url)s/openerp/logout" % dict(url=HTTP_URL_SERVER))
 
@@ -216,6 +220,7 @@ def synchronize_instance(step, instance_name):
 
 # Open a menu/tab {%{
 @step('I open tab menu "([^"]*)"')
+@output.register_for_printscreen
 def open_tab(step, tab_to_open):
     tab_to_open_normalized = to_camel_case(tab_to_open)
 
@@ -226,6 +231,7 @@ def open_tab(step, tab_to_open):
     wait_until_not_loading(world.browser, wait=False)
 
 @step('I open accordion menu "([^"]*)"')
+@output.register_for_printscreen
 def open_tab(step, menu_to_click_on):
 
     accordion_node = get_element_from_text(world.browser, tag_name="li", class_attr="accordion-title", text=menu_to_click_on)
@@ -264,6 +270,7 @@ def open_menu(menu_to_click_on):
     wait_until_not_loading(world.browser)
 
 @step('I click on menu "([^"]*)" and open the window$')
+@output.register_for_printscreen
 def open_tab(step, menu_to_click_on):
     open_menu(menu_to_click_on)
 
@@ -274,11 +281,13 @@ def open_tab(step, menu_to_click_on):
     wait_until_no_ajax(world.browser)
 
 @step('I click on menu "([^"]*)"$')
+@output.register_for_printscreen
 def open_tab(step, menu_to_click_on):
     open_menu(menu_to_click_on)
 
 # I open tab "Supplier"
 @step('I open tab "([^"]*)"')
+@output.add_printscreen
 def open_tab(step, tabtoopen):
     click_on(lambda : get_element_from_text(world.browser, class_attr="tab-title", tag_name="span", text=tabtoopen, wait=True))
     wait_until_not_loading(world.browser)
@@ -287,6 +296,7 @@ def open_tab(step, tabtoopen):
 
 # Fill fields {%{
 @step('I fill "([^"]*)" with "([^"]*)"$')
+@output.register_for_printscreen
 def fill_field(step, fieldname, content):
 
     # Most of the fields use IDs, however, some of them are included in a table with strange fields.
@@ -366,6 +376,7 @@ def fill_field(step, fieldname, content):
     wait_until_no_ajax(world.browser)
 
 @step('I fill "([^"]*)" with table:$')
+@output.register_for_printscreen
 def fill_field(step, fieldname):
     if not step.hashes:
         raise Exception("Why don't you defined at least one row?")
@@ -416,9 +427,8 @@ def fill_field(step, fieldname):
 # I click on ... {%{
 # I click on "Search/New/Clear"
 @step('I click on "([^"]*)"$')
+@output.add_printscreen
 def click_on_button(step, button):
-    world.take_printscren_before = True
-
     elem = get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True)
 
     click_on(lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True))
@@ -436,8 +446,8 @@ def click_on_button(step, button):
         wait_until_no_ajax(world.browser)
 
 @step('I click on "([^"]*)" and open the window$')
+@output.add_printscreen
 def click_on_button_and_open(step, button):
-    world.take_printscren_before = True
 
     #FIXME: It seems that two frames block everything... tocheck...
     wait_until_not_loading(world.browser, wait=False)
@@ -455,8 +465,8 @@ def click_on_button_and_open(step, button):
 #FIXME: What happens if I want to select several lines?
 # I click on "Save & Close"
 @step('I click on "([^"]*)" and close the window$')
+@output.add_printscreen
 def click_on_button_and_close(step, button):
-    world.take_printscren_before = True
 
     click_on(lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True))
     world.nbframes -= 1
@@ -480,10 +490,12 @@ def click_if_toggle_button_is(btn_name, from_class_name):
     wait_until_not_loading(world.browser)
 
 @step('I toggle on "([^"]*)"$')
+@output.register_for_printscreen
 def toggle_on(step, button):
     click_if_toggle_button_is(button, "filter_with_icon inactive")
 
 @step('I toggle off "([^"]*)"$')
+@output.register_for_printscreen
 def toggle_off(step, button):
     click_if_toggle_button_is(button, "filter_with_icon active")
 
@@ -531,6 +543,7 @@ def see_popup(step, message_to_see):
 # Table management {%{
 
 @step('I fill "([^"]*)" within column "([^"]*)"')
+@output.register_for_printscreen
 def fill_column(step, content, fieldname):
     gridtable = get_element(world.browser, tag_name="table", class_attr="grid")
     right_pos = get_column_position_in_table(gridtable, fieldname)
@@ -560,6 +573,7 @@ def fill_column(step, content, fieldname):
 #FIXME: Expand the table if you want to select items. It's necessary if too many
 #        rows are displayed.
 @step('I click "([^"]*)" on line:')
+@output.register_for_printscreen
 def click_on_line(step, action):
 
     # This is important because we cannot click on lines belonging
@@ -615,6 +629,7 @@ def click_on_line(step, action):
         wait_until_no_ajax(world.browser)
 
 @step('I click "([^"]*)" on line and open the window:')
+@output.add_printscreen
 def click_on_line_and_open_the_window(step, action):
     click_on_line(step, action)
 
@@ -638,6 +653,7 @@ def check_line(step):
     repeat_until_no_exception(try_to_check_line, StaleElementReferenceException, step)
 
 @step('I click "([^"]*)" in the side panel$')
+@output.add_printscreen
 def open_side_panel(step, menuname):
     wait_until_no_ajax(world.browser)
     wait_until_not_loading(world.browser)
@@ -654,6 +670,7 @@ def open_side_panel(step, menuname):
     wait_until_not_loading(world.browser)
 
 @step('I click "([^"]*)" in the side panel and open the window$')
+@output.add_printscreen
 def open_side_panel_and_open(step, menuname):
 
     open_side_panel(step, menuname)
@@ -665,6 +682,7 @@ def open_side_panel_and_open(step, menuname):
     wait_until_no_ajax(world.browser)
 
 @step('I validate the line')
+@output.register_for_printscreen
 def choose_field(step):
     click_on(lambda : get_element(world.browser, tag_name="img", attrs={'title': 'Update'}, wait=True))
     wait_until_no_ajax(world.browser)
