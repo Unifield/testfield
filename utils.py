@@ -42,9 +42,11 @@ def get_elements(browser, tag_name=None, id_attr=None, class_attr=None, attrs=di
             break
 
         print("Wait 4 '%s'" % css_selector)
+        browser.save_screenshot("get_elements.png")
         time.sleep(1)
       except:
         print("Wait 4 '%s'" % css_selector)
+        browser.save_screenshot("get_elements.png")
         time.sleep(1)
 
   return elements
@@ -81,8 +83,10 @@ def get_elements_from_text(browser, tag_name, text, class_attr='', wait=True):
   for my_tag in tag_name:
     data = dict(class_attr=class_attr, tagname=my_tag, text=text)
 
-    xpath1_query = "//%(tagname)s[normalize-space(.)='%(text)s'%(class_attr)s]" % data
-    xpath2_query = "//%(tagname)s//*[normalize-space(.)='%(text)s'%(class_attr)s]" % data
+    # we need to look for nodes "in the given node" when we select an option
+    #  in a select and we don't want to select the other option
+    xpath1_query = ".//%(tagname)s[normalize-space(.)='%(text)s'%(class_attr)s]" % data
+    xpath2_query = ".//%(tagname)s//*[normalize-space(.)='%(text)s'%(class_attr)s]" % data
     possibilities.append(xpath1_query)
     possibilities.append(xpath2_query)
 
@@ -101,6 +105,8 @@ def get_elements_from_text(browser, tag_name, text, class_attr='', wait=True):
 
       print("Wait 4 '%s'" % xpath_query)
       time.sleep(1)
+
+      browser.save_screenshot("get_elements_from_text.png")
 
 def get_element_from_text(browser, tag_name, text, class_attr='', wait=True):
   '''

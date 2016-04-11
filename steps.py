@@ -228,20 +228,40 @@ def open_tab(step, tab_to_open):
     button_label = get_element_from_text(elem_menu, tag_name="span", text=tab_to_open_normalized)
     button_label.click()
 
-    wait_until_not_loading(world.browser, wait=False)
+    wait_until_not_loading(world.browser, wait=True)
+
+    world.browser.save_screenshot("after_tab.png")
 
 @step('I open accordion menu "([^"]*)"')
 @output.register_for_printscreen
 def open_tab(step, menu_to_click_on):
+    menu_node = get_element(world.browser, tag_name="td", id_attr="secondary")
 
-    accordion_node = get_element_from_text(world.browser, tag_name="li", class_attr="accordion-title", text=menu_to_click_on)
+    while True:
+        accordion_node = get_element_from_text(menu_node, tag_name="li", text=menu_to_click_on)
+        block_element = accordion_node.find_elements_by_xpath("following-sibling::*[1]")[0]
 
-    block_element = accordion_node.find_elements_by_xpath("following-sibling::*[1]")[0]
+        height = block_element.size['height']
 
-    if block_element.get_attribute("class") != 'accordion-content' or not block_element.is_displayed():
+        if 'accordion-title-active' in accordion_node.get_attribute("class"):
+            break
+
         accordion_node.click()
 
+        # we have to ensure that the element is not hidden (because of animation...)
+        while True:
+            accordion_node = get_element_from_text(menu_node, tag_name="li", text=menu_to_click_on)
+            block_element = accordion_node.find_elements_by_xpath("following-sibling::*[1]")[0]
+            height = block_element.size['height']
+
+            style = block_element.get_attribute("style")
+
+            if style == 'display: block;' or style == 'display: none;':
+                break
+
 def open_menu(menu_to_click_on):
+    menu_node = get_element(world.browser, tag_name="td", id_attr="secondary")
+
     menus = menu_to_click_on.split("|")
 
     after_pos = 0
@@ -249,10 +269,10 @@ def open_menu(menu_to_click_on):
     for i, menu in enumerate(menus):
 
         while True:
-            elements = get_elements(world.browser, tag_name="tr", class_attr="row")
+            elements = get_elements(menu_node, tag_name="a")
             # We don't know why... but some elements appear to be empty when we start using the menu
             #  then, they disapear when we open a menu
-            elements = filter(lambda x : x.text.strip() != "", elements)
+            elements = filter(lambda x : x.text.strip() != "" and x.text.strip() != "Toggle Menu", elements)
             visible_elements = filter(lambda x : x.is_displayed(), elements)
             valid_visible_elements = visible_elements[after_pos:]
 
@@ -283,7 +303,11 @@ def open_tab(step, menu_to_click_on):
 @step('I click on menu "([^"]*)"$')
 @output.register_for_printscreen
 def open_tab(step, menu_to_click_on):
+
     open_menu(menu_to_click_on)
+
+
+
 
 # I open tab "Supplier"
 @step('I open tab "([^"]*)"')
@@ -340,16 +364,17 @@ def fill_field(step, fieldname, content):
     if my_input.tag_name == "select":
         #FIXME: Sometimes it doesn't work... the input is not selected
         # or the value is not saved... Is it related to the Selenium's version?
-        select = Select(my_input)
-        select.select_by_visible_text(content)
+        #select = Select(my_input)
+        #select.select_by_visible_text(content)
 
         ## This version is quite the same as the previous one except that it sometimes fail
         #   to select the right text (but the selected value is correct)
-        #my_input.click()
-        #click_on(lambda : get_element_from_text(my_input, tag_name="option", text=content, wait=False))
-        #my_input.click()
+        option = get_element_from_text(my_input, tag_name="option", text=content, wait=False)
+        option.click()
     elif my_input.tag_name == "input" and my_input.get_attribute("type") == "file":
-        my_input.clear()
+        #FIXME: This clear is not allowed in ChromeWebDriver. It is allowed in Firefox.
+        #  We should ensure that this method is still available.
+        #my_input.clear()
         base_dir = os.path.dirname(__file__)
         content_path = os.path.join(base_dir, FILE_DIR, content)
 
@@ -368,7 +393,9 @@ def fill_field(step, fieldname, content):
             if my_input.is_selected():
                 my_input.click()
 
-    elif my_input.get_attribute("autocomplete") == "off" and '_text' in idattr:
+        #WARNING: the attribute's name is different in PhantomJS and Firefox. Firefox change it into lower case.
+        #  That's not the case of PhantomJS (chromium?). We have to take both cases into account.
+    elif my_input.get_attribute("autocomplete").lower() == "off" and '_text' in idattr:
         select_in_field_an_option(world.browser, lambda : (get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait=True), action_write_in_element, True), content)
     else:
         my_input.send_keys((100*Keys.BACKSPACE) + convert_input(world, content))
@@ -429,6 +456,7 @@ def fill_field(step, fieldname):
 @step('I click on "([^"]*)"$')
 @output.add_printscreen
 def click_on_button(step, button):
+
     elem = get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True)
 
     click_on(lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True))
@@ -482,6 +510,7 @@ def click_on_button_and_close(step, button):
 
 def click_if_toggle_button_is(btn_name, from_class_name):
     btn_name = to_camel_case(btn_name)
+
     btn_toggle = get_element_from_text(world.browser, tag_name="button", text=btn_name, class_attr=from_class_name, wait=True)
     elem = btn_toggle.get_attribute("class")
     classes = map(lambda x : x.strip(), elem.split())

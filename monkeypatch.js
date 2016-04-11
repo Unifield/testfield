@@ -303,6 +303,17 @@ if(!window.MONKEY_PATCHING){
                 console.log(jQuery(caller).attr("id") + " => -1");
             }
         });
-    }
+    };
+
+
+    //before1 = MochiKit.Visual.blindUp;
+    //MochiKit.Visual.blindUp = function(a,b,c){
+        //$(a).css({display: 'none'});
+    //};
+
+    //before2 = MochiKit.Visual.blindDown;
+    //MochiKit.Visual.blindDown = function(a,b,c){
+        //$(a).css({display: 'block'});
+    //};
 }
 
