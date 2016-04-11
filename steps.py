@@ -265,29 +265,43 @@ def open_menu(menu_to_click_on):
     menus = menu_to_click_on.split("|")
 
     after_pos = 0
+    i = 0
 
-    for i, menu in enumerate(menus):
+    while i < len(menus):
+        menu = menus[i]
 
-        while True:
-            elements = get_elements(menu_node, tag_name="a")
-            # We don't know why... but some elements appear to be empty when we start using the menu
-            #  then, they disapear when we open a menu
-            elements = filter(lambda x : x.text.strip() != "" and x.text.strip() != "Toggle Menu", elements)
-            visible_elements = filter(lambda x : x.is_displayed(), elements)
-            valid_visible_elements = visible_elements[after_pos:]
+        elements = get_elements(menu_node, tag_name="a")
+        # We don't know why... but some elements appear to be empty when we start using the menu
+        #  then, they disapear when we open a menu
+        elements = filter(lambda x : x.text.strip() != "" and x.text.strip() != "Toggle Menu", elements)
+        visible_elements = filter(lambda x : x.is_displayed(), elements)
+        valid_visible_elements = visible_elements[after_pos:]
 
-            text_in_menus = map(lambda x : x.text, valid_visible_elements)
+        text_in_menus = map(lambda x : x.text, valid_visible_elements)
 
-            if menu in text_in_menus:
-                pos = text_in_menus.index(menu)
+        if menu in text_in_menus:
+            pos = text_in_menus.index(menu)
 
-                valid_visible_elements[pos].click()
+            valid_visible_elements[pos].click()
 
-                after_pos += pos + 1
+            if i == len(menus) - 1:
+                wait_until_not_loading(world.browser)
+                return
 
-                break
+            # we have to check if it has an impact on number of menus
+            while True:
+                elements_after = get_elements(menu_node, tag_name="a")
+                elements_after = filter(lambda x : x.text.strip() != "" and x.text.strip() != "Toggle Menu", elements_after)
+                visible_elements_after = filter(lambda x : x.is_displayed(), elements_after)
+                visible_elements_after = visible_elements_after[after_pos:]
 
-    wait_until_not_loading(world.browser)
+                if len(valid_visible_elements) > len(visible_elements_after):
+                    # the number of menus has decreased, we've just closed a menu
+                    break
+                elif len(valid_visible_elements) < len(visible_elements_after):
+                    after_pos += pos + 1
+                    i += 1
+                    break
 
 @step('I click on menu "([^"]*)" and open the window$')
 @output.register_for_printscreen
@@ -364,8 +378,10 @@ def fill_field(step, fieldname, content):
     if my_input.tag_name == "select":
         #FIXME: Sometimes it doesn't work... the input is not selected
         # or the value is not saved... Is it related to the Selenium's version?
-        #select = Select(my_input)
-        #select.select_by_visible_text(content)
+        select = Select(my_input)
+        select.select_by_visible_text(content)
+
+        wait_until_no_ajax(world.browser)
 
         ## This version is quite the same as the previous one except that it sometimes fail
         #   to select the right text (but the selected value is correct)
@@ -477,11 +493,9 @@ def click_on_button(step, button):
 @output.add_printscreen
 def click_on_button_and_open(step, button):
 
-    #FIXME: It seems that two frames block everything... tocheck...
     wait_until_not_loading(world.browser, wait=False)
     wait_until_no_ajax(world.browser)
     click_on(lambda : get_element_from_text(world.browser, tag_name="button", text=button, wait=True))
-    #FIXME: It seems that two frames block everything... tocheck...
     wait_until_not_loading(world.browser, wait=False)
 
     world.browser.switch_to_default_content()
@@ -602,8 +616,6 @@ def fill_column(step, content, fieldname):
 
     select_in_field_an_option(world.browser, get_text_box, content)
 
-#FIXME: Expand the table if you want to select items. It's necessary if too many
-#        rows are displayed.
 @step('I click "([^"]*)" on line:')
 @output.register_for_printscreen
 def click_on_line(step, action):
@@ -690,10 +702,15 @@ def open_side_panel(step, menuname):
     wait_until_no_ajax(world.browser)
     wait_until_not_loading(world.browser)
 
-    #TODO: Check that the number of frames equal 0, otherwise it doesn't make sense
-    element = get_element(world.browser, id_attr="a_main_sidebar", wait=True)
+    if world.nbframes != 0:
+        raise Exception("You cannot open the side panel if you have just opened a window")
 
-    if 'closed' in element.get_attribute("class"):
+    # sometimes the click is not done (or at least the side panel doesn't open...)
+    #  it seems that this is related to a new
+    #FIXME: On Firefox, this click sometimes doesn't work because it click on the window
+    #  and not on the small button to open the window...
+    element = get_element(world.browser, id_attr="a_main_sidebar", wait=True)
+    while 'closed' in element.get_attribute("class"):
         element.click()
 
     elem = get_element_from_text(world.browser, tag_name="a", text=menuname)

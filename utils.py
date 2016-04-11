@@ -164,10 +164,6 @@ def get_table_row_from_hashes(world, keydict):
 
         wait_until_not_loading(world.browser, wait=False)
     
-    #FIXME: We should look for all the tables since the first one could be the
-    #  bad one. However, we still have to decide whether two tables strictly identical
-    #  could stand beside each other... That's something we almost see when we open
-    #  a cash register (opening/closing balance)
     maintables = get_elements(world.browser, tag_name="table", class_attr="grid")
     maintables = filter(lambda x : x.is_displayed(), maintables)
 
