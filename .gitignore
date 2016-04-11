@@ -4,3 +4,5 @@ results/
 instances/
 *.feature
 run
+output/*.png
+output/*.html

@@ -548,6 +548,9 @@ def fill_column(step, content, fieldname):
     gridtable = get_element(world.browser, tag_name="table", class_attr="grid")
     right_pos = get_column_position_in_table(gridtable, fieldname)
 
+    if right_pos is None:
+        raise Exception("Cannot find column '%s'" % fieldname)
+
     def get_text_box():
         row_in_edit_mode = get_element(world.browser, tag_name="tr", class_attr="editors", wait=True)
 

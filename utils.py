@@ -110,12 +110,14 @@ def get_element_from_text(browser, tag_name, text, class_attr='', wait=True):
 
   You can indicate wether this method is expected to wait for this element to appear.
   '''
+  #FIXME: We cannot crash if an element is not found (especially an IndexError...)
   return get_elements_from_text(browser, tag_name, text, class_attr, wait)[0]
 
 def get_column_position_in_table(maintable, columnname):
-    elem = get_element_from_text(maintable, tag_name="th", text=columnname, wait=False)
-    if elem is None:
+    elems = get_elements_from_text(maintable, tag_name="th", text=columnname, wait=False)
+    if not elems:
         return None
+    elem = elems[0]
 
     #FIXME: This is the maintable! It doesn't work that way.
     # The parent element is the element that generated this node but
