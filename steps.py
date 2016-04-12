@@ -5,7 +5,7 @@ from credentials import *
 import output
 from lettuce import *
 from selenium import webdriver
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import StaleElementReferenceException, ElementNotVisibleException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
 from utils import *
@@ -36,9 +36,18 @@ def connect_to_db():
     with open("monkeypatch.js") as f:
         world.monkeypatch = '\r\n'.join(f.readlines())
 
+    world.nofailure = 0
+
 @before.each_step
 def apply_monkey_patch(step):
     world.browser.execute_script(world.monkeypatch)
+
+@after.each_scenario
+def after_scenario(scenario):
+    all_ok = all(map(lambda x : x.passed, scenario.steps))
+    if not all_ok:
+        world.nofailure += 1
+        world.browser.save_screenshot('failure%d.png' % world.nofailure)
 
 @before.each_scenario
 def update_idrun(scenario):
@@ -320,9 +329,6 @@ def open_tab(step, menu_to_click_on):
 
     open_menu(menu_to_click_on)
 
-
-
-
 # I open tab "Supplier"
 @step('I open tab "([^"]*)"')
 @output.add_printscreen
@@ -414,7 +420,14 @@ def fill_field(step, fieldname, content):
     elif my_input.get_attribute("autocomplete").lower() == "off" and '_text' in idattr:
         select_in_field_an_option(world.browser, lambda : (get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait=True), action_write_in_element, True), content)
     else:
-        my_input.send_keys((100*Keys.BACKSPACE) + convert_input(world, content))
+        # we have to ensure that the input is selected without any change by a javascript
+        while True:
+            input_text = convert_input(world, content)
+            my_input.send_keys((100*Keys.BACKSPACE) + input_text)
+            wait_until_no_ajax(world.browser)
+
+            if my_input.get_attribute("value") == input_text:
+                break
 
     wait_until_no_ajax(world.browser)
 
@@ -466,6 +479,21 @@ def fill_field(step, fieldname):
     step.given('I fill "%s" with "%s"' % (fieldname, TEMP_FILENAME))
 
 #}%}
+
+@step('I click on "([^"]*)" until not available$')
+@output.add_printscreen
+def click_until_not_available(step, button):
+    wait_until_not_loading(world.browser, wait=False)
+    while True:
+        try:
+            elem = get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait=False)
+            if elem:
+                elem[0].click()
+                time.sleep(0.2)
+            else:
+                break
+        except ElementNotVisibleException:
+            pass
 
 # I click on ... {%{
 # I click on "Search/New/Clear"
@@ -594,6 +622,7 @@ def fill_column(step, content, fieldname):
     if right_pos is None:
         raise Exception("Cannot find column '%s'" % fieldname)
 
+    #FIXME: This method should use the same behaviour as "I fill ... with ..."
     def get_text_box():
         row_in_edit_mode = get_element(world.browser, tag_name="tr", class_attr="editors", wait=True)
 
