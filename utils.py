@@ -261,6 +261,7 @@ def wait_until_element_does_not_exist(browser, get_elem):
 
   while True:
     try:
+      browser.save_screenshot("wait_until_element_does_not_exist.png")
       if not get_elem() or not get_elem().is_displayed():
         return
     except Exception as e:
@@ -274,6 +275,7 @@ def wait_until_not_displayed(browser, get_elem, accept_failure=False):
 
   while True:
     try:
+      browser.save_screenshot("wait_until_not_displayed.png")
       elem = get_elem()
       if not elem.is_displayed():
         return

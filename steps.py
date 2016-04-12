@@ -492,7 +492,7 @@ def click_until_not_available(step, button):
                 time.sleep(0.2)
             else:
                 break
-        except ElementNotVisibleException:
+        except (StaleElementReferenceException, ElementNotVisibleException):
             pass
 
 # I click on ... {%{
@@ -500,6 +500,10 @@ def click_until_not_available(step, button):
 @step('I click on "([^"]*)"$')
 @output.add_printscreen
 def click_on_button(step, button):
+
+    # It seems that some action could still be launched when clicking on a button,
+    #  we have to wait on them for completion
+    wait_until_not_loading(world.browser, wait=False)
 
     elem = get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True)
 
@@ -524,6 +528,7 @@ def click_on_button_and_open(step, button):
     wait_until_not_loading(world.browser, wait=False)
     wait_until_no_ajax(world.browser)
     click_on(lambda : get_element_from_text(world.browser, tag_name="button", text=button, wait=True))
+
     wait_until_not_loading(world.browser, wait=False)
 
     world.browser.switch_to_default_content()
@@ -754,8 +759,14 @@ def open_side_panel_and_open(step, menuname):
     open_side_panel(step, menuname)
 
     world.browser.switch_to_default_content()
-    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait=True))
+    myframe = get_element(world.browser, tag_name="iframe", position=world.nbframes, wait=True)
+    the_url_to_reload = myframe.get_attribute("src")
+    world.browser.switch_to_frame(myframe)
     world.nbframes += 1
+
+    # PhantomJS sometimes fail to open a window, we have to reload it manually
+    script = "window.location = '%s'" % the_url_to_reload
+    world.browser.execute_script(script)
 
     wait_until_no_ajax(world.browser)
 
@@ -827,3 +838,53 @@ def save_time_results(step, counters, filename):
 
 #}%}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    #menus = menu_to_click_on.split("|")
+
+    #after_pos = 0
+    #menu_node = get_element(world.browser, tag_name="td", id_attr="secondary")
+
+    #while True:
+
+        #for i, menu in enumerate(menus):
+
+            #elements = get_elements(menu_node, tag_name="a")
+            ## We don't know why... but some elements appear to be empty when we start using the menu
+            ##  then, they disapear when we open a menu
+            #elements = filter(lambda x : x.text.strip() != "" and x.text.strip() != "Toggle Menu", elements)
+            #visible_elements = filter(lambda x : x.is_displayed(), elements)
+            #valid_visible_elements = visible_elements[after_pos:]
+
+            #text_in_menus = map(lambda x : x.text, valid_visible_elements)
+
+            #if menu in text_in_menus:
+                #pos = text_in_menus.index(menu)
+
+                #valid_visible_elements[pos].click()
+
+                #print "CLICK ON", pos
+                #print "CLICK ON", pos
+                #print "CLICK ON", pos
+                #print "CLICK ON", pos
+                #print "CLICK ON", pos
+                #print "CLICK ON", pos
