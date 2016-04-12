@@ -8,13 +8,16 @@ if(!window.MONKEY_PATCHING){
 
     window.onChange = function(caller){
 
+        console.log("==================================")
+
         if(jQuery(caller).attr("id")){
             console.log(jQuery(caller).attr("id") + " => +1");
+            console.log("TRUE1");
             window.TOT[jQuery(caller).attr("id")] = true;
         }
 
-
         if (openobject.http.AJAX_COUNT > 0) {
+            console.log("Call later?");
             callLater(1, onChange, caller);
             return;
         }
@@ -27,8 +30,10 @@ if(!window.MONKEY_PATCHING){
         if (!(callback || change_default) || $caller[0].__lock_onchange) {
             if(jQuery(caller).attr("id")){
                 window.TOT[jQuery(caller).attr("id")] = false;
+                console.log("FALSE2");
                 console.log(jQuery(caller).attr("id") + " => -1");
             }
+            console.log("RETURN1?");
             return;
         }
 
@@ -58,10 +63,14 @@ if(!window.MONKEY_PATCHING){
             console.log(jQuery(caller).attr("id") + " => -1");
             if(jQuery(caller).attr("id")){
                 window.TOT[jQuery(caller).attr("id")] = false;
+                console.log("FALSE3");
                 console.log(jQuery(caller).attr("id") + " => -1");
             }
+            console.log("RETURN2?");
             return;
         }
+
+        console.log("CALL");
 
         openobject.http.postJSON(post_url, jQuery.extend({}, form_data, {
             _terp_callback: callback,
@@ -76,6 +85,7 @@ if(!window.MONKEY_PATCHING){
 
                 if(jQuery(caller).attr("id")){
                     window.TOT[jQuery(caller).attr("id")] = false;
+                    console.log("FALSE4");
                     console.log(jQuery(caller).attr("id") + " => -1");
                 }
 
@@ -213,6 +223,7 @@ if(!window.MONKEY_PATCHING){
 
                                 if(jQuery(caller).attr("id")){
                                     window.TOT[jQuery(caller).attr("id")] = false;
+                                    console.log("FALSE5");
                                     console.log(jQuery(caller).attr("id") + " => -1");
                                 }
                                 console.log(jQuery(caller).attr("id") + " => -1");
@@ -300,9 +311,14 @@ if(!window.MONKEY_PATCHING){
 
             if(jQuery(caller).attr("id")){
                 window.TOT[jQuery(caller).attr("id")] = false;
+                console.log("FALSE6");
                 console.log(jQuery(caller).attr("id") + " => -1");
             }
+        }).addErrback(function(xmlHttp){
+            window.TOT = {}
         });
+
+        console.log("FINISH")
     };
 
 

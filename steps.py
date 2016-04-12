@@ -46,8 +46,11 @@ def apply_monkey_patch(step):
 def after_scenario(scenario):
     all_ok = all(map(lambda x : x.passed, scenario.steps))
     if not all_ok:
-        world.nofailure += 1
-        world.browser.save_screenshot('failure%d.png' % world.nofailure)
+        try:
+            world.nofailure += 1
+            world.browser.save_screenshot('failure%d.png' % world.nofailure)
+        except:
+            pass
 
 @before.each_scenario
 def update_idrun(scenario):
@@ -773,9 +776,12 @@ def open_side_panel_and_open(step, menuname):
 @step('I validate the line')
 @output.register_for_printscreen
 def choose_field(step):
+    wait_until_no_ajax(world.browser)
+    wait_until_not_loading(world.browser)
     click_on(lambda : get_element(world.browser, tag_name="img", attrs={'title': 'Update'}, wait=True))
     wait_until_no_ajax(world.browser)
     wait_until_not_loading(world.browser)
+    wait_until_not_displayed(world.browser, lambda : get_element(world.browser, tag_name="img", attrs={'title': 'Delete'}, wait=False))
 
 #}%}
 

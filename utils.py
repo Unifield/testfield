@@ -3,6 +3,8 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.keys import Keys
 import time
 
+TIME_TO_SLEEP = 0
+
 # Get an element {%{
 def get_elements(browser, tag_name=None, id_attr=None, class_attr=None, attrs=dict(), wait=False, atleast=0):
   '''
@@ -41,13 +43,13 @@ def get_elements(browser, tag_name=None, id_attr=None, class_attr=None, attrs=di
         if len(elements) > atleast:
             break
 
-        print("Wait 4 '%s'" % css_selector)
+        #print("Wait 4 '%s'" % css_selector)
         browser.save_screenshot("get_elements.png")
-        time.sleep(1)
+        time.sleep(TIME_TO_SLEEP)
       except:
-        print("Wait 4 '%s'" % css_selector)
+        #print("Wait 4 '%s'" % css_selector)
         browser.save_screenshot("get_elements.png")
-        time.sleep(1)
+        time.sleep(TIME_TO_SLEEP)
 
   return elements
 
@@ -103,8 +105,8 @@ def get_elements_from_text(browser, tag_name, text, class_attr='', wait=True):
       if only_visible:
         return only_visible
 
-      print("Wait 4 '%s'" % xpath_query)
-      time.sleep(1)
+      #print("Wait 4 '%s'" % xpath_query)
+      time.sleep(TIME_TO_SLEEP)
 
       browser.save_screenshot("get_elements_from_text.png")
 
@@ -208,7 +210,7 @@ def get_table_row_from_hashes(world, keydict):
 # Wait {%{
 def wait_until_no_ajax(browser):
     while True:
-        time.sleep(1)
+        time.sleep(TIME_TO_SLEEP)
         # sometimes, openobject doesn't exist in some windows
         ret = browser.execute_script('''
 
@@ -241,7 +243,7 @@ def wait_until_no_ajax(browser):
                #(($("iframe").first().size() == 0 || typeof $("iframe")[0].contentWindow.TOT == 'undefined') ? 0 : $("iframe")[0].contentWindow.TOT)
 
         if str(ret) != "0":
-            print "BOUCLE BLOCK", ret
+            #print "BOUCLE BLOCK", ret
             continue
 
         return
@@ -252,7 +254,7 @@ def repeat_until_no_exception(action, exception, *params):
             return action(*params)
         except exception:
             raise
-            time.sleep(1)
+            time.sleep(TIME_TO_SLEEP)
 
 def wait_until_element_does_not_exist(browser, get_elem):
   '''
@@ -266,7 +268,7 @@ def wait_until_element_does_not_exist(browser, get_elem):
         return
     except Exception as e:
       return
-    time.sleep(1)
+    time.sleep(TIME_TO_SLEEP)
 
 def wait_until_not_displayed(browser, get_elem, accept_failure=False):
   '''
@@ -281,14 +283,19 @@ def wait_until_not_displayed(browser, get_elem, accept_failure=False):
         return
     except Exception as e:
       if accept_failure:
+        print "FAILURE ACCEPTED", e
         return
       else:
         print(e)
         raise
-    time.sleep(1)
+    time.sleep(TIME_TO_SLEEP)
 
 def wait_until_not_loading(browser, wait=True):
-  wait_until_not_displayed(browser, lambda : get_element(browser, tag_name="div", id_attr="ajax_loading", wait=wait), accept_failure=not wait)
+  try:
+    wait_until_not_displayed(browser, lambda : get_element(browser, tag_name="div", id_attr="ajax_loading", wait=wait), accept_failure=not wait)
+  except:
+    #print "GRRRRRR"
+    return
 #}%}
 
 def convert_input(world, content, localdict=dict()):
@@ -310,9 +317,9 @@ def click_on(elem_fetcher):
         elem.click()
       return
     except Exception as e:
-      print(e)
+      #print(e)
       pass
-    time.sleep(1)
+    time.sleep(TIME_TO_SLEEP)
 
 def action_write_in_element(txtinput, content):
     txtinput.clear()
@@ -365,4 +372,6 @@ def select_in_field_an_option(browser, fieldelement, content):
 
     # We have to wait until the information is completed
     wait_until_no_ajax(browser)
+
 #}%}
+
