@@ -44,11 +44,11 @@ def get_elements(browser, tag_name=None, id_attr=None, class_attr=None, attrs=di
             break
 
         #print("Wait 4 '%s'" % css_selector)
-        browser.save_screenshot("get_elements.png")
+        #browser.save_screenshot("get_elements.png")
         time.sleep(TIME_TO_SLEEP)
       except:
         #print("Wait 4 '%s'" % css_selector)
-        browser.save_screenshot("get_elements.png")
+        #browser.save_screenshot("get_elements.png")
         time.sleep(TIME_TO_SLEEP)
 
   return elements
@@ -108,7 +108,7 @@ def get_elements_from_text(browser, tag_name, text, class_attr='', wait=True):
       #print("Wait 4 '%s'" % xpath_query)
       time.sleep(TIME_TO_SLEEP)
 
-      browser.save_screenshot("get_elements_from_text.png")
+      #browser.save_screenshot("get_elements_from_text.png")
 
 def get_element_from_text(browser, tag_name, text, class_attr='', wait=True):
   '''
@@ -263,7 +263,7 @@ def wait_until_element_does_not_exist(browser, get_elem):
 
   while True:
     try:
-      browser.save_screenshot("wait_until_element_does_not_exist.png")
+      #browser.save_screenshot("wait_until_element_does_not_exist.png")
       if not get_elem() or not get_elem().is_displayed():
         return
     except Exception as e:
@@ -277,7 +277,7 @@ def wait_until_not_displayed(browser, get_elem, accept_failure=False):
 
   while True:
     try:
-      browser.save_screenshot("wait_until_not_displayed.png")
+      #browser.save_screenshot("wait_until_not_displayed.png")
       elem = get_elem()
       if not elem.is_displayed():
         return

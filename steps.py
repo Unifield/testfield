@@ -48,7 +48,7 @@ def after_scenario(scenario):
     if not all_ok:
         try:
             world.nofailure += 1
-            world.browser.save_screenshot('failure%d.png' % world.nofailure)
+            world.browser.save_screenshot('failure_%d_%d.png' % (world.idrun, world.nofailure))
         except:
             pass
 
@@ -242,7 +242,7 @@ def open_tab(step, tab_to_open):
 
     wait_until_not_loading(world.browser, wait=True)
 
-    world.browser.save_screenshot("after_tab.png")
+    #world.browser.save_screenshot("after_tab.png")
 
 @step('I open accordion menu "([^"]*)"')
 @output.register_for_printscreen
@@ -426,7 +426,7 @@ def fill_field(step, fieldname, content):
         # we have to ensure that the input is selected without any change by a javascript
         while True:
             input_text = convert_input(world, content)
-            my_input.send_keys((100*Keys.BACKSPACE) + input_text)
+            my_input.send_keys((100*Keys.BACKSPACE) + input_text + Keys.TAB)
             wait_until_no_ajax(world.browser)
 
             if my_input.get_attribute("value") == input_text:
@@ -748,7 +748,8 @@ def open_side_panel(step, menuname):
     #  and not on the small button to open the window...
     element = get_element(world.browser, id_attr="a_main_sidebar", wait=True)
     while 'closed' in element.get_attribute("class"):
-        element.click()
+        script = "$('#%s').click()" % element.get_attribute("id")
+        world.browser.execute_script(script)
 
     elem = get_element_from_text(world.browser, tag_name="a", text=menuname)
     elem.click()
@@ -781,7 +782,6 @@ def choose_field(step):
     click_on(lambda : get_element(world.browser, tag_name="img", attrs={'title': 'Update'}, wait=True))
     wait_until_no_ajax(world.browser)
     wait_until_not_loading(world.browser)
-    wait_until_not_displayed(world.browser, lambda : get_element(world.browser, tag_name="img", attrs={'title': 'Delete'}, wait=False))
 
 #}%}
 
