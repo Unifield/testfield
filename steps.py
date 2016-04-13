@@ -348,41 +348,7 @@ def fill_field(step, fieldname, content):
 
     # Most of the fields use IDs, however, some of them are included in a table with strange fields.
     #  We have to look for both
-    my_input = None
-
-    while not my_input:
-        labels = get_elements_from_text(world.browser, tag_name="label", text=fieldname, wait=False)
-
-        # we have a label!
-        if labels:
-            label = labels[0]
-            idattr = label.get_attribute("for")
-            my_input = get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait=True)
-            break
-
-        # do we have a strange table?
-        table_header = get_elements_from_text(world.browser, class_attr='separator horizontal', tag_name="div", text=fieldname, wait=False)
-
-        if not table_header:
-            continue
-
-        # => td
-        table_header = table_header[0]
-
-        table_node = table_header.find_elements_by_xpath("ancestor::tr[1]")
-        if not table_node:
-            continue
-
-        element = table_node[0].find_elements_by_xpath("following-sibling::*[1]")
-        if not element:
-            continue
-
-        # on peut maintenant trouver un input ou un select!
-        for tagname in ["select", "input", "textarea"]:
-            inputnode = element[0].find_elements_by_tag_name(tagname)
-            if inputnode:
-                my_input = inputnode[0]
-                break
+    idattr, my_input = get_input(world.browser, fieldname)
 
     if my_input.tag_name == "select":
         #FIXME: Sometimes it doesn't work... the input is not selected
@@ -462,9 +428,12 @@ def fill_field(step, fieldname):
         for header, cell in values:
             f.write('<ss:Cell>')
 
+            #FIXME: Boolean are not take into account (condition: ('1', 'T', 't', 'True', 'true'))
             celltype = 'String'
             if re.match('\d{4}-\d{2}-\d{2}', cell) is not None:
                 celltype = 'DateTime'
+            elif re.match('\d+', cell) is not None:
+                celltype = 'Number'
 
             localdict = dict(ROW=str(row_number))
 
@@ -483,6 +452,8 @@ def fill_field(step, fieldname):
 
 #}%}
 
+# Active waiting {%{
+
 @step('I click on "([^"]*)" until not available$')
 @output.add_printscreen
 def click_until_not_available(step, button):
@@ -497,6 +468,44 @@ def click_until_not_available(step, button):
                 break
         except (StaleElementReferenceException, ElementNotVisibleException):
             pass
+
+@step('I click on "([^"]*)" until "([^"]*)" in "([^"]*)"$')
+@output.add_printscreen
+def click_until_not_available(step, button, value, fieldname):
+
+    wait_until_not_loading(world.browser, wait=False)
+    while True:
+        try:
+            # what's in the input? Have we just reached the end of the process?
+            _, my_input = get_input(world.browser, fieldname)
+            if value in my_input.get_attribute("value"):
+                return
+
+            elem = get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait=False)
+            if elem:
+                elem[0].click()
+                time.sleep(1)
+            else:
+                break
+        except (StaleElementReferenceException, ElementNotVisibleException):
+            pass
+
+@step('If the window is still open, (.*)$')
+def execute_if_open(step, nextstep):
+    wait_until_not_loading(world.browser, wait=False)
+
+    #FIXME: This code works if only one window is open at the same time (at most)
+    if world.nbframes != 0:
+        world.browser.switch_to_default_content()
+        frames = get_elements(world.browser, tag_name="iframe")
+
+        if not frames:
+            world.nbframes = 0
+        else:
+            world.browser.switch_to_frame(frames[world.nbframes-1])
+            step.given(nextstep)
+
+#}%}
 
 # I click on ... {%{
 # I click on "Search/New/Clear"
@@ -515,11 +524,21 @@ def click_on_button(step, button):
     if world.nbframes != 0:
         wait_until_not_loading(world.browser, wait=False)
 
-        world.browser.switch_to_default_content()
-        world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", wait=True))
 
-        wait_until_not_loading(world.browser, wait=False)
-        wait_until_no_ajax(world.browser)
+        while world.nbframes > 0:
+            try:
+                world.browser.switch_to_default_content()
+                frames = get_elements(world.browser, tag_name="iframe", wait=True)
+                if world.nbframes > len(frames):
+                    raise StaleElementReferenceException
+                world.browser.switch_to_frame(frames[world.nbframes - 1])
+
+                wait_until_not_loading(world.browser, wait=False)
+                wait_until_no_ajax(world.browser)
+                break
+
+            except StaleElementReferenceException as e:
+                world.nbframes -= 1
     else:
         wait_until_not_loading(world.browser, wait=False)
         wait_until_no_ajax(world.browser)
@@ -545,6 +564,8 @@ def click_on_button_and_open(step, button):
 @step('I click on "([^"]*)" and close the window$')
 @output.add_printscreen
 def click_on_button_and_close(step, button):
+
+    world.browser.save_screenshot('and_save_the_window.png')
 
     click_on(lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True))
     world.nbframes -= 1

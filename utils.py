@@ -1,11 +1,54 @@
 
 from selenium.webdriver.support.ui import Select
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.keys import Keys
 import time
 
 TIME_TO_SLEEP = 0
 
 # Get an element {%{
+
+def get_input(browser, fieldname):
+    # Most of the fields use IDs, however, some of them are included in a table with strange fields.
+    #  We have to look for both
+    my_input = None
+
+    while not my_input:
+        labels = get_elements_from_text(browser, tag_name="label", text=fieldname, wait=False)
+
+        # we have a label!
+        if labels:
+            label = labels[0]
+            idattr = label.get_attribute("for")
+            my_input = get_element(browser, id_attr=idattr.replace('/', '\\/'), wait=True)
+            break
+
+        # do we have a strange table?
+        table_header = get_elements_from_text(browser, class_attr='separator horizontal', tag_name="div", text=fieldname, wait=False)
+
+        if not table_header:
+            continue
+
+        # => td
+        table_header = table_header[0]
+
+        table_node = table_header.find_elements_by_xpath("ancestor::tr[1]")
+        if not table_node:
+            continue
+
+        element = table_node[0].find_elements_by_xpath("following-sibling::*[1]")
+        if not element:
+            continue
+
+        # on peut maintenant trouver un input ou un select!
+        for tagname in ["select", "input", "textarea"]:
+            inputnode = element[0].find_elements_by_tag_name(tagname)
+            if inputnode:
+                my_input = inputnode[0]
+                break
+
+    return idattr, my_input
+
 def get_elements(browser, tag_name=None, id_attr=None, class_attr=None, attrs=dict(), wait=False, atleast=0):
   '''
   This method fetch a node among the DOM based on its attributes.
@@ -212,31 +255,37 @@ def wait_until_no_ajax(browser):
     while True:
         time.sleep(TIME_TO_SLEEP)
         # sometimes, openobject doesn't exist in some windows
-        ret = browser.execute_script('''
+        try:
+            ret = browser.execute_script('''
 
-            function check(tab){
-                for(i in tab){
-                    if(tab[i]){
-                        return false;
+                function check(tab){
+                    for(i in tab){
+                        if(tab[i]){
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+
+                if(!check(window.TOT)){
+                    return "BLOCKED IN WINDOW";
+                }
+
+                elements = window.document.getElementsByTagName('iframe');
+
+                for(var i = 0; i < elements.length; i++){
+                    if(!check(elements[i].contentWindow.TOT)){
+                        return "BLOCKED IN INFRAME " + i;
                     }
                 }
-                return true;
-            }
 
-            if(!check(window.TOT)){
-                return "BLOCKED IN WINDOW";
-            }
-
-            elements = window.document.getElementsByTagName('iframe');
-
-            for(var i = 0; i < elements.length; i++){
-                if(!check(elements[i].contentWindow.TOT)){
-                    return "BLOCKED IN INFRAME " + i;
-                }
-            }
-
-            return (typeof openobject == 'undefined') ? 0 : openobject.http.AJAX_COUNT;
-        ''')
+                return (typeof openobject == 'undefined') ? 0 : openobject.http.AJAX_COUNT;
+            ''')
+        except WebDriverException as e:
+            # If the script cannot be run, it means that the context is not available. We should
+            #  stop at that time.
+            print "EXCEPTION!!!!!"
+            return
 
         #return ((typeof openobject == 'undefined') ? 0 : openobject.http.AJAX_COUNT) +
                #(window.TOT == null ? 0 : window.TOT) +
