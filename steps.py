@@ -456,7 +456,8 @@ def fill_field(step, fieldname):
 
 @step('I click on "([^"]*)" until not available$')
 @output.add_printscreen
-def click_until_not_available(step, button):
+def click_until_not_available2(step, button):
+    print "A"
     wait_until_not_loading(world.browser, wait=False)
     while True:
         try:
@@ -471,7 +472,7 @@ def click_until_not_available(step, button):
 
 @step('I click on "([^"]*)" until "([^"]*)" in "([^"]*)"$')
 @output.add_printscreen
-def click_until_not_available(step, button, value, fieldname):
+def click_until_not_available1(step, button, value, fieldname):
 
     wait_until_not_loading(world.browser, wait=False)
     while True:
@@ -490,25 +491,52 @@ def click_until_not_available(step, button, value, fieldname):
         except (StaleElementReferenceException, ElementNotVisibleException):
             pass
 
-@step('If the window is still open, (.*)$')
-def execute_if_open(step, nextstep):
-    wait_until_not_loading(world.browser, wait=False)
-
-    #FIXME: This code works if only one window is open at the same time (at most)
-    if world.nbframes != 0:
-        world.browser.switch_to_default_content()
-        frames = get_elements(world.browser, tag_name="iframe")
-
-        if not frames:
-            world.nbframes = 0
-        else:
-            world.browser.switch_to_frame(frames[world.nbframes-1])
-            step.given(nextstep)
-
-#}%}
-
 # I click on ... {%{
 # I click on "Search/New/Clear"
+
+@step('If a window is open, (.*)K$')
+def if_a_window_is_open(step, nextstep):
+    if world.nbframes > 0:
+        step.given(nextstep)
+
+@step('I click on "([^"]*)" and close the window if necessary$')
+def close_window_if_necessary(step, button):
+
+    # It seems that some action could still be launched when clicking on a button,
+    #  we have to wait on them for completion
+    wait_until_not_loading(world.browser, wait=False)
+
+    # what's the URL of the current frame?
+    world.browser.switch_to_default_content()
+    previous_iframes = get_elements(world.browser, tag_name="iframe")
+    last_frame = previous_iframes[-1]
+    previous_url = last_frame.get_attribute("src")
+    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes-1, wait=True))
+
+    click_on(lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True))
+
+    world.browser.switch_to_default_content()
+    while True:
+        try:
+            current_iframes = get_elements(world.browser, tag_name="iframe")
+
+            if len(current_iframes) != len(previous_iframes):
+                # we close the window => we have to remove the window
+                world.nbframes -= 1
+                world.browser.switch_to_default_content()
+                if world.nbframes != 0:
+                    world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait=True))
+                return
+
+            # if the url is different => we keep the window
+            current_url = current_iframes[-1].get_attribute("src")
+
+            if current_url != previous_url:
+                return
+
+        except (StaleElementReferenceException, ElementNotVisibleException):
+            pass
+
 @step('I click on "([^"]*)"$')
 @output.add_printscreen
 def click_on_button(step, button):
@@ -524,21 +552,11 @@ def click_on_button(step, button):
     if world.nbframes != 0:
         wait_until_not_loading(world.browser, wait=False)
 
+        world.browser.switch_to_default_content()
+        world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", wait=True))
 
-        while world.nbframes > 0:
-            try:
-                world.browser.switch_to_default_content()
-                frames = get_elements(world.browser, tag_name="iframe", wait=True)
-                if world.nbframes > len(frames):
-                    raise StaleElementReferenceException
-                world.browser.switch_to_frame(frames[world.nbframes - 1])
-
-                wait_until_not_loading(world.browser, wait=False)
-                wait_until_no_ajax(world.browser)
-                break
-
-            except StaleElementReferenceException as e:
-                world.nbframes -= 1
+        wait_until_not_loading(world.browser, wait=False)
+        wait_until_no_ajax(world.browser)
     else:
         wait_until_not_loading(world.browser, wait=False)
         wait_until_no_ajax(world.browser)
@@ -564,8 +582,6 @@ def click_on_button_and_open(step, button):
 @step('I click on "([^"]*)" and close the window$')
 @output.add_printscreen
 def click_on_button_and_close(step, button):
-
-    world.browser.save_screenshot('and_save_the_window.png')
 
     click_on(lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True))
     world.nbframes -= 1
@@ -865,53 +881,3 @@ def save_time_results(step, counters, filename):
 
 #}%}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    #menus = menu_to_click_on.split("|")
-
-    #after_pos = 0
-    #menu_node = get_element(world.browser, tag_name="td", id_attr="secondary")
-
-    #while True:
-
-        #for i, menu in enumerate(menus):
-
-            #elements = get_elements(menu_node, tag_name="a")
-            ## We don't know why... but some elements appear to be empty when we start using the menu
-            ##  then, they disapear when we open a menu
-            #elements = filter(lambda x : x.text.strip() != "" and x.text.strip() != "Toggle Menu", elements)
-            #visible_elements = filter(lambda x : x.is_displayed(), elements)
-            #valid_visible_elements = visible_elements[after_pos:]
-
-            #text_in_menus = map(lambda x : x.text, valid_visible_elements)
-
-            #if menu in text_in_menus:
-                #pos = text_in_menus.index(menu)
-
-                #valid_visible_elements[pos].click()
-
-                #print "CLICK ON", pos
-                #print "CLICK ON", pos
-                #print "CLICK ON", pos
-                #print "CLICK ON", pos
-                #print "CLICK ON", pos
-                #print "CLICK ON", pos
