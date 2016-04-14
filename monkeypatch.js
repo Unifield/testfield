@@ -33,7 +33,7 @@ if(!window.MONKEY_PATCHING){
                 console.log("FALSE2");
                 console.log(jQuery(caller).attr("id") + " => -1");
             }
-            console.log("RETURN1?");
+            console.log("RETURN1? " + callback + " " + change_default + " " + $caller[0].__lock_onchange);
             return;
         }
 

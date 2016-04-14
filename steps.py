@@ -457,7 +457,6 @@ def fill_field(step, fieldname):
 @step('I click on "([^"]*)" until not available$')
 @output.add_printscreen
 def click_until_not_available2(step, button):
-    print "A"
     wait_until_not_loading(world.browser, wait=False)
     while True:
         try:
@@ -477,8 +476,12 @@ def click_until_not_available1(step, button, value, fieldname):
     wait_until_not_loading(world.browser, wait=False)
     while True:
         try:
+            world.browser.switch_to_default_content()
+            world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait=True))
+
             # what's in the input? Have we just reached the end of the process?
             _, my_input = get_input(world.browser, fieldname)
+
             if value in my_input.get_attribute("value"):
                 return
 
@@ -488,13 +491,15 @@ def click_until_not_available1(step, button, value, fieldname):
                 time.sleep(1)
             else:
                 break
-        except (StaleElementReferenceException, ElementNotVisibleException):
+        except (AssertionError, StaleElementReferenceException, ElementNotVisibleException):
+            # AssertionError is used if the frame is not the good one (because it was replaced with
+            #  another one)
             pass
 
 # I click on ... {%{
 # I click on "Search/New/Clear"
 
-@step('If a window is open, (.*)K$')
+@step('(.*) if a window is open$')
 def if_a_window_is_open(step, nextstep):
     if world.nbframes > 0:
         step.given(nextstep)
@@ -532,6 +537,7 @@ def close_window_if_necessary(step, button):
             current_url = current_iframes[-1].get_attribute("src")
 
             if current_url != previous_url:
+                world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait=True))
                 return
 
         except (StaleElementReferenceException, ElementNotVisibleException):
