@@ -18,7 +18,7 @@ if __name__ == '__main__':
         return cr.fetchall()
 
     def get_articles(count):
-        return get_sql_query("SELECT default_code AS CODE, name_template AS NAME FROM product_product WHERE batch_management = 'f' AND perishable = 'f'LIMIT %d" % count)
+        return get_sql_query("SELECT default_code AS CODE, name_template AS NAME FROM product_product WHERE batch_management = 'f' AND perishable = 'f' AND active = 't' LIMIT %d" % count)
 
     def inject_variable(line, **variables):
 

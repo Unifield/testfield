@@ -311,7 +311,7 @@ if(!window.MONKEY_PATCHING){
 
             if(jQuery(caller).attr("id")){
                 window.TOT[jQuery(caller).attr("id")] = false;
-                console.log("FALSE6");
+                console.log("FALSE6" + openobject.http.AJAX_COUNT);
                 console.log(jQuery(caller).attr("id") + " => -1");
             }
         }).addErrback(function(xmlHttp){

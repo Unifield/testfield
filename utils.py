@@ -201,13 +201,25 @@ def get_table_row_from_hashes(world, keydict):
     pagers = filter(lambda x : x.is_displayed(), pagers)
     for pager in pagers:
         elem = get_element(pager, class_attr="pager_info", tag_name="span")
-        elem.click()
 
-        element = get_element(pager, tag_name="select", attrs=dict(action="filter"))
-        select = Select(element)
-        select.select_by_visible_text("unlimited")
+        import re
+        m = re.match('^\d+ - (?P<from>\d+) of (?P<to>\d+)$', elem.text.strip())
+        do_it = False
 
-        wait_until_not_loading(world.browser, wait=False)
+        if m is None:
+            do_it = True
+        else:
+            gp = m.groupdict()
+            do_it = gp['from'] != gp['to']
+
+        if do_it:
+            elem.click()
+
+            element = get_element(pager, tag_name="select", attrs=dict(action="filter"))
+            select = Select(element)
+            select.select_by_visible_text("unlimited")
+
+            wait_until_not_loading(world.browser, wait=False)
     
     maintables = get_elements(world.browser, tag_name="table", class_attr="grid")
     maintables = filter(lambda x : x.is_displayed(), maintables)
@@ -240,6 +252,7 @@ def get_table_row_from_hashes(world, keydict):
 
                 value = keydict[column]
                 new_value = convert_input(world, value)
+                print "CHECK COLUMNS", value, column, new_value, td_node.text.strip()
 
                 if td_node.text.strip() != new_value:
                     break
@@ -273,13 +286,23 @@ def wait_until_no_ajax(browser):
 
                 elements = window.document.getElementsByTagName('iframe');
 
+                totcount = (typeof window.openobject == 'undefined') ? 0 : window.openobject.http.AJAX_COUNT;
+
+
                 for(var i = 0; i < elements.length; i++){
                     if(!check(elements[i].contentWindow.TOT)){
                         return "BLOCKED IN INFRAME " + i;
                     }
+
+                    var local_ajaxcount = (typeof elements[i].contentWindow.openobject == 'undefined') ? 0 : elements[i].contentWindow.openobject.http.AJAX_COUNT;
+                    if(local_ajaxcount > 0){
+                        console.log("BLOCKED IN AJAXCOUNT WINDOW")
+                    }
+
+                    totcount += local_ajaxcount;
                 }
 
-                return (typeof openobject == 'undefined') ? 0 : openobject.http.AJAX_COUNT;
+                return totcount;
             ''')
         except WebDriverException as e:
             # If the script cannot be run, it means that the context is not available. We should
@@ -302,7 +325,6 @@ def repeat_until_no_exception(action, exception, *params):
         try:
             return action(*params)
         except exception:
-            raise
             time.sleep(TIME_TO_SLEEP)
 
 def wait_until_element_does_not_exist(browser, get_elem):
@@ -399,25 +421,6 @@ def select_in_field_an_option(browser, fieldelement, content):
     txtinput, _, _ = fieldelement()
 
     action(txtinput, content)
-
-    if confirm:
-
-        # We have to wait until the value is updated in the field
-        if value_before is not None:
-            value_after = value_before
-            while value_after == value_before:
-                #FIXME: What happens if I change a field without changing its value?...
-                txtidinput = get_element(browser, id_attr=idvalue_before.replace('/', '\\/'), wait=True)
-                value_after = txtidinput.get_attribute("value")
-
-                #click_on(lambda : get_element_from_text(browser, tag_name="span", text=content, wait=True))
-        else:
-            #FIXME: What happens if the name already exist in the interface?
-            #click_on(lambda : get_element_from_text(browser, tag_name="span", text=content, wait=True))
-            pass
-
-        # the popup menu should disappear
-        #wait_until_element_does_not_exist(browser, get_element_from_text(browser, tag_name="span", text=content))
 
     # We have to wait until the information is completed
     wait_until_no_ajax(browser)

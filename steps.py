@@ -392,7 +392,9 @@ def fill_field(step, fieldname, content):
         # we have to ensure that the input is selected without any change by a javascript
         while True:
             input_text = convert_input(world, content)
-            my_input.send_keys((100*Keys.BACKSPACE) + input_text + Keys.TAB)
+            my_input.send_keys((100*Keys.BACKSPACE) + input_text)
+
+            world.browser.execute_script("$('#%s').change()" % my_input.get_attribute("id"))
             wait_until_no_ajax(world.browser)
 
             if my_input.get_attribute("value") == input_text:
@@ -513,7 +515,8 @@ def close_window_if_necessary(step, button):
 
     # what's the URL of the current frame?
     world.browser.switch_to_default_content()
-    previous_iframes = get_elements(world.browser, tag_name="iframe")
+    # We have to wait here because we sometimes the new iframe is not visible straight away
+    previous_iframes = get_elements(world.browser, tag_name="iframe", wait=True)
     last_frame = previous_iframes[-1]
     previous_url = last_frame.get_attribute("src")
     world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes-1, wait=True))
@@ -667,8 +670,19 @@ def see_popup(step, message_to_see):
 @step('I fill "([^"]*)" within column "([^"]*)"')
 @output.register_for_printscreen
 def fill_column(step, content, fieldname):
-    gridtable = get_element(world.browser, tag_name="table", class_attr="grid")
-    right_pos = get_column_position_in_table(gridtable, fieldname)
+
+    while True:
+        # A new table is sometimes created
+        try:
+            gridtable = get_element(world.browser, tag_name="table", class_attr="grid")
+            right_pos = get_column_position_in_table(gridtable, fieldname)
+
+            # we have to wait on the table to be editable (or at least one row)
+            if get_element(gridtable, tag_name="tr", class_attr="editors", wait=True):
+                break
+
+        except StaleElementReferenceException as e:
+            pass
 
     if right_pos is None:
         raise Exception("Cannot find column '%s'" % fieldname)
