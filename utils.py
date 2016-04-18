@@ -4,9 +4,27 @@ from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.keys import Keys
 import time
 
-TIME_TO_SLEEP = 0
+TIME_TO_SLEEP = 0.1
 
 # Get an element {%{
+
+def monitor(browser):
+    here = {'val': 0}
+    LIMIT_COUNTER = 30
+    found_message = set([])
+
+    def counter():
+        here['val'] += 1
+        if here['val'] > LIMIT_COUNTER:
+            browser.save_screenshot("waiting_too_long.png")
+
+            for entry in browser.get_log('browser'):
+                key = (entry['timestamp'], entry['message'])
+                if key not in found_message:
+                    print entry
+                found_message.add(key)
+
+    return counter
 
 def get_input(browser, fieldname):
     # Most of the fields use IDs, however, some of them are included in a table with strange fields.
@@ -77,10 +95,16 @@ def get_elements(browser, tag_name=None, id_attr=None, class_attr=None, attrs=di
 
     css_selector += "]"
 
+  nbtries = 0
+
+  tick = monitor(browser)
+
   if not wait:
     elements = browser.find_elements_by_css_selector(css_selector)
   else:
+    tick = monitor(browser)
     while True:
+      tick()
       try:
         elements = browser.find_elements_by_css_selector(css_selector)
         if len(elements) > atleast:
@@ -89,10 +113,15 @@ def get_elements(browser, tag_name=None, id_attr=None, class_attr=None, attrs=di
         #print("Wait 4 '%s'" % css_selector)
         #browser.save_screenshot("get_elements.png")
         time.sleep(TIME_TO_SLEEP)
+
+        tick()
+
       except:
         #print("Wait 4 '%s'" % css_selector)
         #browser.save_screenshot("get_elements.png")
         time.sleep(TIME_TO_SLEEP)
+
+      nbtries += 1
 
   return elements
 
@@ -141,7 +170,10 @@ def get_elements_from_text(browser, tag_name, text, class_attr='', wait=True):
     ret = browser.find_elements_by_xpath(xpath_query)
     return filter(lambda x : x.is_displayed(), ret)
   else:
+    tick = monitor(browser)
     while True:
+      tick()
+
       elems = browser.find_elements_by_xpath(xpath_query)
       only_visible = filter(lambda x : x.is_displayed(), elems)
 
@@ -252,7 +284,6 @@ def get_table_row_from_hashes(world, keydict):
 
                 value = keydict[column]
                 new_value = convert_input(world, value)
-                print "CHECK COLUMNS", value, column, new_value, td_node.text.strip()
 
                 if td_node.text.strip() != new_value:
                     break
@@ -265,7 +296,9 @@ def get_table_row_from_hashes(world, keydict):
 
 # Wait {%{
 def wait_until_no_ajax(browser):
+    tick = monitor(browser)
     while True:
+        tick()
         time.sleep(TIME_TO_SLEEP)
         # sometimes, openobject doesn't exist in some windows
         try:
@@ -332,7 +365,9 @@ def wait_until_element_does_not_exist(browser, get_elem):
   This method tries to click on the elem(ent) until the click doesn't raise en exception.
   '''
 
+  tick = monitor(browser)
   while True:
+    tick()
     try:
       #browser.save_screenshot("wait_until_element_does_not_exist.png")
       if not get_elem() or not get_elem().is_displayed():
@@ -346,7 +381,9 @@ def wait_until_not_displayed(browser, get_elem, accept_failure=False):
   This method tries to click on the elem(ent) until the click doesn't raise en exception.
   '''
 
+  tick = monitor(browser)
   while True:
+    tick()
     try:
       #browser.save_screenshot("wait_until_not_displayed.png")
       elem = get_elem()
@@ -380,7 +417,6 @@ def click_on(elem_fetcher):
   '''
   This method tries to click on the elem(ent) until the click doesn't raise en exception.
   '''
-
   while True:
     try:
       elem = elem_fetcher()
@@ -388,7 +424,7 @@ def click_on(elem_fetcher):
         elem.click()
       return
     except Exception as e:
-      #print(e)
+      print(e)
       pass
     time.sleep(TIME_TO_SLEEP)
 

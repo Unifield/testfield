@@ -249,7 +249,10 @@ def open_tab(step, tab_to_open):
 def open_tab(step, menu_to_click_on):
     menu_node = get_element(world.browser, tag_name="td", id_attr="secondary")
 
+    tick = monitor(world.browser)
     while True:
+        tick()
+
         accordion_node = get_element_from_text(menu_node, tag_name="li", text=menu_to_click_on)
         block_element = accordion_node.find_elements_by_xpath("following-sibling::*[1]")[0]
 
@@ -261,7 +264,9 @@ def open_tab(step, menu_to_click_on):
         accordion_node.click()
 
         # we have to ensure that the element is not hidden (because of animation...)
+        tick2 = monitor(world.browser)
         while True:
+            tick2()
             accordion_node = get_element_from_text(menu_node, tag_name="li", text=menu_to_click_on)
             block_element = accordion_node.find_elements_by_xpath("following-sibling::*[1]")[0]
             height = block_element.size['height']
@@ -279,12 +284,15 @@ def open_menu(menu_to_click_on):
     after_pos = 0
     i = 0
 
+    tick = monitor(world.browser)
     while i < len(menus):
         menu = menus[i]
+        tick()
 
         elements = get_elements(menu_node, tag_name="a")
         # We don't know why... but some elements appear to be empty when we start using the menu
         #  then, they disapear when we open a menu
+
         elements = filter(lambda x : x.text.strip() != "" and x.text.strip() != "Toggle Menu", elements)
         visible_elements = filter(lambda x : x.is_displayed(), elements)
         valid_visible_elements = visible_elements[after_pos:]
@@ -301,7 +309,9 @@ def open_menu(menu_to_click_on):
                 return
 
             # we have to check if it has an impact on number of menus
+            tick2 = monitor(world.browser)
             while True:
+                tick2()
                 elements_after = get_elements(menu_node, tag_name="a")
                 elements_after = filter(lambda x : x.text.strip() != "" and x.text.strip() != "Toggle Menu", elements_after)
                 visible_elements_after = filter(lambda x : x.is_displayed(), elements_after)
@@ -390,11 +400,13 @@ def fill_field(step, fieldname, content):
         select_in_field_an_option(world.browser, lambda : (get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait=True), action_write_in_element, True), content)
     else:
         # we have to ensure that the input is selected without any change by a javascript
+        tick = monitor(world.browser)
         while True:
+            tick()
             input_text = convert_input(world, content)
-            my_input.send_keys((100*Keys.BACKSPACE) + input_text)
+            my_input.send_keys((100*Keys.BACKSPACE) + input_text + Keys.TAB)
 
-            world.browser.execute_script("$('#%s').change()" % my_input.get_attribute("id"))
+            #world.browser.execute_script("$('#%s').change()" % my_input.get_attribute("id"))
             wait_until_no_ajax(world.browser)
 
             if my_input.get_attribute("value") == input_text:
@@ -460,7 +472,9 @@ def fill_field(step, fieldname):
 @output.add_printscreen
 def click_until_not_available2(step, button):
     wait_until_not_loading(world.browser, wait=False)
+    tick = monitor(world.browser)
     while True:
+        tick()
         try:
             elem = get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait=False)
             if elem:
@@ -476,7 +490,9 @@ def click_until_not_available2(step, button):
 def click_until_not_available1(step, button, value, fieldname):
 
     wait_until_not_loading(world.browser, wait=False)
+    tick = monitor(world.browser)
     while True:
+        tick()
         try:
             world.browser.switch_to_default_content()
             world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait=True))
@@ -524,7 +540,9 @@ def close_window_if_necessary(step, button):
     click_on(lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True))
 
     world.browser.switch_to_default_content()
+    tick = monitor(world.browser)
     while True:
+        tick()
         try:
             current_iframes = get_elements(world.browser, tag_name="iframe")
 
@@ -549,10 +567,11 @@ def close_window_if_necessary(step, button):
 @step('I click on "([^"]*)"$')
 @output.add_printscreen
 def click_on_button(step, button):
-
     # It seems that some action could still be launched when clicking on a button,
     #  we have to wait on them for completion
-    wait_until_not_loading(world.browser, wait=False)
+    # But we cannot do that for frames because the "loading" menu item doesn't exist
+    #  at that time.
+    wait_until_not_loading(world.browser, wait=world.nbframes == 0)
 
     elem = get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True)
 
@@ -569,6 +588,7 @@ def click_on_button(step, button):
     else:
         wait_until_not_loading(world.browser, wait=False)
         wait_until_no_ajax(world.browser)
+        #world.browser.save_screenshot('mourge.png')
 
 @step('I click on "([^"]*)" and open the window$')
 @output.add_printscreen
@@ -671,17 +691,22 @@ def see_popup(step, message_to_see):
 @output.register_for_printscreen
 def fill_column(step, content, fieldname):
 
+    tick = monitor(world.browser)
     while True:
+        tick()
         # A new table is sometimes created
         try:
             gridtable = get_element(world.browser, tag_name="table", class_attr="grid")
             right_pos = get_column_position_in_table(gridtable, fieldname)
 
             # we have to wait on the table to be editable (or at least one row)
-            if get_element(gridtable, tag_name="tr", class_attr="editors", wait=True):
+            if get_elements(gridtable, tag_name="tr", class_attr="editors", wait=False):
                 break
 
+            time.sleep(TIME_TO_SLEEP)
+
         except StaleElementReferenceException as e:
+            print e
             pass
 
     if right_pos is None:
@@ -804,7 +829,9 @@ def open_side_panel(step, menuname):
     #FIXME: On Firefox, this click sometimes doesn't work because it click on the window
     #  and not on the small button to open the window...
     element = get_element(world.browser, id_attr="a_main_sidebar", wait=True)
+    tick = monitor(world.browser)
     while 'closed' in element.get_attribute("class"):
+        tick()
         script = "$('#%s').click()" % element.get_attribute("id")
         world.browser.execute_script(script)
 
@@ -836,9 +863,32 @@ def open_side_panel_and_open(step, menuname):
 def choose_field(step):
     wait_until_no_ajax(world.browser)
     wait_until_not_loading(world.browser)
-    click_on(lambda : get_element(world.browser, tag_name="img", attrs={'title': 'Update'}, wait=True))
-    wait_until_no_ajax(world.browser)
-    wait_until_not_loading(world.browser)
+
+    # We have to ensure that the number of rows changes, otherwise, we could continue
+    #  without validating it effectively
+    nbrows_before = len(filter(lambda x : x.get_attribute("record") is not None, get_elements(world.browser, tag_name="tr", class_attr='inline_editors')))
+
+    tick = monitor(world.browser)
+    while True:
+        tick()
+        # We cannot click using Selenium because the button is sometimes outside
+        #  of the window.
+        world.browser.execute_script("$('img[title=Update]').click()")
+        #click_on(lambda : get_element(world.browser, tag_name="img", attrs={'title': 'Update'}, wait=True))
+
+        wait_until_no_ajax(world.browser)
+        wait_until_not_loading(world.browser)
+
+        try:
+            nbrows_after = len(filter(lambda x : x.get_attribute("record") is not None, get_elements(world.browser, tag_name="tr", class_attr='inline_editors')))
+        except StaleElementReferenceException as e:
+            print "StaleElementReferenceException"
+            continue
+
+        time.sleep(TIME_TO_SLEEP)
+
+        if nbrows_before != nbrows_after:
+            break
 
 #}%}
 
@@ -900,4 +950,19 @@ def save_time_results(step, counters, filename):
     f.close()
 
 #}%}
+
+        #for j in ['browser']:
+            #print j
+            #print j
+            #print j
+            #print j
+            #print j
+            #for e in world.browser.get_log(j):
+                #print e
+                #print e
+                #print e
+                #print e
+
+        #if j > 10:
+            #world.browser.save_screenshot('mourge.png')
 
