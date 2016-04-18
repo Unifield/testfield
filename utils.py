@@ -222,9 +222,7 @@ def get_column_position_in_table(maintable, columnname):
 
     return right_pos
 
-def get_table_row_from_hashes(world, keydict):
-    columns = keydict.keys()
-
+def open_all_the_tables(world):
     #TODO: The pager is outside the table we look for above. As a result, we look
     #  for the external table, but that's not very efficient since we have to load
     #  them again afterwards...
@@ -253,6 +251,12 @@ def get_table_row_from_hashes(world, keydict):
 
             wait_until_not_loading(world.browser, wait=False)
     
+
+def get_table_row_from_hashes(world, keydict):
+    columns = keydict.keys()
+
+    open_all_the_tables(world)
+
     maintables = get_elements(world.browser, tag_name="table", class_attr="grid")
     maintables = filter(lambda x : x.is_displayed(), maintables)
 

@@ -735,6 +735,20 @@ def fill_column(step, content, fieldname):
 
     select_in_field_an_option(world.browser, get_text_box, content)
 
+@step('I tick all the lines')
+def click_on_all_line(step):
+
+    wait_until_not_loading(world.browser, wait=False)
+    wait_until_no_ajax(world.browser)
+
+    open_all_the_tables(world)
+
+    for elem in get_elements(world.browser, class_attr='grid-header', tag_name="tr"):
+        get_element(elem, tag_name="input", attrs={'type': 'checkbox'}).click()
+
+    wait_until_not_loading(world.browser, wait=False)
+    wait_until_no_ajax(world.browser)
+
 @step('I click "([^"]*)" on line:')
 @output.register_for_printscreen
 def click_on_line(step, action):
