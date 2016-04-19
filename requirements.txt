@@ -1,0 +1,30 @@
+argparse==1.2.1
+bottle==0.12.9
+cycler==0.10.0
+distribute==0.7.3
+extras==0.0.3
+fixtures==2.0.0
+funcsigs==1.0.0
+fuzzywuzzy==0.10.0
+lettuce==0.2.21
+linecache2==1.0.0
+matplotlib==1.5.1
+mock==2.0.0
+numpy==1.11.0
+ordereddict==1.1
+pbr==1.9.1
+psycopg2==2.6.1
+pyparsing==2.1.1
+python-dateutil==2.5.2
+python-mimeparse==1.5.1
+python-subunit==1.2.0
+pytz==2016.3
+selenium==2.53.1
+six==1.10.0
+sure==1.2.24
+testtools==2.1.0
+traceback2==1.4.0
+unittest2==1.1.0
+wsgiref==0.1.2
+# sudo apt-get install libpng-dev
+# sudo apt-get install libfreetype6-dev
