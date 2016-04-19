@@ -957,26 +957,11 @@ def save_time_results(step, counters, filename):
 
     f = open(results_path, 'a')
     if has_to_add_title:
-        f.write(first_line)
+        f.write(first_line + '\r\n')
 
     line = ';'.join(values)
-    f.write('\r\n' + line)
+    f.write(line + '\r\n')
     f.close()
 
 #}%}
-
-        #for j in ['browser']:
-            #print j
-            #print j
-            #print j
-            #print j
-            #print j
-            #for e in world.browser.get_log(j):
-                #print e
-                #print e
-                #print e
-                #print e
-
-        #if j > 10:
-            #world.browser.save_screenshot('mourge.png')
 

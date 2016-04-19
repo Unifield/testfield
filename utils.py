@@ -154,13 +154,22 @@ def get_elements_from_text(browser, tag_name, text, class_attr='', wait=True):
     tag_name = [tag_name]
   possibilities = []
 
+  #FIXME: It won't work in French...
+  from_translate = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+  to_translate = 'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz'
+
   for my_tag in tag_name:
-    data = dict(class_attr=class_attr, tagname=my_tag, text=text)
+    data = dict(class_attr=class_attr,
+                tagname=my_tag,
+                text=text.lower(),
+                from_translate=from_translate,
+                to_translate=to_translate)
 
     # we need to look for nodes "in the given node" when we select an option
     #  in a select and we don't want to select the other option
-    xpath1_query = ".//%(tagname)s[normalize-space(.)='%(text)s'%(class_attr)s]" % data
-    xpath2_query = ".//%(tagname)s//*[normalize-space(.)='%(text)s'%(class_attr)s]" % data
+
+    xpath1_query = ".//%(tagname)s[translate(normalize-space(.), '%(from_translate)s', '%(to_translate)s') ='%(text)s'%(class_attr)s]" % data
+    xpath2_query = ".//%(tagname)s//*[translate(normalize-space(.), '%(from_translate)s', '%(to_translate)s') ='%(text)s'%(class_attr)s]" % data
     possibilities.append(xpath1_query)
     possibilities.append(xpath2_query)
 

@@ -126,45 +126,49 @@ def run_preprocessor(path):
 
         return ''.join(waiting_lines[0][0] * waiting_lines[0][2])
 
-try:
-    if os.path.isdir(FEATURE_DIR):
-        shutil.rmtree(FEATURE_DIR)
-    os.mkdir(FEATURE_DIR)
+if __name__ == '__main__':
+    try:
+        if os.path.isdir(FEATURE_DIR):
+            shutil.rmtree(FEATURE_DIR)
+        os.mkdir(FEATURE_DIR)
 
-    for dirpath, dirnames, filenames in os.walk(META_FEATURE_DIR):
+        for dirpath, dirnames, filenames in os.walk(META_FEATURE_DIR):
 
-        # do we have to create the directory?
-        relative_path_in_meta = os.path.sep.join(dirpath.split(os.path.sep)[1:])
-        if relative_path_in_meta and not os.path.isdir(relative_path_in_meta):
-            os.mkdir(os.path.join(FEATURE_DIR, relative_path_in_meta))
+            # do we have to create the directory?
+            relative_path_in_meta = os.path.sep.join(dirpath.split(os.path.sep)[1:])
+            if relative_path_in_meta and not os.path.isdir(relative_path_in_meta):
+                os.mkdir(os.path.join(FEATURE_DIR, relative_path_in_meta))
 
-        # Which file ends with the extension we have to convert?
-        for filename in filenames:
-            m = re.match('(?P<filename>.*)\.meta_feature$', filename, re.IGNORECASE)
-            if m:
-                from_path = os.path.join(dirpath, filename)
-                new_file_name = '%s.feature' % m.groupdict()['filename']
+            # Which file ends with the extension we have to convert?
+            for filename in filenames:
+                m = re.match('(?P<filename>.*)\.meta_feature$', filename, re.IGNORECASE)
+                if m:
+                    from_path = os.path.join(dirpath, filename)
+                    new_file_name = '%s.feature' % m.groupdict()['filename']
 
-                to_path = os.path.join(FEATURE_DIR, relative_path_in_meta, new_file_name)
+                    to_path = os.path.join(FEATURE_DIR, relative_path_in_meta, new_file_name)
 
-                try:
-                    print "Converting %s" % new_file_name
+                    try:
+                        print "Converting %s" % new_file_name
 
-                    content = run_preprocessor(from_path)
+                        content = run_preprocessor(from_path)
 
-                    f = open(to_path, 'w')
-                    f.write(to_path)
-                    f.close()
+                        f = open(to_path, 'w')
+                        f.write(content)
+                        f.close()
 
+                    except SyntaxException as e:
+                        sys.stderr.write('FAILURE:%s: %s\n\n' % (filename, e))
 
-                except SyntaxException as e:
-                    sys.stderr.write('FAILURE:%s: %s\n\n' % (filename, e))
+        # we can run lettuce now
+        import subprocess
+        subprocess.call(["lettuce"] + sys.argv[1:])
 
-except shutil.Error as e:
-    sys.stderr.write(e)
-    sys.exit(-1)
-except (OSError, IOError) as e:
-    sys.stderr.write(str(e))
-    sys.exit(-1)
+    except shutil.Error as e:
+        sys.stderr.write(e)
+        sys.exit(-1)
+    except (OSError, IOError) as e:
+        sys.stderr.write(str(e))
+        sys.exit(-1)
 
 
