@@ -98,6 +98,7 @@ def disconnect_to_db(total):
 
 # Log into/out of/restore an instance{%{
 
+#WARNING: Undocumented!
 @step('I go on the homepage')
 @output.register_for_printscreen
 def go_home_page(step):
@@ -607,7 +608,6 @@ def click_on_button_and_open(step, button):
 
     wait_until_no_ajax(world.browser)
 
-#FIXME: What happens if I want to select several lines?
 # I click on "Save & Close"
 @step('I click on "([^"]*)" and close the window$')
 @output.add_printscreen
@@ -648,16 +648,13 @@ def toggle_off(step, button):
 #}%}
 
 # Check messages (error, warning, ...) {%{
+#FIXME: No check here.
 @step('I should see "([^"]*)" in "([^"]*)"')
 def should_see(step, content, fieldname):
     label = get_element_from_text(world.browser, tag_name="label", text=fieldname, wait=True)
     idattr = label.get_attribute("for")
 
     txtinput = get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait=True)
-
-@step('I should see "([^"]*)"')
-def see_message(step, text_to_see):
-    e = get_element_from_text(world.browser, tag_name="th", text=text_to_see, wait=True)
 
 @step('I should see a text status with "([^"]*)"')
 def see_status(step, message_to_see):
@@ -691,6 +688,10 @@ def see_popup(step, message_to_see):
 @step('I fill "([^"]*)" within column "([^"]*)"')
 @output.register_for_printscreen
 def fill_column(step, content, fieldname):
+
+    # we have to open the table directly because we don't know
+    #  if the new row will be available later (hidden by a pager)
+    open_all_the_tables(world)
 
     tick = monitor(world.browser)
     while True:
@@ -823,8 +824,6 @@ def check_line(step):
 
     def try_to_check_line(step):
         for hashes in values:
-            #TODO: Check that we don't find twice the same row...
-            #TODO: Check that all the lines are in the same table...
             if not get_table_row_from_hashes(world, hashes):
                 raise Exception("I don't find: %s" % hashes)
 
@@ -839,8 +838,6 @@ def click_on_search_until(step, action_search):
 
     def try_to_check_line(myhashes):
         for hashes in myhashes:
-            #TODO: Check that we don't find twice the same row...
-            #TODO: Check that all the lines are in the same table...
             if not get_table_row_from_hashes(world, hashes):
                 return False
         return True
@@ -909,6 +906,9 @@ def choose_field(step):
     #  without validating it effectively
     nbrows_before = len(filter(lambda x : x.get_attribute("record") is not None, get_elements(world.browser, tag_name="tr", class_attr='inline_editors')))
 
+
+    records_before = map(lambda x : x.get_attribute("record"), filter(lambda x : x.get_attribute("record") is not None, get_elements(world.browser, tag_name="tr", class_attr='inline_editors')))
+
     tick = monitor(world.browser)
     while True:
         tick()
@@ -922,14 +922,20 @@ def choose_field(step):
 
         try:
             nbrows_after = len(filter(lambda x : x.get_attribute("record") is not None, get_elements(world.browser, tag_name="tr", class_attr='inline_editors')))
+            records_after = map(lambda x : x.get_attribute("record"), filter(lambda x : x.get_attribute("record") is not None, get_elements(world.browser, tag_name="tr", class_attr='inline_editors')))
+
         except StaleElementReferenceException as e:
             print "StaleElementReferenceException"
             continue
 
+        # We have to check if a new ID has just appeard. We cannot just compare the sizes because
+        #  a pager could be used. As a result, the number of rows won't change if we add a new one
+        #  since one of them will become hidden directly.
+        if set(records_after) ^ set(records_before):
+            break
+
         time.sleep(TIME_TO_SLEEP)
 
-        if nbrows_before != nbrows_after:
-            break
 
 #}%}
 
