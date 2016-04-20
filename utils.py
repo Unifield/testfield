@@ -267,6 +267,8 @@ def open_all_the_tables(world):
     
 
 def get_table_row_from_hashes(world, keydict):
+    #TODO: Check that we don't find twice the same row...
+    #TODO: Check that all the lines are in the same table...
     columns = keydict.keys()
 
     open_all_the_tables(world)
