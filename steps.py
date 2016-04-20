@@ -418,7 +418,7 @@ def fill_field(step, fieldname, content):
 @output.register_for_printscreen
 def fill_field(step, fieldname):
     if not step.hashes:
-        raise Exception("Why don't you defined at least one row?")
+        raise Exception("Why don't you define at least one row?")
 
     TEMP_FILENAME = 'tempfile'
 
@@ -824,10 +824,36 @@ def check_line(step):
         for hashes in values:
             #TODO: Check that we don't find twice the same row...
             #TODO: Check that all the lines are in the same table...
-            if get_table_row_from_hashes(world, hashes) is None:
+            if not get_table_row_from_hashes(world, hashes):
                 raise Exception("I don't find: %s" % hashes)
 
     repeat_until_no_exception(try_to_check_line, StaleElementReferenceException, step)
+
+@step('I click "([^"]*)" until I see:')
+@output.add_printscreen
+def click_on_search_until(step, action_search):
+
+    if not step.hashes:
+        raise Exception("Why don't you define at least one row?")
+
+    def try_to_check_line(myhashes):
+        for hashes in myhashes:
+            #TODO: Check that we don't find twice the same row...
+            #TODO: Check that all the lines are in the same table...
+            if not get_table_row_from_hashes(world, hashes):
+                return False
+        return True
+
+    myhashes = map(lambda x : dict(x), step.hashes)
+
+    step.given('I click on "%s"' % action_search)
+
+    tick = monitor(world.browser)
+
+    while not repeat_until_no_exception(try_to_check_line, StaleElementReferenceException, myhashes):
+        step.given('I click on "%s"' % action_search)
+        time.sleep(1)
+        tick()
 
 @step('I click "([^"]*)" in the side panel$')
 @output.add_printscreen
