@@ -25,8 +25,9 @@ RUN_NUMBER_FILE = 'run'
 @before.all
 def connect_to_db():
 
+    #WARNING: we need firefox at least Firefox 43. Otherwise, AJAX call seem to be asynchronous
+    world.browser = webdriver.Firefox() 
     #world.browser = webdriver.PhantomJS()
-    world.browser = webdriver.Firefox()
     #world.browser = webdriver.Chrome()
     world.browser.set_window_size(1600, 1200)
     world.nbframes = 0
