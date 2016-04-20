@@ -886,8 +886,8 @@ def choose_field(step):
     while True:
         tick()
         # We cannot click using Selenium because the button is sometimes outside
-        #  of the window.
-        world.browser.execute_script("$('img[title=Update]').click()")
+        #  of the window. But sometimes we click on "the new update". So we have to choose the first one.
+        world.browser.execute_script("$('img[title=Update]').first().click()")
         #click_on(lambda : get_element(world.browser, tag_name="img", attrs={'title': 'Update'}, wait=True))
 
         wait_until_no_ajax(world.browser)

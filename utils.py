@@ -24,6 +24,11 @@ def monitor(browser):
                     print entry
                 found_message.add(key)
 
+            content = browser.page_source
+            f = open("waiting_too_long.html", 'w')
+            f.write(content.encode('utf-8'))
+            f.close()
+
     return counter
 
 def get_input(browser, fieldname):

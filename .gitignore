@@ -3,6 +3,12 @@
 results/
 instances/
 *.feature
+*.meta_feature
 run
 output/*.png
 output/*.html
+files/*
+*.html
+*.png
+\.DS_Store
+bin/*
