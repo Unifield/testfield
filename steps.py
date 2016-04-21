@@ -116,8 +116,8 @@ def connect_on_database(step, database_name):
     get_element(elem_select, tag_name="option", attrs={'value': database_name}).click()
 
     # fill in the credentials
-    get_element(world.browser, tag_name="input", id_attr="user").send_keys("admin")
-    get_element(world.browser, tag_name="input", id_attr="password").send_keys("admin")
+    get_element(world.browser, tag_name="input", id_attr="user").send_keys(UNIFIELD_ADMIN)
+    get_element(world.browser, tag_name="input", id_attr="password").send_keys(UNIFIELD_PASSWORD)
     # log in
     get_element(world.browser, tag_name="button", attrs={'type': 'submit'}).click()
 
@@ -144,45 +144,6 @@ def run_script(dbname, script):
 
     return ret
 
-@step('I restore environment "([^"]*)"')
-def restore_environment(step, env_name):
-
-    # We have to load the environment
-    environment_dir = os.path.join(ENV_DIR, env_name)
-
-    try:
-        if os.path.isfile(environment_dir):
-            raise Exception("%s is a file, not a directory" % environment_dir)
-        elif not os.path.isdir(environment_dir):
-            raise Exception("%s is not a valid directory" % environment_dir)
-
-        for filename in os.listdir(environment_dir):
-            dbname, _ = os.path.splitext(filename)
-
-            if not dbname:
-                raise Exception("No database name in %s" % dbname)
-
-            dbtokill = run_script("postgres", '''
-                SELECT 'select pg_terminate_backend(' || procpid || ');'
-                FROM pg_stat_activity
-                WHERE datname = '%s'
-            ''' % dbname)
-
-            #FIXME: Need superuser rights... ALTER USER unifield_dev WITH SUPERUSER;
-            names = dbtokill.split('\n')
-            killall = '\n'.join(names[2:-3]).strip()
-
-            if killall:
-                run_script("postgres", killall)
-
-            run_script("postgres", 'DROP DATABASE IF EXISTS "%s"' % dbname)
-            run_script('postgres', 'CREATE DATABASE "%s";' % dbname)
-
-            path_dump = os.path.join(environment_dir, filename)
-            os.system('pg_restore -h %s -U %s --no-acl --no-owner -d %s %s' % (DB_ADDRESS, DB_USERNAME, dbname, path_dump))
-
-    except (OSError, IOError) as e:
-        raise Exception("Unable to access an environment (cause: %s)" % e)
 
 #}%}
 
@@ -206,8 +167,8 @@ def synchronize_instance(step, instance_name):
             # Prepare some values
             server_port = NETRPC_PORT
             server_url = URL_SERVER
-            uid = 'admin'
-            pwd = 'admin'
+            uid = UNIFIELD_ADMIN
+            pwd = UNIFIELD_PASSWORD
             # OpenERP connection
             super(XMLRPCConnection, self).__init__(
                 server=server_url,
