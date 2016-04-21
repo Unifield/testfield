@@ -36,3 +36,4 @@ sure==1.2.24
 testtools==2.1.0
 traceback2==1.4.0
 unittest2==1.1.0
+OERPLib==0.8.3

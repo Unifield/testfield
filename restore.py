@@ -58,7 +58,7 @@ if __name__ == '__main__':
                 raise Exception("No database name in %s" % dbname)
 
             dbtokill = run_script("postgres", '''
-                SELECT 'select pg_terminate_backend(' || procpid || ');'
+                SELECT 'select pg_terminate_backend(' || pid || ');'
                 FROM pg_stat_activity
                 WHERE datname = '%s'
             ''' % dbname)
