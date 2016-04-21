@@ -1,6 +1,6 @@
 *.dump
 *.pyc
-results/
+results/*
 instances/
 *.feature
 *.meta_feature
