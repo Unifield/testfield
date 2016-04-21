@@ -347,7 +347,7 @@ def fill_field(step, fieldname, content):
         my_input.send_keys(content_path)
     elif my_input.tag_name == "input" and my_input.get_attribute("type") == "checkbox":
 
-        if content.lower() not in {"yes", "no"}:
+        if content.lower() not in ["yes", "no"]:
             raise Exception("You cannot defined any value except no and yes for a checkbox")
 
         if content.lower() == "yes":
@@ -910,7 +910,8 @@ def selenium_sleeps(step):
 def save_time_difference(step, counter):
     step.need_printscreen = False
     now = datetime.datetime.now()
-    total_secs = (now - world.last_measure).total_seconds()
+
+    total_secs = timedelta_total_seconds(now - world.last_measure)
     world.durations[counter] = total_secs
 
 @step('I save the time')

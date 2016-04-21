@@ -6,6 +6,9 @@ import time
 
 TIME_TO_SLEEP = 0.1
 
+def timedelta_total_seconds(timedelta):
+    return (timedelta.microseconds + 0.0 + (timedelta.seconds + timedelta.days * 24 * 3600) * 10 ** 6) / 10 ** 6
+
 # Get an element {%{
 
 def monitor(browser):

@@ -1,4 +1,5 @@
 
+from utils import *
 from lettuce import *
 from selenium import webdriver
 import os.path
@@ -38,7 +39,7 @@ def after_scenario(scenario):
     all_ok = all(map(lambda x : x.passed, scenario.steps))
     filter_passed = sum(map(lambda x : 1 if x.passed else 0, scenario.steps))
     percentage_ok = '%.2f' % (float(filter_passed) / len(scenario.steps) * 100.0)
-    time_total = ('%.2f' % (datetime.datetime.now() - world.time_before).total_seconds()) if all_ok else ''
+    time_total = ('%.2f' % timedelta_total_seconds(datetime.datetime.now() - world.time_before)) if all_ok else ''
     index_page = 'index%d.html' % world.idscenario
 
     world.scenarios.append((all_ok, scenario.name, percentage_ok, time_total, index_page))
