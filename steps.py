@@ -689,10 +689,6 @@ def see_popup(step, message_to_see):
 @output.register_for_printscreen
 def fill_column(step, content, fieldname):
 
-    # we have to open the table directly because we don't know
-    #  if the new row will be available later (hidden by a pager)
-    open_all_the_tables(world)
-
     tick = monitor(world.browser)
     while True:
         tick()
@@ -914,7 +910,7 @@ def choose_field(step):
         tick()
         # We cannot click using Selenium because the button is sometimes outside
         #  of the window. But sometimes we click on "the new update". So we have to choose the first one.
-        world.browser.execute_script("$('img[title=Update]').first().click()")
+        world.browser.execute_script("$('img[title=Update]').first().triggerHandler('click')")
         #click_on(lambda : get_element(world.browser, tag_name="img", attrs={'title': 'Update'}, wait=True))
 
         wait_until_no_ajax(world.browser)

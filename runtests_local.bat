@@ -1,0 +1,3 @@
+
+python runtests.py %*
+
