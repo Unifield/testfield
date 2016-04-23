@@ -165,8 +165,8 @@ def synchronize_instance(step, instance_name):
             Constructor
             '''
             # Prepare some values
-            server_port = NETRPC_PORT
-            server_url = URL_SERVER
+            server_port = XMLRPC_PORT
+            server_url = SRV_ADDRESS
             uid = UNIFIELD_ADMIN
             pwd = UNIFIELD_PASSWORD
             # OpenERP connection
@@ -190,6 +190,14 @@ def synchronize_instance(step, instance_name):
         sync_ids = sync_obj.search([])
         sync_obj.sync(sync_ids)
     except RPCError as e:
+        message = str(e)
+
+        #FIXME: This is a dirty hack. We don't want to fail if there is a revision
+        #  available. That's part of a normal scenario. As a result, the code
+        #  shouldn't raise an exception.
+        if 'revision(s) available' in message:
+            return
+
         raise
 #}%}
 
@@ -359,7 +367,7 @@ def fill_field(step, fieldname, content):
 
         #WARNING: the attribute's name is different in PhantomJS and Firefox. Firefox change it into lower case.
         #  That's not the case of PhantomJS (chromium?). We have to take both cases into account.
-    elif my_input.get_attribute("autocomplete").lower() == "off" and '_text' in idattr:
+    elif my_input.get_attribute("autocomplete") and my_input.get_attribute("autocomplete").lower() == "off" and '_text' in idattr:
         select_in_field_an_option(world.browser, lambda : (get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait=True), action_write_in_element, True), content)
     else:
         # we have to ensure that the input is selected without any change by a javascript
@@ -569,7 +577,23 @@ def click_on_button_and_open(step, button):
 
     wait_until_no_ajax(world.browser)
 
+@step('I close the window$')
+@output.add_printscreen
+def close_the_window(step):
+
+    world.browser.switch_to_default_content()
+
+    elem = get_element_from_text(world.browser, tag_name="span", text="close")
+    elem.click()
+
+    world.nbframes -= 1
+    if world.nbframes > 0:
+        world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait=True))
+    else:
+        wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe"))
+
 # I click on "Save & Close"
+
 @step('I click on "([^"]*)" and close the window$')
 @output.add_printscreen
 def click_on_button_and_close(step, button):

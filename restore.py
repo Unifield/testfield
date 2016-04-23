@@ -1,12 +1,26 @@
 
-
 if __name__ == '__main__':
+
+    def get_hardware_id():
+            mac = []
+            if sys.platform == 'win32':
+                for line in os.popen("ipconfig /all"):
+                    if line.lstrip().startswith('Physical Address'):
+                        mac.append(line.split(':')[1].strip().replace('-',':'))
+            else:
+                for line in os.popen("/sbin/ifconfig"):
+                    if line.find('Ether') > -1:
+                        mac.append(line.split()[4])
+            mac.sort()
+            hw_hash = hashlib.md5(''.join(mac)).hexdigest()
+            return hw_hash
 
     import re
     import sys
     import shutil
     import os, os.path
     import tempfile
+    import hashlib
 
     from credentials import *
 
@@ -35,7 +49,7 @@ if __name__ == '__main__':
 
         os.environ['PGPASSWORD'] = DB_PASSWORD
 
-        ret = os.popen('psql -h %s -U %s %s < %s' % (DB_ADDRESS, DB_USERNAME, dbname, scriptfile[1])).read()
+        ret = os.popen('psql -t -h %s -U %s %s < %s' % (DB_ADDRESS, DB_USERNAME, dbname, scriptfile[1])).read()
 
         try:
             os.unlink(scriptfile[1])
@@ -64,7 +78,7 @@ if __name__ == '__main__':
             ''' % dbname)
 
             names = dbtokill.split('\n')
-            killall = '\n'.join(names[2:-3]).strip()
+            killall = '\n'.join(filter(lambda x : x, names)).strip()
 
             if killall:
                 run_script("postgres", killall)
@@ -78,7 +92,14 @@ if __name__ == '__main__':
 
             run_script(dbname, "UPDATE res_users SET password = '%s' WHERE login = '%s'" % (UNIFIELD_PASSWORD, UNIFIELD_ADMIN))
 
-            #FIXME: We have to update the HWID if it's a sync server
+            # if it's a sync server we have to update the hardware ids. Otherwise our instances won't synchronise
+            ret = run_script(dbname, "select 1 from pg_class where relname='sync_server_entity'")
+
+            if filter(lambda x : x, ret.split('\n')):
+                hwid = get_hardware_id()
+                run_script(dbname, "UPDATE sync_server_entity SET hardware_id = '%s'" % hwid)
+            else:
+                run_script(dbname, "UPDATE sync_client_sync_server_connection SET host = 'localhost', protocol = 'netrpc_gzip', port = %d" % NETRPC_PORT)
 
     except (OSError, IOError) as e:
         raise Exception("Unable to access an environment (cause: %s)" % e)

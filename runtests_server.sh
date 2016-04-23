@@ -1,4 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
 
 MYTMPDIR=/tmp
 ENVNAME=P1C1
@@ -8,21 +12,13 @@ WEBDIR=$MYTMPDIR/web
 
 SESSION_NAME=unifield-$$
 
-if [[ $# == 0 ]];
+if [[ $# > 2 ]];
 then
-    SERVERBRANCH=lp:unifield-server
-    WEBBRANCH=lp:unifield-web
-elif [[ $# == 1 ]];
-then
-    SERVERBRANCH=$1
-    WEBBRANCH=lp:unifield-web
-elif [[ $# == 2 ]];
-then
-    SERVERBRANCH=$1
-    WEBBRANCH=$2
-else
     exit 1
 fi
+
+SERVERBRANCH=${1:-lp:unifield-server}
+WEBBRANCH=${2:-lp:unifield-web}
 
 source config.sh
 export PGPASSWORD=$DBPASSWORD
@@ -111,6 +107,7 @@ FIRST_DATABASE=`echo $DATABASES | cut -d " " -f1`
 fetch_source_code;
 python restore.py $ENVNAME
 generate_configuration_file;
+#FIXME: We should do it only if necessary. How can we check that?
 upgrade_server;
 
 if [[ ! $DISPLAY ]];

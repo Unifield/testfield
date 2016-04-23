@@ -38,6 +38,7 @@ def get_input(browser, fieldname):
     # Most of the fields use IDs, however, some of them are included in a table with strange fields.
     #  We have to look for both
     my_input = None
+    idattr = None
 
     while not my_input:
         labels = get_elements_from_text(browser, tag_name="label", text=fieldname, wait=False)
@@ -343,7 +344,7 @@ def wait_until_no_ajax(browser):
                 elements = window.document.getElementsByTagName('iframe');
 
                 totcount = (typeof window.openobject == 'undefined') ? 0 : window.openobject.http.AJAX_COUNT;
-
+                totcount += (typeof $ == 'undefined') ? 0 : $.active;
 
                 for(var i = 0; i < elements.length; i++){
                     if(!check(elements[i].contentWindow.TOT)){
