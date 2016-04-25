@@ -336,6 +336,8 @@ def open_tab(step, tabtoopen):
 @output.register_for_printscreen
 def fill_field(step, fieldname, content):
 
+    content = convert_input(world, content)
+
     # Most of the fields use IDs, however, some of them are included in a table with strange fields.
     #  We have to look for both
     idattr, my_input = get_input(world.browser, fieldname)
@@ -561,7 +563,7 @@ def click_on_button(step, button):
         wait_until_not_loading(world.browser, wait=False)
 
         world.browser.switch_to_default_content()
-        world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", wait=True))
+        world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", wait=True, position=world.nbframes-1))
 
         wait_until_not_loading(world.browser, wait=False)
         wait_until_no_ajax(world.browser)
@@ -796,14 +798,19 @@ def click_on_line(step, action):
                     action_to_click = actions_to_click[0]
                     action_to_click.click()
                     no_by_fingerprint[hash_key_value] += 1
-                    return True
+                    # we have found the line, the action has already been found.
+                    #  everything is great
+                    return
                 else:
                     no_matched_row += 1
 
-            return False
+            # we have to provide an error mesage to explain the options
+            columns = i_hash.keys()
+            options = map(lambda x : x[1], get_options_for_table(world, columns))
+            options_txt =', '.join(map(lambda x : '|'.join(x), options))
+            raise Exception("A line hasn't been found among the following values: %s" % options_txt)
 
-        if not repeat_until_no_exception(try_to_click_on_line, StaleElementReferenceException, step, action):
-            raise Exception("A line hasn't been found")
+        repeat_until_no_exception(try_to_click_on_line, StaleElementReferenceException, step, action)
 
         # we have to execute that outside the function because it cannot raise an exception
         #  (we would do the action twice)

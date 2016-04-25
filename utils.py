@@ -275,12 +275,12 @@ def open_all_the_tables(world):
             select.select_by_visible_text("unlimited")
 
             wait_until_not_loading(world.browser, wait=False)
-    
 
-def get_table_row_from_hashes(world, keydict):
-    #TODO: Check that we don't find twice the same row...
-    #TODO: Check that all the lines are in the same table...
-    columns = keydict.keys()
+def get_options_for_table(world, columns):
+    '''
+    Return all the rows that have been found in one of the table
+     with, at least, the given column in the table.
+    '''
 
     open_all_the_tables(world)
 
@@ -308,20 +308,33 @@ def get_table_row_from_hashes(world, keydict):
 
         # we look for the first line with the right value
         for row_node in lines:
+            values = []
 
             # we have to check all the columns
             for column, position in position_per_column.iteritems():
                 td_node = get_element(row_node, class_attr="grid-cell", tag_name="td", position=position)
 
-                value = keydict[column]
-                new_value = convert_input(world, value)
+                values.append(td_node.text.strip())
 
-                if td_node.text.strip() != new_value:
-                    break
-            else:
-                rows.append(row_node)
+            yield row_node, values
 
-    return rows
+def get_table_row_from_hashes(world, keydict):
+    '''
+    Returns all the rows that contains the columns given in the
+     dictionary's key (keydict) with the right values.
+    '''
+    #TODO: Check that we don't find twice the same row...
+    #TODO: Check that all the lines are in the same table...
+    columns = list(keydict.keys())
+
+    for row_node, values in get_options_for_table(world, columns):
+        everything_match = True
+
+        for column_name, value in zip(columns, values):
+            everything_match = everything_match and convert_input(world, keydict[column_name]) == value
+
+        if everything_match:
+            yield row_node
 
 #}%}
 
