@@ -1,41 +1,47 @@
 
 if(!window.MONKEY_PATCHING){
     window.MONKEY_PATCHING = 1;
+
     window.TOT = {};
-    window.TIMEOUT_COUNT = 0;
     window.TOT2 = {};
-    //console.log("DEBUT")
+
+    window.TIMEOUT_COUNT = 0;
+    window.TIMEOUT_CALLS = {};
 
     realSetTimeout = window.setTimeout;
     realClearTimeout = window.clearTimeout;
 
-    window.TIMEOUT_CALLS = {};
-
     window.setTimeout = function(a,b){
 
-        if(b === 30000)
+        // we don't want to wait for the header to be updated (hidden/visible)
+        //   because it's not part of a process.
+        if(b === 30000 || b === 5000)
             return realSetTimeout(a,b);
 
         window.TIMEOUT_COUNT += 1;
-        var ici = {};
+        var save_id_dict = {};
+
         id = realSetTimeout(function callA(){
             a(b);
-            window.TIMEOUT_COUNT -= 1;
-            window.TIMEOUT_CALLS[ici.e] = false;
-        },b);
-        ici.e = id;
 
-        console.log(ici.e + " => " + b);
-        window.console.trace();
+            if(window.TIMEOUT_CALLS[save_id_dict.id])
+                window.TIMEOUT_COUNT -= 1;
+
+            window.TIMEOUT_CALLS[save_id_dict.id] = false;
+        },b);
+        save_id_dict.id = id;
 
         window.TIMEOUT_CALLS[id] = true;
+
         return id;
     }
     window.clearTimeout = function(b){
-        window.TIMEOUT_COUNT -= 1;
-        console.log("WARRRRRNING!!!!!");
-        console.log(b);
+
+        if(window.TIMEOUT_CALLS[b])
+            window.TIMEOUT_COUNT -= 1;
+
         window.TIMEOUT_CALLS[b] = false;
+
         return realClearTimeout(b);
     }
 
@@ -43,17 +49,12 @@ if(!window.MONKEY_PATCHING){
 
     window.onChange = function(caller){
 
-        //console.log("==================================")
-
         if(jQuery(caller).attr("id")){
-            //console.log(jQuery(caller).attr("id") + " => +1");
-            //console.log("TRUE1");
             window.TOT2[jQuery(caller).attr("id")] = true;
             window.TOT[jQuery(caller).attr("id")] = (window.TOT[jQuery(caller).attr("id")] || 0) + 1;
         }
 
         if (openobject.http.AJAX_COUNT > 0) {
-            //console.log("Call later?");
             if(jQuery(caller).attr("id"))
                 window.TOT[jQuery(caller).attr("id")] = (window.TOT[jQuery(caller).attr("id")] || 0) - 1;
             callLater(1, onChange, caller);
@@ -69,10 +70,7 @@ if(!window.MONKEY_PATCHING){
             if(jQuery(caller).attr("id")){
                 window.TOT2[jQuery(caller).attr("id")] = false;
                 window.TOT[jQuery(caller).attr("id")] = (window.TOT[jQuery(caller).attr("id")] || 0) - 1;
-                //console.log("FALSE2");
-                //console.log(jQuery(caller).attr("id") + " => -1");
             }
-            //console.log("RETURN1? " + callback + " " + change_default + " " + $caller[0].__lock_onchange);
             return;
         }
 
@@ -99,18 +97,12 @@ if(!window.MONKEY_PATCHING){
             elem_id = key;
         }
         if(nbr_elems == 1 && /\/__id$/.test(elem_id)) {
-            //console.log(jQuery(caller).attr("id") + " => -1");
             if(jQuery(caller).attr("id")){
                 window.TOT2[jQuery(caller).attr("id")] = false;
                 window.TOT[jQuery(caller).attr("id")] = (window.TOT[jQuery(caller).attr("id")] || 0) - 1;
-                //console.log("FALSE3");
-                //console.log(jQuery(caller).attr("id") + " => -1");
             }
-            //console.log("RETURN2?");
             return;
         }
-
-        //console.log("CALL");
 
         openobject.http.postJSON(post_url, jQuery.extend({}, form_data, {
             _terp_callback: callback,
@@ -126,8 +118,6 @@ if(!window.MONKEY_PATCHING){
                 if(jQuery(caller).attr("id")){
                     window.TOT2[jQuery(caller).attr("id")] = false;
                     window.TOT[jQuery(caller).attr("id")] = (window.TOT[jQuery(caller).attr("id")] || 0) - 1;
-                    //console.log("FALSE4");
-                    //console.log(jQuery(caller).attr("id") + " => -1");
                 }
 
                 return error_popup(obj)
@@ -265,10 +255,7 @@ if(!window.MONKEY_PATCHING){
                                 if(jQuery(caller).attr("id")){
                                     window.TOT2[jQuery(caller).attr("id")] = false;
                                     window.TOT[jQuery(caller).attr("id")] = (window.TOT[jQuery(caller).attr("id")] || 0) - 1;
-                                    //console.log("FALSE5");
-                                    //console.log(jQuery(caller).attr("id") + " => -1");
                                 }
-                                //console.log(jQuery(caller).attr("id") + " => -1");
                                 return;
                             }
                             fld.value = value[0] || '';
@@ -354,26 +341,12 @@ if(!window.MONKEY_PATCHING){
             if(jQuery(caller).attr("id")){
                 window.TOT2[jQuery(caller).attr("id")] = false;
                 window.TOT[jQuery(caller).attr("id")] = (window.TOT[jQuery(caller).attr("id")] || 0) - 1;
-                //console.log("FALSE6" + openobject.http.AJAX_COUNT);
-                //console.log(jQuery(caller).attr("id") + " => -1");
             }
         }).addErrback(function(xmlHttp){
             window.TOT = {}
             window.TOT2 = {}
         });
 
-        //console.log("FINISH")
     };
-
-
-    //before1 = MochiKit.Visual.blindUp;
-    //MochiKit.Visual.blindUp = function(a,b,c){
-        //$(a).css({display: 'none'});
-    //};
-
-    //before2 = MochiKit.Visual.blindDown;
-    //MochiKit.Visual.blindDown = function(a,b,c){
-        //$(a).css({display: 'block'});
-    //};
 }
 

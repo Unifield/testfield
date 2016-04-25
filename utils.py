@@ -2,9 +2,12 @@
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.keys import Keys
+import datetime
 import time
 
+# The time (in seconds) that we wait when we know that an action has still to be performed
 TIME_TO_SLEEP = 0.1
+# The time that we wait when we now that a change is almost immediate
 TIME_TO_WAIT = 0.0
 
 def timedelta_total_seconds(timedelta):
@@ -24,8 +27,12 @@ def monitor(browser):
 
             for entry in browser.get_log('browser'):
                 key = (entry['timestamp'], entry['message'])
-                #if key not in found_message:
-                    #print entry
+                if key not in found_message:
+                    # we have to add the entry in the file
+                    f = open("waiting_too_long.txt", 'a')
+                    strdate = datetime.datetime.strftime(datetime.datetime.now(), '%Y/%m/%d %H:%M:%S')
+                    f.write(strdate + ": " + str(entry) + '\r\n')
+                    f.close()
                 found_message.add(key)
 
             content = browser.page_source
@@ -125,15 +132,10 @@ def get_elements(browser, tag_name=None, id_attr=None, class_attr=None, attrs=di
         if len(elements) > atleast:
             break
 
-        #print("Wait 4 '%s'" % css_selector)
-        #browser.save_screenshot("get_elements.png")
         time.sleep(TIME_TO_SLEEP)
-
         tick()
 
       except:
-        #print("Wait 4 '%s'" % css_selector)
-        #browser.save_screenshot("get_elements.png")
         time.sleep(TIME_TO_SLEEP)
 
       nbtries += 1
@@ -204,7 +206,6 @@ def get_elements_from_text(browser, tag_name, text, class_attr='', wait=True):
       if only_visible:
         return only_visible
 
-      #print("Wait 4 '%s'" % xpath_query)
       time.sleep(TIME_TO_SLEEP)
 
       #browser.save_screenshot("get_elements_from_text.png")
@@ -385,18 +386,9 @@ def wait_until_no_ajax(browser):
                 return totcount;
             ''')
         except WebDriverException as e:
-            # If the script cannot be run, it means that the context is not available. We should
-            #  stop at that time.
-            #print "EXCEPTION!!!!!"
             raise
 
         if str(ret) != "0":
-            #print "BOUCLE BLOCK", ret
-            #print "BOUCLE BLOCK", ret
-            #print "BOUCLE BLOCK", ret
-            #print "BOUCLE BLOCK", ret
-            #print "BOUCLE BLOCK", ret
-            #print "BOUCLE BLOCK", ret
             continue
 
         return
@@ -439,7 +431,6 @@ def wait_until_not_displayed(browser, get_elem, accept_failure=False):
         return
     except Exception as e:
       if accept_failure:
-        #print "FAILURE ACCEPTED", e
         return
       else:
         print(e)
@@ -450,7 +441,6 @@ def wait_until_not_loading(browser, wait=True):
   try:
     wait_until_not_displayed(browser, lambda : get_element(browser, tag_name="div", id_attr="ajax_loading", wait=wait), accept_failure=not wait)
   except:
-    #print "GRRRRRR"
     return
 #}%}
 
@@ -473,7 +463,6 @@ def click_on(elem_fetcher):
       return
     except Exception as e:
       print(e)
-      pass
     time.sleep(TIME_TO_SLEEP)
 
 def action_write_in_element(txtinput, content):
