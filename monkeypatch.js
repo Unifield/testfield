@@ -2,22 +2,60 @@
 if(!window.MONKEY_PATCHING){
     window.MONKEY_PATCHING = 1;
     window.TOT = {};
-    console.log("DEBUT")
+    window.TIMEOUT_COUNT = 0;
+    window.TOT2 = {};
+    //console.log("DEBUT")
+
+    realSetTimeout = window.setTimeout;
+    realClearTimeout = window.clearTimeout;
+
+    window.TIMEOUT_CALLS = {};
+
+    window.setTimeout = function(a,b){
+
+        if(b === 30000)
+            return realSetTimeout(a,b);
+
+        window.TIMEOUT_COUNT += 1;
+        var ici = {};
+        id = realSetTimeout(function callA(){
+            a(b);
+            window.TIMEOUT_COUNT -= 1;
+            window.TIMEOUT_CALLS[ici.e] = false;
+        },b);
+        ici.e = id;
+
+        console.log(ici.e + " => " + b);
+        window.console.trace();
+
+        window.TIMEOUT_CALLS[id] = true;
+        return id;
+    }
+    window.clearTimeout = function(b){
+        window.TIMEOUT_COUNT -= 1;
+        console.log("WARRRRRNING!!!!!");
+        console.log(b);
+        window.TIMEOUT_CALLS[b] = false;
+        return realClearTimeout(b);
+    }
 
     window.confirm = function(a){return true;}
 
     window.onChange = function(caller){
 
-        console.log("==================================")
+        //console.log("==================================")
 
         if(jQuery(caller).attr("id")){
-            console.log(jQuery(caller).attr("id") + " => +1");
-            console.log("TRUE1");
-            window.TOT[jQuery(caller).attr("id")] = true;
+            //console.log(jQuery(caller).attr("id") + " => +1");
+            //console.log("TRUE1");
+            window.TOT2[jQuery(caller).attr("id")] = true;
+            window.TOT[jQuery(caller).attr("id")] = (window.TOT[jQuery(caller).attr("id")] || 0) + 1;
         }
 
         if (openobject.http.AJAX_COUNT > 0) {
-            console.log("Call later?");
+            //console.log("Call later?");
+            if(jQuery(caller).attr("id"))
+                window.TOT[jQuery(caller).attr("id")] = (window.TOT[jQuery(caller).attr("id")] || 0) - 1;
             callLater(1, onChange, caller);
             return;
         }
@@ -29,11 +67,12 @@ if(!window.MONKEY_PATCHING){
 
         if (!(callback || change_default) || $caller[0].__lock_onchange) {
             if(jQuery(caller).attr("id")){
-                window.TOT[jQuery(caller).attr("id")] = false;
-                console.log("FALSE2");
-                console.log(jQuery(caller).attr("id") + " => -1");
+                window.TOT2[jQuery(caller).attr("id")] = false;
+                window.TOT[jQuery(caller).attr("id")] = (window.TOT[jQuery(caller).attr("id")] || 0) - 1;
+                //console.log("FALSE2");
+                //console.log(jQuery(caller).attr("id") + " => -1");
             }
-            console.log("RETURN1? " + callback + " " + change_default + " " + $caller[0].__lock_onchange);
+            //console.log("RETURN1? " + callback + " " + change_default + " " + $caller[0].__lock_onchange);
             return;
         }
 
@@ -60,17 +99,18 @@ if(!window.MONKEY_PATCHING){
             elem_id = key;
         }
         if(nbr_elems == 1 && /\/__id$/.test(elem_id)) {
-            console.log(jQuery(caller).attr("id") + " => -1");
+            //console.log(jQuery(caller).attr("id") + " => -1");
             if(jQuery(caller).attr("id")){
-                window.TOT[jQuery(caller).attr("id")] = false;
-                console.log("FALSE3");
-                console.log(jQuery(caller).attr("id") + " => -1");
+                window.TOT2[jQuery(caller).attr("id")] = false;
+                window.TOT[jQuery(caller).attr("id")] = (window.TOT[jQuery(caller).attr("id")] || 0) - 1;
+                //console.log("FALSE3");
+                //console.log(jQuery(caller).attr("id") + " => -1");
             }
-            console.log("RETURN2?");
+            //console.log("RETURN2?");
             return;
         }
 
-        console.log("CALL");
+        //console.log("CALL");
 
         openobject.http.postJSON(post_url, jQuery.extend({}, form_data, {
             _terp_callback: callback,
@@ -84,9 +124,10 @@ if(!window.MONKEY_PATCHING){
             if (obj.error) {
 
                 if(jQuery(caller).attr("id")){
-                    window.TOT[jQuery(caller).attr("id")] = false;
-                    console.log("FALSE4");
-                    console.log(jQuery(caller).attr("id") + " => -1");
+                    window.TOT2[jQuery(caller).attr("id")] = false;
+                    window.TOT[jQuery(caller).attr("id")] = (window.TOT[jQuery(caller).attr("id")] || 0) - 1;
+                    //console.log("FALSE4");
+                    //console.log(jQuery(caller).attr("id") + " => -1");
                 }
 
                 return error_popup(obj)
@@ -222,11 +263,12 @@ if(!window.MONKEY_PATCHING){
                                 fld.__lock_onchange = false;
 
                                 if(jQuery(caller).attr("id")){
-                                    window.TOT[jQuery(caller).attr("id")] = false;
-                                    console.log("FALSE5");
-                                    console.log(jQuery(caller).attr("id") + " => -1");
+                                    window.TOT2[jQuery(caller).attr("id")] = false;
+                                    window.TOT[jQuery(caller).attr("id")] = (window.TOT[jQuery(caller).attr("id")] || 0) - 1;
+                                    //console.log("FALSE5");
+                                    //console.log(jQuery(caller).attr("id") + " => -1");
                                 }
-                                console.log(jQuery(caller).attr("id") + " => -1");
+                                //console.log(jQuery(caller).attr("id") + " => -1");
                                 return;
                             }
                             fld.value = value[0] || '';
@@ -310,15 +352,17 @@ if(!window.MONKEY_PATCHING){
             }
 
             if(jQuery(caller).attr("id")){
-                window.TOT[jQuery(caller).attr("id")] = false;
-                console.log("FALSE6" + openobject.http.AJAX_COUNT);
-                console.log(jQuery(caller).attr("id") + " => -1");
+                window.TOT2[jQuery(caller).attr("id")] = false;
+                window.TOT[jQuery(caller).attr("id")] = (window.TOT[jQuery(caller).attr("id")] || 0) - 1;
+                //console.log("FALSE6" + openobject.http.AJAX_COUNT);
+                //console.log(jQuery(caller).attr("id") + " => -1");
             }
         }).addErrback(function(xmlHttp){
             window.TOT = {}
+            window.TOT2 = {}
         });
 
-        console.log("FINISH")
+        //console.log("FINISH")
     };
 
 

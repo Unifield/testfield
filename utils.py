@@ -5,6 +5,7 @@ from selenium.webdriver.common.keys import Keys
 import time
 
 TIME_TO_SLEEP = 0.1
+TIME_TO_WAIT = 0.0
 
 def timedelta_total_seconds(timedelta):
     return (timedelta.microseconds + 0.0 + (timedelta.seconds + timedelta.days * 24 * 3600) * 10 ** 6) / 10 ** 6
@@ -23,8 +24,8 @@ def monitor(browser):
 
             for entry in browser.get_log('browser'):
                 key = (entry['timestamp'], entry['message'])
-                if key not in found_message:
-                    print entry
+                #if key not in found_message:
+                    #print entry
                 found_message.add(key)
 
             content = browser.page_source
@@ -73,6 +74,11 @@ def get_input(browser, fieldname):
             if inputnode:
                 my_input = inputnode[0]
                 break
+
+        inputnodes = get_elements(element[0], tag_name="p", class_attr="raw-text")
+        if inputnodes:
+            my_input = inputnodes[0]
+            break
 
     return idattr, my_input
 
@@ -340,23 +346,40 @@ def wait_until_no_ajax(browser):
                 if(!check(window.TOT)){
                     return "BLOCKED IN WINDOW";
                 }
+                if(!check(window.TOT2)){
+                    return "BLOCKED 2 IN WINDOW";
+                }
 
                 elements = window.document.getElementsByTagName('iframe');
 
                 totcount = (typeof window.openobject == 'undefined') ? 0 : window.openobject.http.AJAX_COUNT;
+                totcount += (typeof window.TIMEOUT_COUNT == 'undefined') ? 0 : window.TIMEOUT_COUNT;
                 totcount += (typeof $ == 'undefined') ? 0 : $.active;
 
                 for(var i = 0; i < elements.length; i++){
                     if(!check(elements[i].contentWindow.TOT)){
                         return "BLOCKED IN INFRAME " + i;
                     }
-
-                    var local_ajaxcount = (typeof elements[i].contentWindow.openobject == 'undefined') ? 0 : elements[i].contentWindow.openobject.http.AJAX_COUNT;
-                    if(local_ajaxcount > 0){
-                        console.log("BLOCKED IN AJAXCOUNT WINDOW")
+                    if(!check(elements[i].contentWindow.TOT2)){
+                        return "BLOCKED IN INFRAME WINDOW " + i;
                     }
 
-                    totcount += local_ajaxcount;
+                    var local_ajaxcount1 = (typeof elements[i].contentWindow.openobject == 'undefined') ? 0 : elements[i].contentWindow.openobject.http.AJAX_COUNT;
+                    if(local_ajaxcount1 > 0){
+                        return "BLOCKED IN AJAXCOUNT WINDOW";
+                    }
+
+                    var local_ajaxcount2 = (typeof elements[i].contentWindow.$ == 'undefined') ? 0 : elements[i].contentWindow.$.active;
+
+                    if(local_ajaxcount2 > 0){
+                        return "VOILAAA";
+                    }
+
+
+                    totcount += (typeof elements[i].contentWindow.TIMEOUT_COUNT == 'undefined') ? 0 : elements[i].contentWindow.TIMEOUT_COUNT;
+
+                    totcount += local_ajaxcount1;
+                    totcount += local_ajaxcount2;
                 }
 
                 return totcount;
@@ -364,14 +387,15 @@ def wait_until_no_ajax(browser):
         except WebDriverException as e:
             # If the script cannot be run, it means that the context is not available. We should
             #  stop at that time.
-            print "EXCEPTION!!!!!"
-            return
-
-        #return ((typeof openobject == 'undefined') ? 0 : openobject.http.AJAX_COUNT) +
-               #(window.TOT == null ? 0 : window.TOT) +
-               #(($("iframe").first().size() == 0 || typeof $("iframe")[0].contentWindow.TOT == 'undefined') ? 0 : $("iframe")[0].contentWindow.TOT)
+            #print "EXCEPTION!!!!!"
+            raise
 
         if str(ret) != "0":
+            #print "BOUCLE BLOCK", ret
+            #print "BOUCLE BLOCK", ret
+            #print "BOUCLE BLOCK", ret
+            #print "BOUCLE BLOCK", ret
+            #print "BOUCLE BLOCK", ret
             #print "BOUCLE BLOCK", ret
             continue
 
@@ -415,7 +439,7 @@ def wait_until_not_displayed(browser, get_elem, accept_failure=False):
         return
     except Exception as e:
       if accept_failure:
-        print "FAILURE ACCEPTED", e
+        #print "FAILURE ACCEPTED", e
         return
       else:
         print(e)

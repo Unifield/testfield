@@ -26,7 +26,13 @@ RUN_NUMBER_FILE = 'run'
 def connect_to_db():
 
     #WARNING: we need firefox at least Firefox 43. Otherwise, AJAX call seem to be asynchronous
-    world.browser = webdriver.Firefox() 
+    from selenium.webdriver.firefox.options import Options
+    from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
+
+    # /Applications/Firefox.app/Contents/MacOS/firefox
+    #world.browser = webdriver.Firefox(firefox_binary=FirefoxBinary('/Users/sblanc/Desktop/msf/testfield/bin/firefox2/main'))
+
+    world.browser = webdriver.Firefox()
     #world.browser = webdriver.PhantomJS()
     #world.browser = webdriver.Chrome()
     world.browser.set_window_size(1600, 1200)
@@ -120,6 +126,9 @@ def connect_on_database(step, database_name):
     get_element(world.browser, tag_name="input", id_attr="password").send_keys(UNIFIELD_PASSWORD)
     # log in
     get_element(world.browser, tag_name="button", attrs={'type': 'submit'}).click()
+
+
+    #world.browser.find_element_by_tag_name('body').send_keys(Keys.COMMAND + Keys.ALT + 's')
 
 @step('I log out')
 @output.register_for_printscreen
@@ -353,7 +362,7 @@ def fill_field(step, fieldname, content):
         if not os.path.isfile(content_path):
             raise Exception("%s is not a file" % content_path)
         my_input.send_keys(content_path)
-    elif my_input.tag_name == "input" and my_input.get_attribute("type") == "checkbox":
+    elif my_input.tag_name == "input" and my_input.get_attribute("type") and my_input.get_attribute("type") == "checkbox":
 
         if content.lower() not in ["yes", "no"]:
             raise Exception("You cannot defined any value except no and yes for a checkbox")
@@ -450,7 +459,7 @@ def click_until_not_available2(step, button):
             elem = get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait=False)
             if elem:
                 elem[0].click()
-                time.sleep(0.2)
+                time.sleep(TIME_TO_WAIT)
             else:
                 break
         except (StaleElementReferenceException, ElementNotVisibleException):
@@ -477,7 +486,7 @@ def click_until_not_available1(step, button, value, fieldname):
             elem = get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait=False)
             if elem:
                 elem[0].click()
-                time.sleep(1)
+                time.sleep(TIME_TO_WAIT)
             else:
                 break
         except (AssertionError, StaleElementReferenceException, ElementNotVisibleException):
@@ -636,10 +645,23 @@ def toggle_off(step, button):
 #FIXME: No check here.
 @step('I should see "([^"]*)" in "([^"]*)"')
 def should_see(step, content, fieldname):
-    label = get_element_from_text(world.browser, tag_name="label", text=fieldname, wait=True)
-    idattr = label.get_attribute("for")
 
-    txtinput = get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait=True)
+    idattr, txtinput = get_input(world.browser, fieldname)
+
+    # if it's a text that is not changable
+    if txtinput.tag_name in ['span', 'textarea']:
+        assert txtinput.text == content
+    elif txtinput.tag_name in ['input']:
+        if txtinput.get_attribute("type") and txtinput.get_attribute("type") == "checkbox":
+            assert content.lower() in ['yes', 'no']
+            assert txtinput.is_selected() == (content.lower() == 'yes')
+        else:
+            assert txtinput.get_attribute("value") == content
+    elif txtinput.tag_name in ['select']:
+        select = Select(txtinput)
+        assert content in map(lambda x : x.text, select.all_selected_options)
+    else:
+        assert False
 
 @step('I should see a text status with "([^"]*)"')
 def see_status(step, message_to_see):
@@ -831,7 +853,7 @@ def click_on_search_until(step, action_search):
 
     while not repeat_until_no_exception(try_to_check_line, StaleElementReferenceException, myhashes):
         step.given('I click on "%s"' % action_search)
-        time.sleep(1)
+        time.sleep(TIME_TO_WAIT)
         tick()
 
 @step('I click "([^"]*)" in the side panel$')
