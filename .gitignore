@@ -12,3 +12,4 @@ files/*
 *.png
 \.DS_Store
 bin/*
+*.bat

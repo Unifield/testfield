@@ -4,8 +4,10 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-MYTMPDIR=/tmp
-ENVNAME=P1C1
+source config.sh
+
+MYTMPDIR=$SERVER_TMPDIR
+ENVNAME=$SERVER_ENVNAME
 
 SERVERDIR=$MYTMPDIR/server
 WEBDIR=$MYTMPDIR/web
@@ -20,7 +22,6 @@ fi
 SERVERBRANCH=${1:-lp:unifield-server}
 WEBBRANCH=${2:-lp:unifield-web}
 
-source config.sh
 export PGPASSWORD=$DBPASSWORD
 
 PARAM_UNIFIELD_SERVER="--db_user=$DBUSERNAME --db_password=$DBPASSWORD --db_host=$DBADDR -c $MYTMPDIR/openerp-server.conf"
@@ -51,6 +52,7 @@ admin_bkpdb_passwd = $BASE64_UNIFIELDPASSWORD
 admin_dropdb_passwd = $BASE64_UNIFIELDPASSWORD
 admin_restoredb_passwd = $BASE64_UNIFIELDPASSWORD
 db_password = $BASE64_DBPASSWORD
+db_port = $DBPORT
 xmlrpcs_port = $XMLRPCS_PORT
 xmlrpc_port = $XMLRPC_PORT
 root_path = $SERVERDIR/bin
@@ -107,6 +109,7 @@ FIRST_DATABASE=`echo $DATABASES | cut -d " " -f1`
 fetch_source_code;
 python restore.py $ENVNAME
 generate_configuration_file;
+
 #FIXME: We should do it only if necessary. How can we check that?
 upgrade_server;
 

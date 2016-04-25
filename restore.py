@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
         os.environ['PGPASSWORD'] = DB_PASSWORD
 
-        ret = os.popen('psql -t -h %s -U %s %s < %s' % (DB_ADDRESS, DB_USERNAME, dbname, scriptfile[1])).read()
+        ret = os.popen('psql -p %d -t -h %s -U %s %s < %s' % (DB_PORT, DB_ADDRESS, DB_USERNAME, dbname, scriptfile[1])).read()
 
         try:
             os.unlink(scriptfile[1])
@@ -72,7 +72,7 @@ if __name__ == '__main__':
                 raise Exception("No database name in %s" % dbname)
 
             dbtokill = run_script("postgres", '''
-                SELECT 'select pg_terminate_backend(' || pid || ');'
+                SELECT 'select pg_terminate_backend(' || procpid || ');'
                 FROM pg_stat_activity
                 WHERE datname = '%s'
             ''' % dbname)
@@ -85,10 +85,10 @@ if __name__ == '__main__':
 
             run_script("postgres", 'DROP DATABASE IF EXISTS "%s"' % dbname)
             run_script('postgres', 'CREATE DATABASE "%s";' % dbname)
-            run_script(dbname, 'DROP EXTENSION IF EXISTS plpgsql;')
+            #run_script(dbname, 'DROP EXTENSION IF EXISTS plpgsql;')
 
             path_dump = os.path.join(environment_dir, filename)
-            os.system('pg_restore -h %s -U %s --no-acl --no-owner -d %s %s' % (DB_ADDRESS, DB_USERNAME, dbname, path_dump))
+            os.system('pg_restore -p %d -h %s -U %s --no-acl --no-owner -d %s %s' % (DB_PORT, DB_ADDRESS, DB_USERNAME, dbname, path_dump))
 
             run_script(dbname, "UPDATE res_users SET password = '%s' WHERE login = '%s'" % (UNIFIELD_PASSWORD, UNIFIELD_ADMIN))
 

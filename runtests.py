@@ -10,15 +10,24 @@ import os, os.path
 FEATURE_DIR = "features"
 META_FEATURE_DIR = "meta_features"
 
+class SyntaxException(Exception):
+    pass
+
+class DBException(Exception):
+    pass
+
 def get_sql_query(sqlquery):
     import psycopg2
     import psycopg2.extras
 
-    conn = psycopg2.connect("host=%s dbname=%s user=%s password=%s" % (DB_ADDRESS, DB_NAME, DB_USERNAME, DB_PASSWORD))
-    cr = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        conn = psycopg2.connect("host=%s dbname=%s user=%s port=%d, password=%s" % (DB_ADDRESS, DB_NAME, DB_USERNAME, DB_PORT, DB_PASSWORD))
+        cr = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    cr.execute(sqlquery)
-    return cr.fetchall()
+        cr.execute(sqlquery)
+        return cr.fetchall()
+    except psycopg2.OperationalError as e:
+        raise DBException("Cannot reach the database (reason: %s)" % e)
 
 def get_articles(count):
     return get_sql_query('''
@@ -32,9 +41,6 @@ def inject_variable(line, **variables):
     for key, value in variables.iteritems():
         line = line.replace('{{%s}}' % key, value)
     return line
-
-class SyntaxException(Exception):
-    pass
 
 def run_preprocessor(path):
     with open(path, 'r') as f:
@@ -158,7 +164,9 @@ if __name__ == '__main__':
                         f.close()
 
                     except SyntaxException as e:
-                        sys.stderr.write('FAILURE:%s: %s\n\n' % (filename, e))
+                        sys.stderr.write('SYNTAX FAILURE:%s: %s\n\n' % (filename, e))
+                    except DBException as e:
+                        sys.stderr.write('DB FAILURE:%s: %s\n\n' % (filename, e))
 
         # we can run lettuce now
         import subprocess
