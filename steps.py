@@ -670,9 +670,7 @@ def see_status(step, message_to_see):
     wait_until_not_loading(world.browser)
     elem = get_element(world.browser, tag_name="tr", id_attr="actions_row", wait=True)
 
-    parts = message_to_see.split('*')
-    parts = map(lambda x : re.escape(x), parts)
-    reg = '.*' + '.*'.join(parts) + '.*'
+    reg = create_regex(message_to_see)
 
     if re.match(reg, elem.text, flags=re.DOTALL) is None:
         print "No '%s' found in '%s'" % (message_to_see, elem.text)
@@ -683,9 +681,7 @@ def see_popup(step, message_to_see):
     wait_until_not_loading(world.browser)
     elem = get_element(world.browser, tag_name="td", class_attr="error_message_content", wait=True)
 
-    parts = message_to_see.split('*')
-    parts = map(lambda x : re.escape(x), parts)
-    reg = '.*' + '.*'.join(parts) + '.*'
+    reg = create_regex(message_to_see)
 
     if re.match(reg, elem.text, flags=re.DOTALL) is None:
         print "No '%s' found in '%s'" % (message_to_see, elem.text)
@@ -846,7 +842,6 @@ def search_until_I(step, action_search, see):
     def try_to_check_line(myhashes):
         for hashes in myhashes:
             ret = list(get_table_row_from_hashes(world, hashes))
-
             if not ret:
                 return False
         return True

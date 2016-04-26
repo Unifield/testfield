@@ -4,6 +4,7 @@ from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.keys import Keys
 import datetime
 import time
+import re
 
 # The time (in seconds) that we wait when we know that an action has still to be performed
 TIME_TO_SLEEP = 0.1
@@ -12,6 +13,16 @@ TIME_TO_WAIT = 0.0
 
 def timedelta_total_seconds(timedelta):
     return (timedelta.microseconds + 0.0 + (timedelta.seconds + timedelta.days * 24 * 3600) * 10 ** 6) / 10 ** 6
+
+def create_regex(raw_text):
+    if '*' in raw_text:
+        parts = raw_text.split('*')
+        parts = map(lambda x : re.escape(x), parts)
+        reg = '.*' + '.*'.join(parts) + '.*'
+
+        return reg
+    else:
+        return '^%s$' % re.escape(raw_text)
 
 # Get an element {%{
 
@@ -333,7 +344,11 @@ def get_table_row_from_hashes(world, keydict):
         everything_match = True
 
         for column_name, value in zip(columns, values):
-            everything_match = everything_match and convert_input(world, keydict[column_name]) == value
+            valreg = convert_input(world, keydict[column_name])
+            reg = create_regex(valreg)
+
+            if re.match(reg, value, flags=re.DOTALL) is None:
+                everything_match = False
 
         if everything_match:
             yield row_node

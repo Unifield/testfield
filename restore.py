@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     import sys
 
-    if len(sys.argv) != 2:
+    if len(sys.argv) == 1:
         sys.stdout.write("Env name: ")
         env_name = raw_input()
     else:
@@ -35,6 +35,8 @@ if __name__ == '__main__':
 
     # We have to load the environment
     environment_dir = os.path.join(ENV_DIR, env_name)
+
+    dumps_to_restore = sys.argv[1:] if len(sys.argv) > 1 else []
 
     if not os.path.isdir(environment_dir):
         print "Invalid environment"
@@ -49,8 +51,8 @@ if __name__ == '__main__':
 
         os.environ['PGPASSWORD'] = DB_PASSWORD
 
-        pipe_stderr = "2> /dev/null" if sys.platform == 'win32' else ""
-        ret = os.popen('psql -p %d -t -h %s -U %s %s < %s %s' % (DB_PORT, DB_ADDRESS, DB_USERNAME, dbname, scriptfile[1], pipe_stderr)).read()
+        pipe_stderr = "2> /dev/null" if sys.platform != 'win32' else ""
+        ret = os.popen('psql -p %d -t -h %s -U %s %s %s < %s' % (DB_PORT, DB_ADDRESS, DB_USERNAME, dbname, pipe_stderr, scriptfile[1])).read()
 
         try:
             os.unlink(scriptfile[1])
@@ -67,6 +69,10 @@ if __name__ == '__main__':
 
         for filename in os.listdir(environment_dir):
             dbname, _ = os.path.splitext(filename)
+
+            if dbname not in dumps_to_restore and dumps_to_restore:
+                continue
+
             print "Restoring", dbname
 
             if not dbname:
