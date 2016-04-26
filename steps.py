@@ -834,21 +834,20 @@ def check_line(step):
 
     def try_to_check_line(step):
         for hashes in values:
-            if not get_table_row_from_hashes(world, hashes):
+            if not list(get_table_row_from_hashes(world, hashes)):
                 raise Exception("I don't find: %s" % hashes)
 
     repeat_until_no_exception(try_to_check_line, StaleElementReferenceException, step)
 
-@step('I click "([^"]*)" until I see:')
-@output.add_printscreen
-def click_on_search_until(step, action_search):
-
+def search_until_I(step, action_search, see):
     if not step.hashes:
         raise Exception("Why don't you define at least one row?")
 
     def try_to_check_line(myhashes):
         for hashes in myhashes:
-            if not get_table_row_from_hashes(world, hashes):
+            ret = list(get_table_row_from_hashes(world, hashes))
+
+            if not ret:
                 return False
         return True
 
@@ -858,10 +857,20 @@ def click_on_search_until(step, action_search):
 
     tick = monitor(world.browser)
 
-    while not repeat_until_no_exception(try_to_check_line, StaleElementReferenceException, myhashes):
+    while repeat_until_no_exception(try_to_check_line, StaleElementReferenceException, myhashes) != see:
         step.given('I click on "%s"' % action_search)
         time.sleep(TIME_TO_WAIT)
         tick()
+
+@step('I click "([^"]*)" until I don\'t see:')
+@output.add_printscreen
+def click_on_search_until_not(step, action_search):
+    search_until_I(step, action_search, False)
+
+@step('I click "([^"]*)" until I see:')
+@output.add_printscreen
+def click_on_search_until(step, action_search):
+    search_until_I(step, action_search, True)
 
 @step('I click "([^"]*)" in the side panel$')
 @output.add_printscreen

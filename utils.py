@@ -316,7 +316,9 @@ def get_options_for_table(world, columns):
 
                 values.append(td_node.text.strip())
 
-            yield row_node, values
+            # we want to skip the empty lines
+            if any(map(lambda x : bool(x), values)):
+                yield row_node, values
 
 def get_table_row_from_hashes(world, keydict):
     '''

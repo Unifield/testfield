@@ -9,7 +9,7 @@ To install it:
 * sudo apt-get install build-essential
 * pip install -r requirements.txt
 
-You may also intall matplotlib in order to ba able to generate graphs based on the time that some actions take (see the steps related to time evaluation).
+You may also install matplotlib in order to be able to generate graphs based on the time that some actions take (see the steps related to time evaluation).
 * pip install matplotlib
 
 
