@@ -49,7 +49,8 @@ if __name__ == '__main__':
 
         os.environ['PGPASSWORD'] = DB_PASSWORD
 
-        ret = os.popen('psql -p %d -t -h %s -U %s %s < %s' % (DB_PORT, DB_ADDRESS, DB_USERNAME, dbname, scriptfile[1])).read()
+        pipe_stderr = "2> /dev/null" if sys.platform == 'win32' else ""
+        ret = os.popen('psql -p %d -t -h %s -U %s %s < %s %s' % (DB_PORT, DB_ADDRESS, DB_USERNAME, dbname, scriptfile[1], pipe_stderr)).read()
 
         try:
             os.unlink(scriptfile[1])
@@ -71,17 +72,19 @@ if __name__ == '__main__':
             if not dbname:
                 raise Exception("No database name in %s" % dbname)
 
-            dbtokill = run_script("postgres", '''
-                SELECT 'select pg_terminate_backend(' || procpid || ');'
-                FROM pg_stat_activity
-                WHERE datname = '%s'
-            ''' % dbname)
 
-            names = dbtokill.split('\n')
-            killall = '\n'.join(filter(lambda x : x, names)).strip()
+            for procname in ['pid', 'procpid']:
+                dbtokill = run_script("postgres", '''
+                    SELECT 'select pg_terminate_backend(' || %s || ');'
+                    FROM pg_stat_activity
+                    WHERE datname = '%s'
+                ''' % (procname, dbname))
 
-            if killall:
-                run_script("postgres", killall)
+                names = dbtokill.split('\n')
+                killall = '\n'.join(filter(lambda x : x, names)).strip()
+
+                if killall:
+                    run_script("postgres", killall)
 
             run_script("postgres", 'DROP DATABASE IF EXISTS "%s"' % dbname)
             run_script('postgres', 'CREATE DATABASE "%s";' % dbname)
