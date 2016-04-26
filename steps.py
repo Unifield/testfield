@@ -127,7 +127,7 @@ def connect_on_database(step, database_name):
     # log in
     get_element(world.browser, tag_name="button", attrs={'type': 'submit'}).click()
 
-
+    ## if you want to open the debugger before starting any action in UniField
     #world.browser.find_element_by_tag_name('body').send_keys(Keys.COMMAND + Keys.ALT + 's')
 
 @step('I log out')
@@ -183,7 +183,7 @@ def synchronize_instance(step, instance_name):
                 server=server_url,
                 protocol='xmlrpc',
                 port=server_port,
-                timeout=3600
+                timeout=TIME_BEFORE_FAILURE_SYNCHRONIZATION
             )
             # Login initialization
             self.login(uid, pwd, db_name)
@@ -217,10 +217,10 @@ def open_tab(step, tab_to_open):
     tab_to_open_normalized = to_camel_case(tab_to_open)
 
     elem_menu = get_element(world.browser, tag_name="div", id_attr="applications_menu")
-    button_label = get_element_from_text(elem_menu, tag_name="span", text=tab_to_open_normalized)
+    button_label = get_element_from_text(elem_menu, tag_name="span", text=tab_to_open_normalized, wait="Cannot find tab menu %s" % elem_menu)
     button_label.click()
 
-    wait_until_not_loading(world.browser, wait=True)
+    wait_until_not_loading(world.browser, wait="We cannot open fully tab menu '%s'. Something is still processing" % tab_to_open)
 
     #world.browser.save_screenshot("after_tab.png")
 
@@ -233,7 +233,7 @@ def open_tab(step, menu_to_click_on):
     while True:
         tick()
 
-        accordion_node = get_element_from_text(menu_node, tag_name="li", text=menu_to_click_on)
+        accordion_node = get_element_from_text(menu_node, tag_name="li", text=menu_to_click_on, wait="Cannot find accordion %s" % menu_node)
         block_element = accordion_node.find_elements_by_xpath("following-sibling::*[1]")[0]
 
         height = block_element.size['height']
@@ -247,7 +247,7 @@ def open_tab(step, menu_to_click_on):
         tick2 = monitor(world.browser)
         while True:
             tick2()
-            accordion_node = get_element_from_text(menu_node, tag_name="li", text=menu_to_click_on)
+            accordion_node = get_element_from_text(menu_node, tag_name="li", text=menu_to_click_on, wait="Cannot find accordion %s" % menu_node)
             block_element = accordion_node.find_elements_by_xpath("following-sibling::*[1]")[0]
             height = block_element.size['height']
 
@@ -312,7 +312,7 @@ def open_tab(step, menu_to_click_on):
 
     # we have to open the window!
     world.browser.switch_to_default_content()
-    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait=True))
+    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait="Cannot find the window"))
     world.nbframes += 1
     wait_until_no_ajax(world.browser)
 
@@ -326,7 +326,7 @@ def open_tab(step, menu_to_click_on):
 @step('I open tab "([^"]*)"')
 @output.add_printscreen
 def open_tab(step, tabtoopen):
-    click_on(lambda : get_element_from_text(world.browser, class_attr="tab-title", tag_name="span", text=tabtoopen, wait=True))
+    click_on(lambda : get_element_from_text(world.browser, class_attr="tab-title", tag_name="span", text=tabtoopen, wait="Cannot find tab %s" % tabtoopen))
     wait_until_not_loading(world.browser)
 
 #}%}
@@ -352,7 +352,7 @@ def fill_field(step, fieldname, content):
 
         ## This version is quite the same as the previous one except that it sometimes fail
         #   to select the right text (but the selected value is correct)
-        option = get_element_from_text(my_input, tag_name="option", text=content, wait=False)
+        option = get_element_from_text(my_input, tag_name="option", text=content)
         option.click()
     elif my_input.tag_name == "input" and my_input.get_attribute("type") == "file":
         #FIXME: This clear is not allowed in ChromeWebDriver. It is allowed in Firefox.
@@ -379,7 +379,9 @@ def fill_field(step, fieldname, content):
         #WARNING: the attribute's name is different in PhantomJS and Firefox. Firefox change it into lower case.
         #  That's not the case of PhantomJS (chromium?). We have to take both cases into account.
     elif my_input.get_attribute("autocomplete") and my_input.get_attribute("autocomplete").lower() == "off" and '_text' in idattr:
-        select_in_field_an_option(world.browser, lambda : (get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait=True), action_write_in_element, True), content)
+        select_in_field_an_option(world.browser,
+                                  lambda : (get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait="Cannot find the field for this input"), action_write_in_element, True),
+                                  content)
     else:
         # we have to ensure that the input is selected without any change by a javascript
         tick = monitor(world.browser)
@@ -458,7 +460,7 @@ def click_until_not_available2(step, button):
     while True:
         tick()
         try:
-            elem = get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait=False)
+            elem = get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait="Cannot find button %s" % button)
             if elem:
                 elem[0].click()
                 time.sleep(TIME_TO_WAIT)
@@ -477,7 +479,8 @@ def click_until_not_available1(step, button, value, fieldname):
         tick()
         try:
             world.browser.switch_to_default_content()
-            world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait=True))
+            if world.nbframes != 0:
+                world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait="Cannot find the frame in which the button is located"))
 
             # what's in the input? Have we just reached the end of the process?
             _, my_input = get_input(world.browser, fieldname)
@@ -485,7 +488,9 @@ def click_until_not_available1(step, button, value, fieldname):
             if value in my_input.get_attribute("value"):
                 return
 
-            elem = get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait=False)
+            message = "I cannot find button %s to refresh the page" % button
+
+            elem = get_elements_from_text(world.browser, tag_name=["button", "a"], text=button)
             if elem:
                 elem[0].click()
                 time.sleep(TIME_TO_WAIT)
@@ -517,9 +522,9 @@ def close_window_if_necessary(step, button):
     previous_iframes = get_elements(world.browser, tag_name="iframe", wait=True)
     last_frame = previous_iframes[-1]
     previous_url = last_frame.get_attribute("src")
-    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes-1, wait=True))
+    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes-1, wait="Cannot find the window in which the button is located"))
 
-    click_on(lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True))
+    click_on(lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait="Cannot find button %s" % button))
 
     world.browser.switch_to_default_content()
     tick = monitor(world.browser)
@@ -533,13 +538,15 @@ def close_window_if_necessary(step, button):
                 world.nbframes -= 1
                 world.browser.switch_to_default_content()
                 if world.nbframes != 0:
-                    world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait=True))
+                    world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait="Cannot find the previous frame"))
                 return
 
             # if the url is different => we keep the window
             current_url = current_iframes[-1].get_attribute("src")
 
             if current_url != previous_url:
+                #TODO ADD AN EXPLANATION HERE ET BELOW
+                #TODO GIVE AN EXPLANATION FOR ALL THE CALLS TO monitor(...) and the others (except get_element(s) and get_elemnets_from_text...)
                 world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait=True))
                 return
 
@@ -555,9 +562,7 @@ def click_on_button(step, button):
     #  at that time.
     wait_until_not_loading(world.browser, wait=world.nbframes == 0)
 
-    elem = get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True)
-
-    click_on(lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True))
+    click_on(lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait="Cannot find button %s" % button))
 
     if world.nbframes != 0:
         wait_until_not_loading(world.browser, wait=False)
@@ -578,7 +583,7 @@ def click_on_button_and_open(step, button):
 
     wait_until_not_loading(world.browser, wait=False)
     wait_until_no_ajax(world.browser)
-    click_on(lambda : get_element_from_text(world.browser, tag_name="button", text=button, wait=True))
+    click_on(lambda : get_element_from_text(world.browser, tag_name="button", text=button, wait="Cannot find button %s" % button))
 
     wait_until_not_loading(world.browser, wait=False)
 
@@ -594,7 +599,7 @@ def close_the_window(step):
 
     world.browser.switch_to_default_content()
 
-    elem = get_element_from_text(world.browser, tag_name="span", text="close")
+    elem = get_element_from_text(world.browser, tag_name="span", text="close", wait="Cannot find the button to close the window")
     elem.click()
 
     world.nbframes -= 1
@@ -609,7 +614,7 @@ def close_the_window(step):
 @output.add_printscreen
 def click_on_button_and_close(step, button):
 
-    click_on(lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True))
+    click_on(lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait="Cannot find the button to close the window"))
     world.nbframes -= 1
 
     world.browser.switch_to_default_content()
@@ -624,7 +629,7 @@ def click_on_button_and_close(step, button):
 def click_if_toggle_button_is(btn_name, from_class_name):
     btn_name = to_camel_case(btn_name)
 
-    btn_toggle = get_element_from_text(world.browser, tag_name="button", text=btn_name, class_attr=from_class_name, wait=True)
+    btn_toggle = get_element_from_text(world.browser, tag_name="button", text=btn_name, class_attr=from_class_name, wait="Cannot find toggle button %s" % btn_name)
     elem = btn_toggle.get_attribute("class")
     classes = map(lambda x : x.strip(), elem.split())
 
@@ -703,6 +708,7 @@ def fill_column(step, content, fieldname):
         tick()
         # A new table is sometimes created
         try:
+            #FIXME we should look for this value in all the tables
             gridtable = get_element(world.browser, tag_name="table", class_attr="grid")
             right_pos = get_column_position_in_table(gridtable, fieldname)
 
@@ -883,7 +889,7 @@ def open_side_panel(step, menuname):
         script = "$('#%s').click()" % element.get_attribute("id")
         world.browser.execute_script(script)
 
-    elem = get_element_from_text(world.browser, tag_name="a", text=menuname)
+    elem = get_element_from_text(world.browser, tag_name="a", text=menuname, wait="Cannot find menu '%s' in the side panel" % menuname)
     elem.click()
 
     wait_until_not_loading(world.browser)
