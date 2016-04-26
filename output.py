@@ -41,8 +41,10 @@ def after_scenario(scenario):
     percentage_ok = '%.2f' % (float(filter_passed) / len(scenario.steps) * 100.0)
     time_total = ('%.2f' % timedelta_total_seconds(datetime.datetime.now() - world.time_before)) if all_ok else ''
     index_page = 'index%d.html' % world.idscenario
+    tags = scenario.tags
 
-    world.scenarios.append((all_ok, scenario.name, percentage_ok, time_total, index_page))
+    #TODO: Get rid of this awful tupe to use a class
+    world.scenarios.append((all_ok, scenario.name, percentage_ok, time_total, index_page, tags))
     world.idscenario += 1
 
 @after.all

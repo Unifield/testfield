@@ -20,6 +20,7 @@
             <table class="table">
                 <thead>
                     <tr>
+                        <th>Type</th>
                         <th>Result</th>
                         <th>Test</th>
                         <th>Percentage</th>
@@ -28,8 +29,26 @@
                 </thead>
 
                 <tbody>
-                    %for valid, scenario, ratio, time, url in scenarios:
+                    %for valid, scenario, ratio, time, url, tags in scenarios:
                         <tr>
+
+                            <td>
+                                <div class="text-center">
+
+                                    %if 'it' in tags:
+                                        <span class="label label-primary">IT</span>
+                                    %end
+
+                                    %if 'supply' in tags:
+                                        <span class="label label-success">Supply</span>
+                                    %end
+
+                                    %if 'finance' in tags:
+                                        <span class="label label-warning">Finance</span>
+                                    %end
+
+                                </div>
+                            </td>
 
                             <td>
                                 <div class="text-center">
