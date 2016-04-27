@@ -55,13 +55,15 @@ def after_scenario(scenario):
     if not all_ok:
         try:
             world.nofailure += 1
-            world.browser.save_screenshot('failure_%d_%d.png' % (world.idrun, world.nofailure))
+            world.browser.save_screenshot('failure_%d_%d.png' % (world.FEATURE_VARIABLE['ID'], world.nofailure))
         except:
             pass
 
 @before.each_scenario
 def update_idrun(scenario):
-    world.idrun = 1
+    world.FEATURE_VARIABLE = {}
+
+    world.FEATURE_VARIABLE['ID'] = 1
 
     if os.path.isdir(RUN_NUMBER_FILE):
         raise Error("A configuration file is a directory")
@@ -71,15 +73,17 @@ def update_idrun(scenario):
         try:
             s_idrun = f.read(512)
             last_idrun = int(s_idrun)
-            world.idrun = last_idrun + 1
+            world.FEATURE_VARIABLE['ID'] = last_idrun + 1
         except ValueError:
             raise Error("Invalid value in %s" % RUN_NUMBER_FILE)
 
         f.close()
 
     new_f = open(RUN_NUMBER_FILE, 'w')
-    new_f.write(str(world.idrun))
+    new_f.write(str(world.FEATURE_VARIABLE['ID']))
     new_f.close()
+
+    world.FEATURE_VARIABLE['ID'] = str(world.FEATURE_VARIABLE['ID'])
 
 @after.each_scenario
 def remove_iframes(scenario):
@@ -446,6 +450,18 @@ def fill_field(step, fieldname):
 
     step.given('I fill "%s" with "%s"' % (fieldname, TEMP_FILENAME))
 
+@step('I store "([^"]*)" in "([^"]*)"$')
+def remember_step(step, fieldname, variable):
+
+    values = get_values(fieldname)
+
+    if not values:
+        raise Exception("No field named %s" % fieldname)
+    elif len(values) > 1:
+        raise Exception("Several values found for %s (values: %s)" % (fieldname, ', '.join(values)))
+
+    world.FEATURE_VARIABLE[variable.strip()] = values[0].strip()
+
 #}%}
 
 # Active waiting {%{
@@ -644,26 +660,32 @@ def toggle_off(step, button):
 #}%}
 
 # Check messages (error, warning, ...) {%{
-#FIXME: No check here.
-@step('I should see "([^"]*)" in "([^"]*)"')
-def should_see(step, content, fieldname):
 
-    idattr, txtinput = get_input(world.browser, fieldname)
+def get_values(fieldname):
+    _, txtinput = get_input(world.browser, fieldname)
 
     # if it's a text that is not changable
     if txtinput.tag_name in ['span', 'textarea']:
-        assert txtinput.text == content
+        return [txtinput.text]
     elif txtinput.tag_name in ['input']:
         if txtinput.get_attribute("type") and txtinput.get_attribute("type") == "checkbox":
-            assert content.lower() in ['yes', 'no']
-            assert txtinput.is_selected() == (content.lower() == 'yes')
+            return ["yes" if txtinput.is_selected() else "no"]
         else:
-            assert txtinput.get_attribute("value") == content
+            return [txtinput.get_attribute("value")]
     elif txtinput.tag_name in ['select']:
         select = Select(txtinput)
-        assert content in map(lambda x : x.text, select.all_selected_options)
+        return map(lambda x : x.text, select.all_selected_options)
     else:
-        assert False
+        return []
+
+@step('I should see "([^"]*)" in "([^"]*)"')
+def should_see(step, content, fieldname):
+    content = convert_input(world, content)
+
+    content_found = get_values(fieldname)
+
+    if content not in content_found:
+        raise Exception("%s doesn't contain %s (values found: %s)" % (fieldname, content, ', '.join(content_found)))
 
 @step('I should see a text status with "([^"]*)"')
 def see_status(step, message_to_see):

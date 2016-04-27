@@ -475,9 +475,10 @@ def wait_until_not_loading(browser, wait=True):
 #}%}
 
 def convert_input(world, content, localdict=dict()):
-    content = content.replace("{{ID}}", str(world.idrun))
-    for key, value in localdict.iteritems():
-        content = content.replace("{{%s}}" % key, value)
+
+    for key, value in list(localdict.iteritems()) + list(world.FEATURE_VARIABLE.iteritems()):
+        content = content.replace(u"{{%s}}" % key, value)
+
     return content
 
 # Do something {%{
