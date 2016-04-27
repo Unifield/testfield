@@ -716,6 +716,8 @@ def see_popup(step, message_to_see):
 @output.register_for_printscreen
 def fill_column(step, content, fieldname):
 
+    content = convert_input(world, content)
+
     tick = monitor(world.browser)
     while True:
         tick()
