@@ -12,7 +12,7 @@ TIME_TO_SLEEP = 0.0
 TIME_TO_WAIT = 0.1
 
 # the maximum amount of time that we expect to wait on one element
-TIME_BEFORE_FAILURE = 10.0
+TIME_BEFORE_FAILURE = 10000.0
 TIME_BEFORE_FAILURE_SYNCHRONIZATION = 200.0
 
 def timedelta_total_seconds(timedelta):

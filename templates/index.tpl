@@ -22,7 +22,7 @@
                     <tr>
                         <th>Type</th>
                         <th>Result</th>
-                        <th>Test</th>
+                        <th>Scenario</th>
                         <th>Percentage</th>
                         <th>Time [s]</th>
                     </tr>

@@ -11,15 +11,36 @@ TEMPLATES_DIR = 'templates/'
 
 from bottle import SimpleTemplate
 
+class MyPrintscreen(object):
+
+    def __init__(self, filename, steps):
+        self.__steps = steps
+        self.__filename = filename
+
+    def getSteps(self):
+        return self.__steps
+
+    def getFilename(self):
+        return self.__filename
+
+    steps = property(getSteps)
+    filename = property(getFilename)
+
 def register_for_printscreen(function):
     def newfonc(step, *arg1, **arg2):
-        world.steps_to_display.append(step.original_sentence)
+        #FIXME: We will keep the wildcar here. We should try to
+        #  figue out a way to "turn it" into something real
+        #  when we match it against a web element.
+        real_sentence = convert_input(world, step.original_sentence)
+        world.steps_to_display.append((real_sentence, step))
         return function(step, *arg1, **arg2)
     return newfonc
 
 def add_printscreen(function):
     def newfonc(step, *arg1, **arg2):
-        world.steps_to_display.append(step.original_sentence)
+        #FIXME: same as above
+        real_sentence = convert_input(world, step.original_sentence)
+        world.steps_to_display.append((real_sentence, step))
         write_printscreen(world)
         return function(step, *arg1, **arg2)
     return newfonc
@@ -29,23 +50,6 @@ def create_website():
     world.scenarios = []
     world.idscenario = 0
     world.idprintscreen = 1
-
-@before.each_scenario
-def save_time(scenario):
-    world.time_before = datetime.datetime.now()
-
-@after.each_scenario
-def after_scenario(scenario):
-    all_ok = all(map(lambda x : x.passed, scenario.steps))
-    filter_passed = sum(map(lambda x : 1 if x.passed else 0, scenario.steps))
-    percentage_ok = '%.2f' % (float(filter_passed) / len(scenario.steps) * 100.0)
-    time_total = ('%.2f' % timedelta_total_seconds(datetime.datetime.now() - world.time_before)) if all_ok else ''
-    index_page = 'index%d.html' % world.idscenario
-    tags = scenario.tags
-
-    #TODO: Get rid of this awful tupe to use a class
-    world.scenarios.append((all_ok, scenario.name, percentage_ok, time_total, index_page, tags))
-    world.idscenario += 1
 
 @after.all
 def create_real_repport(total):
@@ -67,25 +71,41 @@ def create_real_repport(total):
 
 @before.each_scenario
 def create_scenario_report(scenario):
-
-    path_html = os.path.join(OUTPUT_DIR, "index%d.html" % world.idscenario)
-    world.output_file = open(path_html, 'w')
-
-    world.output_file.write("<html><head><title>%s</title></head><body>" % scenario.name)
-    world.output_file.write("<h1>%s</h1>" % scenario.name)
-
-    world.output_file.write("<table>")
-
+    world.time_before = datetime.datetime.now()
+    world.printscreen_to_display = []
     world.steps_to_display = []
 
 @after.each_scenario
 def write_end_of_section(scenario):
+
+    all_ok = all(map(lambda x : x.passed, scenario.steps))
+    filter_passed = sum(map(lambda x : 1 if x.passed else 0, scenario.steps))
+    percentage_ok = '%.2f' % (float(filter_passed) / len(scenario.steps) * 100.0)
+    time_total = ('%.2f' % timedelta_total_seconds(datetime.datetime.now() - world.time_before)) if all_ok else ''
+    index_page = 'index%d.html' % world.idscenario
+    tags = scenario.tags
+
+    world.scenarios.append((all_ok, scenario.name, percentage_ok, time_total, index_page, tags))
+
     # we have to add the steps that haven't been included
     write_printscreen(world)
 
-    world.output_file.write("</table>")
-    world.output_file.write("</body></html>")
-    world.output_file.close()
+    path_html = os.path.join(OUTPUT_DIR, index_page)
+
+    path_tpl = os.path.join(TEMPLATES_DIR, "scenario.tpl")
+    with open(path_tpl, 'r') as f:
+        content = ''.join(f.xreadlines())
+
+        mytemplate = SimpleTemplate(content)
+        content = mytemplate.render(printscreens=world.printscreen_to_display, scenario=scenario)
+
+        output_index_file = open(path_html, 'w')
+        output_index_file.write(content)
+        output_index_file.close()
+
+    world.printscreen_to_display = []
+
+    world.idscenario += 1
 
 def write_printscreen(world):
 
@@ -95,26 +115,10 @@ def write_printscreen(world):
     steps_to_print = world.steps_to_display
     world.steps_to_display = []
 
-    # can we merge this step with the previous one?
-    world.output_file.write("<tr>")
-    world.output_file.write("<td>")
-
-    world.output_file.write("<ul>")
-    for sentence in steps_to_print:
-        world.output_file.write("<li>")
-        world.output_file.write(sentence)
-        world.output_file.write("</li>")
-    world.output_file.write("</ul>")
-
-    world.output_file.write("</td>")
-
     filename = "printscreen%d.png" % world.idprintscreen
-
     path_printscreen = os.path.join(OUTPUT_DIR, filename)
     world.browser.save_screenshot(path_printscreen)
-
     world.idprintscreen += 1
 
-    world.output_file.write("<td><img src='%s' width='400px'></td>" % filename)
-    world.output_file.write("</tr>")
+    world.printscreen_to_display.append(MyPrintscreen(filename, steps_to_print))
 

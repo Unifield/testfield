@@ -161,7 +161,7 @@ def connect_on_database(step, database_name):
     #world.browser.find_element_by_tag_name('body').send_keys(Keys.COMMAND + Keys.ALT + 's')
 
 @step('I log out')
-@output.register_for_printscreen
+@output.add_printscreen
 def log_out(step):
     world.browser.get("%(url)s/openerp/logout" % dict(url=HTTP_URL_SERVER))
 
@@ -189,6 +189,7 @@ def run_script(dbname, script):
 # Synchronisation {%{
 
 @step('I synchronize "([^"]*)"')
+@output.register_for_printscreen
 def synchronize_instance(step, instance_name):
 
     from oerplib.oerp import OERP
@@ -500,7 +501,6 @@ def remember_step(step, fieldname, variable):
 # Active waiting {%{
 
 @step('I click on "([^"]*)" until not available$')
-@output.add_printscreen
 def click_until_not_available2(step, button):
     wait_until_not_loading(world.browser, wait="Loading before clicking takes too much time")
     tick = monitor(world.browser)
@@ -517,7 +517,6 @@ def click_until_not_available2(step, button):
             pass
 
 @step('I click on "([^"]*)" until "([^"]*)" in "([^"]*)"$')
-@output.add_printscreen
 def click_until_not_available1(step, button, value, fieldname):
 
     wait_until_not_loading(world.browser, wait="Loading before clicking takes too much time")
@@ -555,6 +554,7 @@ def if_a_window_is_open(step, nextstep):
         step.given(nextstep)
 
 @step('I click on "([^"]*)" and close the window if necessary$')
+@output.add_printscreen
 def close_window_if_necessary(step, button):
 
     # It seems that some action could still be launched when clicking on a button,
@@ -610,7 +610,7 @@ def click_on_button(step, button):
     #wait_until_not_loading(world.browser, wait=world.nbframes == 0)
     # But we have to take into account that such element doesn't exist when a user is not logged in...
     wait_until_not_loading(world.browser, wait=False)
-    click_on(lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait="Cannot find button %s" % button)[-1])
+    click_on(lambda : get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait="Cannot find button %s" % button)[-1])
 
     if world.nbframes != 0:
         wait_until_not_loading(world.browser, wait=False)
@@ -716,6 +716,7 @@ def get_values(fieldname):
         return []
 
 @step('I should see "([^"]*)" in "([^"]*)"')
+@output.register_for_printscreen
 def should_see(step, content, fieldname):
     content = convert_input(world, content)
 
@@ -725,6 +726,7 @@ def should_see(step, content, fieldname):
         raise Exception("%s doesn't contain %s (values found: %s)" % (fieldname, content, ', '.join(content_found)))
 
 @step('I should see a text status with "([^"]*)"')
+@output.register_for_printscreen
 def see_status(step, message_to_see):
     wait_until_not_loading(world.browser)
     elem = get_element(world.browser, tag_name="tr", id_attr="actions_row", wait=True)
@@ -736,6 +738,7 @@ def see_status(step, message_to_see):
         raise Exception("No '%s' found in '%s'" % (message_to_see, elem.text))
 
 @step('I should see a popup with "([^"]*)"$')
+@output.register_for_printscreen
 def see_popup(step, message_to_see):
     wait_until_not_loading(world.browser)
     elem = get_element(world.browser, tag_name="td", class_attr="error_message_content", wait=True)
@@ -801,6 +804,7 @@ def fill_column(step, content, fieldname):
     select_in_field_an_option(world.browser, get_text_box, content)
 
 @step('I tick all the lines')
+@output.register_for_printscreen
 def click_on_all_line(step):
 
     wait_until_not_loading(world.browser, wait=False)
@@ -814,10 +818,7 @@ def click_on_all_line(step):
     wait_until_not_loading(world.browser, wait=False)
     wait_until_no_ajax(world.browser)
 
-@step('I click "([^"]*)" on line:')
-@output.register_for_printscreen
 def click_on_line(step, action):
-
     # This is important because we cannot click on lines belonging
     #  to the previous window
     wait_until_not_loading(world.browser, wait=False)
@@ -879,6 +880,17 @@ def click_on_line(step, action):
         wait_until_not_loading(world.browser, wait=False)
         wait_until_no_ajax(world.browser)
 
+
+@step('I click on line:')
+@output.add_printscreen
+def click_on_line_line(step):
+    click_on_line(step, "line")
+
+@step('I click "([^"]*)" on line:')
+@output.register_for_printscreen
+def click_on_line_tooltip(step, action):
+    click_on_line(step, action)
+
 @step('I click "([^"]*)" on line and open the window:')
 @output.add_printscreen
 def click_on_line_and_open_the_window(step, action):
@@ -891,6 +903,7 @@ def click_on_line_and_open_the_window(step, action):
     wait_until_no_ajax(world.browser)
 
 @step('I should see in the main table the following data:')
+@output.register_for_printscreen
 def check_line(step):
     values = step.hashes
 
@@ -926,12 +939,10 @@ def search_until_I(step, action_search, see):
         tick()
 
 @step('I click "([^"]*)" until I don\'t see:')
-@output.add_printscreen
 def click_on_search_until_not(step, action_search):
     search_until_I(step, action_search, False)
 
 @step('I click "([^"]*)" until I see:')
-@output.add_printscreen
 def click_on_search_until(step, action_search):
     search_until_I(step, action_search, True)
 
@@ -1020,6 +1031,11 @@ def choose_field(step):
 def selenium_sleeps(step):
     import time
     time.sleep(30)
+
+@step('I wait')
+@output.register_for_printscreen
+def selenium_sleeps(step):
+    raw_input()
 
 #}%}
 
