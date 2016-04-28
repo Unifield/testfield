@@ -36,7 +36,7 @@ if __name__ == '__main__':
     # We have to load the environment
     environment_dir = os.path.join(ENV_DIR, env_name)
 
-    dumps_to_restore = sys.argv[1:] if len(sys.argv) > 1 else []
+    dumps_to_restore = sys.argv[2:] if len(sys.argv) > 2 else []
 
     if not os.path.isdir(environment_dir):
         print "Invalid environment"
