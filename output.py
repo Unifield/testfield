@@ -26,13 +26,32 @@ class MyPrintscreen(object):
     steps = property(getSteps)
     filename = property(getFilename)
 
+def convert_hashes_to_table(hashes):
+    import itertools
+    str_hashes = list(set(itertools.chain(*map(lambda x : x.keys(), hashes))))
+    str_hashes.sort()
+
+    if not ''.join(str_hashes).strip():
+        return None
+
+    table = [str_hashes]
+
+    for line in hashes:
+        row = []
+        for header in str_hashes:
+            row.append(line.get(header, ""))
+        table.append(row)
+
+    return table
+
 def register_for_printscreen(function):
     def newfonc(step, *arg1, **arg2):
         #FIXME: We will keep the wildcar here. We should try to
         #  figue out a way to "turn it" into something real
         #  when we match it against a web element.
         real_sentence = convert_input(world, step.original_sentence)
-        world.steps_to_display.append((real_sentence, step))
+        real_table = convert_hashes_to_table(step.hashes)
+        world.steps_to_display.append((real_sentence, real_table, step))
         return function(step, *arg1, **arg2)
     return newfonc
 
@@ -40,7 +59,8 @@ def add_printscreen(function):
     def newfonc(step, *arg1, **arg2):
         #FIXME: same as above
         real_sentence = convert_input(world, step.original_sentence)
-        world.steps_to_display.append((real_sentence, step))
+        real_table = convert_hashes_to_table(step.hashes)
+        world.steps_to_display.append((real_sentence, real_table, step))
         write_printscreen(world)
         return function(step, *arg1, **arg2)
     return newfonc
