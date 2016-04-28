@@ -1,7 +1,6 @@
 *.dump
 *.pyc
 results/*
-instances/
 *.feature
 *.meta_feature
 run

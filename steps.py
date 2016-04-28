@@ -45,6 +45,12 @@ def connect_to_db():
 
     world.nofailure = 0
 
+    # we have to save the files in the directory to remove those who are not
+    #  useful anymore
+    base_dir = os.path.dirname(__file__)
+    file_path = os.path.join(base_dir, FILE_DIR)
+    world.files_before = os.listdir(file_path)
+
 @before.each_step
 def apply_monkey_patch(step):
     world.browser.execute_script(world.monkeypatch)
@@ -85,6 +91,11 @@ def update_idrun(scenario):
 
     world.FEATURE_VARIABLE['ID'] = str(world.FEATURE_VARIABLE['ID'])
 
+    base_dir = os.path.dirname(__file__)
+    file_path = os.path.join(base_dir, FILE_DIR)
+    # we have to set the path for the files
+    world.FEATURE_VARIABLE['FILES'] = file_path
+
 @after.each_scenario
 def remove_iframes(scenario):
     world.nbframes = 0
@@ -104,6 +115,21 @@ def disconnect_to_db(total):
     f.close()
 
     world.browser.close()
+
+    base_dir = os.path.dirname(__file__)
+    file_path = os.path.join(base_dir, FILE_DIR)
+    files_after = os.listdir(file_path)
+
+    files_to_delete = set(files_after) - set(world.files_before)
+
+    for filename in files_to_delete:
+        file_to_delte = os.path.join(file_path, filename)
+
+        try:
+            os.unlink(file_to_delte)
+        except OSError as e:
+            pass
+
 #}%}
 
 # Log into/out of/restore an instance{%{
@@ -577,11 +603,12 @@ def click_on_button(step, button):
     #  we have to wait on them for completion
     # But we cannot do that for frames because the "loading" menu item doesn't exist
     #  at that time.
-    wait_until_not_loading(world.browser, wait=world.nbframes == 0)
+    #wait_until_not_loading(world.browser, wait=world.nbframes == 0)
+    # But we have to take into account that such element doesn't exist when a user is not logged in...
+    wait_until_not_loading(world.browser, wait=False)
 
-    elem = get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True)
-
-    click_on(lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True))
+    # we have to take the last element because the "Drop" button at the home page appears twice....
+    click_on(lambda : get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait=True)[-1])
 
     if world.nbframes != 0:
         wait_until_not_loading(world.browser, wait=False)
@@ -607,15 +634,8 @@ def click_on_button_and_open(step, button):
     wait_until_not_loading(world.browser, wait=False)
 
     world.browser.switch_to_default_content()
-    the_frame = get_element(world.browser, position=world.nbframes, tag_name="iframe", wait=True)
-    the_url_to_reload = the_frame.get_attribute("src")
-
-    world.browser.switch_to_frame(the_frame)
+    world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes, tag_name="iframe", wait=True))
     world.nbframes += 1
-
-    # PhantomJS sometimes fail to open a window, we have to reload it manually
-    script = "window.location = '%s'" % the_url_to_reload
-    world.browser.execute_script(script)
 
     wait_until_no_ajax(world.browser)
 
@@ -823,6 +843,10 @@ def click_on_line(step, action):
                 # we have to look for this action the user wants to execute
                 if action == 'checkbox':
                     actions_to_click = get_elements(row_node, tag_name="input", attrs=dict(type='checkbox'))
+                elif action == 'option':
+                    actions_to_click = get_elements(row_node, tag_name="option")
+                elif action == 'line':
+                    actions_to_click = [row_node]
                 else:
                     actions_to_click = get_elements(row_node, attrs={'title': action})
 
@@ -858,20 +882,16 @@ def click_on_line_and_open_the_window(step, action):
     click_on_line(step, action)
 
     world.browser.switch_to_default_content()
-    frame = get_element(world.browser, tag_name="iframe", position=world.nbframes, wait=True)
-    the_url_to_reload = frame.get_attribute("src")
-    world.browser.switch_to_frame(frame)
+    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait=True))
     world.nbframes += 1
-
-    # PhantomJS sometimes fail to open a window, we have to reload it manually
-    script = "window.location = '%s'" % the_url_to_reload
-    world.browser.execute_script(script)
 
     wait_until_no_ajax(world.browser)
 
 @step('I should see in the main table the following data:')
 def check_line(step):
     values = step.hashes
+
+    open_all_the_tables(world)
 
     def try_to_check_line(step):
         for hashes in values:
@@ -944,14 +964,8 @@ def open_side_panel_and_open(step, menuname):
     open_side_panel(step, menuname)
 
     world.browser.switch_to_default_content()
-    myframe = get_element(world.browser, tag_name="iframe", position=world.nbframes, wait=True)
-    the_url_to_reload = myframe.get_attribute("src")
-    world.browser.switch_to_frame(myframe)
+    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait=True))
     world.nbframes += 1
-
-    # PhantomJS sometimes fail to open a window, we have to reload it manually
-    script = "window.location = '%s'" % the_url_to_reload
-    world.browser.execute_script(script)
 
     wait_until_no_ajax(world.browser)
 
@@ -1002,7 +1016,7 @@ def choose_field(step):
 @step('I sleep')
 def selenium_sleeps(step):
     import time
-    time.sleep(400)
+    time.sleep(30)
 
 #}%}
 
