@@ -260,6 +260,8 @@ def open_tab(step, menu_to_click_on):
             if style == 'display: block;' or style == 'display: none;':
                 break
 
+            time.sleep(TIME_TO_SLEEP)
+
 def open_menu(menu_to_click_on):
     menu_node = get_element(world.browser, tag_name="td", id_attr="secondary")
 
@@ -303,12 +305,14 @@ def open_menu(menu_to_click_on):
 
                 if len(valid_visible_elements) > len(visible_elements_after):
                     # the number of menus has decreased, we've just closed a menu
+                    time.sleep(TIME_TO_SLEEP)
                     break
                 elif len(valid_visible_elements) < len(visible_elements_after):
                     after_pos += pos + 1
                     i += 1
                     break
 
+#FIXME: We have to open the window for PhantomJS.
 @step('I click on menu "([^"]*)" and open the window$')
 @output.register_for_printscreen
 def open_tab(step, menu_to_click_on):
@@ -397,6 +401,8 @@ def fill_field(step, fieldname, content):
 
             if my_input.get_attribute("value") == input_text:
                 break
+
+            time.sleep(TIME_TO_SLEEP)
 
     wait_until_no_ajax(world.browser)
 
@@ -559,6 +565,8 @@ def close_window_if_necessary(step, button):
                 world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait=True))
                 return
 
+            time.sleep(TIME_TO_SLEEP)
+
         except (StaleElementReferenceException, ElementNotVisibleException):
             pass
 
@@ -599,8 +607,15 @@ def click_on_button_and_open(step, button):
     wait_until_not_loading(world.browser, wait=False)
 
     world.browser.switch_to_default_content()
-    world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes, tag_name="iframe", wait=True))
+    the_frame = get_element(world.browser, position=world.nbframes, tag_name="iframe", wait=True)
+    the_url_to_reload = the_frame.get_attribute("src")
+
+    world.browser.switch_to_frame(the_frame)
     world.nbframes += 1
+
+    # PhantomJS sometimes fail to open a window, we have to reload it manually
+    script = "window.location = '%s'" % the_url_to_reload
+    world.browser.execute_script(script)
 
     wait_until_no_ajax(world.browser)
 
@@ -843,8 +858,14 @@ def click_on_line_and_open_the_window(step, action):
     click_on_line(step, action)
 
     world.browser.switch_to_default_content()
-    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait=True))
+    frame = get_element(world.browser, tag_name="iframe", position=world.nbframes, wait=True)
+    the_url_to_reload = frame.get_attribute("src")
+    world.browser.switch_to_frame(frame)
     world.nbframes += 1
+
+    # PhantomJS sometimes fail to open a window, we have to reload it manually
+    script = "window.location = '%s'" % the_url_to_reload
+    world.browser.execute_script(script)
 
     wait_until_no_ajax(world.browser)
 

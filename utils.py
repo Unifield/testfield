@@ -7,9 +7,9 @@ import time
 import re
 
 # The time (in seconds) that we wait when we know that an action has still to be performed
-TIME_TO_SLEEP = 0.1
+TIME_TO_SLEEP = 0.0
 # The time that we wait when we now that a change is almost immediate
-TIME_TO_WAIT = 0.0
+TIME_TO_WAIT = 0.1
 
 def timedelta_total_seconds(timedelta):
     return (timedelta.microseconds + 0.0 + (timedelta.seconds + timedelta.days * 24 * 3600) * 10 ** 6) / 10 ** 6
@@ -33,6 +33,7 @@ def monitor(browser):
 
     def counter():
         here['val'] += 1
+
         if here['val'] > LIMIT_COUNTER:
             browser.save_screenshot("waiting_too_long.png")
 
@@ -59,7 +60,10 @@ def get_input(browser, fieldname):
     my_input = None
     idattr = None
 
+    tick = monitor(browser)
+
     while not my_input:
+
         labels = get_elements_from_text(browser, tag_name="label", text=fieldname, wait=False)
 
         # we have a label!
@@ -73,6 +77,8 @@ def get_input(browser, fieldname):
         table_header = get_elements_from_text(browser, class_attr='separator horizontal', tag_name="div", text=fieldname, wait=False)
 
         if not table_header:
+            tick()
+            time.sleep(TIME_TO_SLEEP)
             continue
 
         # => td
@@ -80,10 +86,14 @@ def get_input(browser, fieldname):
 
         table_node = table_header.find_elements_by_xpath("ancestor::tr[1]")
         if not table_node:
+            tick()
+            time.sleep(TIME_TO_SLEEP)
             continue
 
         element = table_node[0].find_elements_by_xpath("following-sibling::*[1]")
         if not element:
+            tick()
+            time.sleep(TIME_TO_SLEEP)
             continue
 
         # on peut maintenant trouver un input ou un select!
@@ -97,6 +107,12 @@ def get_input(browser, fieldname):
         if inputnodes:
             my_input = inputnodes[0]
             break
+
+        if not my_input:
+            break
+
+        tick()
+        time.sleep(TIME_TO_SLEEP)
 
     return idattr, my_input
 
@@ -209,7 +225,6 @@ def get_elements_from_text(browser, tag_name, text, class_attr='', wait=True):
   else:
     tick = monitor(browser)
     while True:
-      tick()
 
       elems = browser.find_elements_by_xpath(xpath_query)
       only_visible = filter(lambda x : x.is_displayed(), elems)
@@ -217,6 +232,7 @@ def get_elements_from_text(browser, tag_name, text, class_attr='', wait=True):
       if only_visible:
         return only_visible
 
+      tick()
       time.sleep(TIME_TO_SLEEP)
 
       #browser.save_screenshot("get_elements_from_text.png")
@@ -359,8 +375,6 @@ def get_table_row_from_hashes(world, keydict):
 def wait_until_no_ajax(browser):
     tick = monitor(browser)
     while True:
-        tick()
-        time.sleep(TIME_TO_SLEEP)
         # sometimes, openobject doesn't exist in some windows
         try:
             ret = browser.execute_script('''
@@ -420,6 +434,9 @@ def wait_until_no_ajax(browser):
 
         if str(ret) != "0":
             continue
+
+        tick()
+        time.sleep(TIME_TO_SLEEP)
 
         return
 
