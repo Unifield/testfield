@@ -11,6 +11,10 @@ TIME_TO_SLEEP = 0.0
 # The time that we wait when we now that a change is almost immediate
 TIME_TO_WAIT = 0.1
 
+# the maximum amount of time that we expect to wait on one element
+TIME_BEFORE_FAILURE = 10.0
+TIME_BEFORE_FAILURE_SYNCHRONIZATION = 200.0
+
 def timedelta_total_seconds(timedelta):
     return (timedelta.microseconds + 0.0 + (timedelta.seconds + timedelta.days * 24 * 3600) * 10 ** 6) / 10 ** 6
 
@@ -24,15 +28,25 @@ def create_regex(raw_text):
     else:
         return '^%s$' % re.escape(raw_text)
 
+class TimeoutException(Exception):
+    pass
+
 # Get an element {%{
 
-def monitor(browser):
-    here = {'val': 0}
+def monitor(browser, explanation=''):
+    start_datetime = datetime.datetime.now()
+    here = {'val': 0, 'start_datetime': start_datetime}
     LIMIT_COUNTER = 30
     found_message = set([])
 
     def counter():
         here['val'] += 1
+
+        now = datetime.datetime.now()
+        time_spent_waiting = timedelta_total_seconds(now - here['start_datetime'])
+
+        if time_spent_waiting > TIME_BEFORE_FAILURE:
+            raise TimeoutException(explanation or "We have waited for too long on an element")
 
         if here['val'] > LIMIT_COUNTER:
             browser.save_screenshot("waiting_too_long.png")
@@ -64,7 +78,10 @@ def get_input(browser, fieldname):
 
     while not my_input:
 
-        labels = get_elements_from_text(browser, tag_name="label", text=fieldname, wait=False)
+        #FIXME: I don't understand how that works... we shouldn't wait since the field description
+        #  could be something else than a label (see below)
+        message = "Cannot find field %s" % fieldname
+        labels = get_elements_from_text(browser, tag_name="label", text=fieldname, wait=message)
 
         # we have a label!
         if labels:
@@ -74,7 +91,7 @@ def get_input(browser, fieldname):
             break
 
         # do we have a strange table?
-        table_header = get_elements_from_text(browser, class_attr='separator horizontal', tag_name="div", text=fieldname, wait=False)
+        table_header = get_elements_from_text(browser, class_attr='separator horizontal', tag_name="div", text=fieldname, wait=message)
 
         if not table_header:
             tick()
@@ -116,140 +133,140 @@ def get_input(browser, fieldname):
 
     return idattr, my_input
 
-def get_elements(browser, tag_name=None, id_attr=None, class_attr=None, attrs=dict(), wait=False, atleast=0):
-  '''
-  This method fetch a node among the DOM based on its attributes.
+def get_elements(browser, tag_name=None, id_attr=None, class_attr=None, attrs=dict(), wait='', atleast=0):
+    '''
+    This method fetch a node among the DOM based on its attributes.
 
-  You can indicate wether this method is expected to wait for this element to appear.
+    You can indicate wether this method is expected to wait for this element to appear.
 
-  Be careful: this method also returns hidden elements!
-  '''
+    Be careful: this method also returns hidden elements!
+    '''
 
-  css_selector = ""
+    css_selector = ""
 
-  css_selector += tag_name if tag_name is not None else "*"
-  css_selector += ("." + class_attr) if class_attr is not None else ""
-  css_selector += ("#" + id_attr) if id_attr is not None else ""
+    css_selector += tag_name if tag_name is not None else "*"
+    css_selector += ("." + class_attr) if class_attr is not None else ""
+    css_selector += ("#" + id_attr) if id_attr is not None else ""
 
-  if attrs:
-    css_selector += "["
-    item_number = 0
+    if attrs:
+        css_selector += "["
+        item_number = 0
 
-    for attr_name, value_attr in attrs.items():
-      css_selector += "%(attr)s='%(value)s'" % dict(attr=attr_name, value=value_attr)
+        for attr_name, value_attr in attrs.items():
+            css_selector += "%(attr)s='%(value)s'" % dict(attr=attr_name, value=value_attr)
 
-      item_number += 1
-      if item_number != len(attrs):
-        css_selector += ","
+            item_number += 1
+            if item_number != len(attrs):
+                css_selector += ","
 
-    css_selector += "]"
+        css_selector += "]"
 
-  nbtries = 0
+        nbtries = 0
 
-  tick = monitor(browser)
+    tick = monitor(browser, wait)
 
-  if not wait:
-    elements = browser.find_elements_by_css_selector(css_selector)
-  else:
-    tick = monitor(browser)
-    while True:
-      tick()
-      try:
+    if not wait:
         elements = browser.find_elements_by_css_selector(css_selector)
-        if len(elements) > atleast:
-            break
+    else:
+        while True:
+            tick()
+            try:
+                elements = browser.find_elements_by_css_selector(css_selector)
+                if len(elements) > atleast:
+                    break
 
-        time.sleep(TIME_TO_SLEEP)
-        tick()
+                time.sleep(TIME_TO_SLEEP)
+                tick()
 
-      except:
-        time.sleep(TIME_TO_SLEEP)
+            except:
+                time.sleep(TIME_TO_SLEEP)
 
-      nbtries += 1
+            nbtries += 1
 
-  return elements
+    return elements
 
-def get_element(browser, tag_name=None, id_attr=None, class_attr=None, attrs=dict(), wait=False, position=None):
-  elements = get_elements(browser, tag_name, id_attr, class_attr, attrs, wait, atleast=position or 0)
+def get_element(browser, tag_name=None, id_attr=None, class_attr=None, attrs=dict(), wait='', position=None):
+    elements = get_elements(browser, tag_name, id_attr, class_attr, attrs, wait, atleast=position or 0)
 
-  if position is None:
-      only_visible = filter(lambda x : x.is_displayed(), elements)
+    if position is None:
+        only_visible = filter(lambda x : x.is_displayed(), elements)
 
-      return only_visible[0] if only_visible else elements[0]
-  else:
-    return elements[position]
+        return only_visible[0] if only_visible else elements[0]
+    else:
+        return elements[position]
 
 def to_camel_case(text):
     words = text.split()
     words = map(lambda x : x[:1].upper() + x[1:].lower(), words)
     return ' '.join(words)
 
-def get_elements_from_text(browser, tag_name, text, class_attr='', wait=True):
-  '''
-  This method fetch a node among the DOM based on its text.
+def get_elements_from_text(browser, tag_name, text, class_attr='', wait=''):
+    '''
+    This method fetch a node among the DOM based on its text.
 
-  To find it, you must provide the name of the tag and its text.
+    To find it, you must provide the name of the tag and its text.
 
-  You can indicate wether this method is expected to wait for this element to appear.
-  '''
-  class_attr = (" and @class = '%s'" % class_attr) if class_attr else ''
+    You can indicate wether this method is expected to wait for this element to appear.
+    '''
+    class_attr = (" and @class = '%s'" % class_attr) if class_attr else ''
 
-  if not isinstance(tag_name, list):
-    tag_name = [tag_name]
-  possibilities = []
+    if not isinstance(tag_name, list):
+        tag_name = [tag_name]
+    possibilities = []
 
-  #FIXME: It won't work in French...
-  from_translate = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-  to_translate = 'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz'
+    #FIXME: It won't work in French...
+    from_translate = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+    to_translate = 'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz'
 
-  for my_tag in tag_name:
-    data = dict(class_attr=class_attr,
-                tagname=my_tag,
-                text=text.lower(),
-                from_translate=from_translate,
-                to_translate=to_translate)
+    for my_tag in tag_name:
+        data = dict(class_attr=class_attr,
+                    tagname=my_tag,
+                    text=text.lower(),
+                    from_translate=from_translate,
+                    to_translate=to_translate)
 
-    # we need to look for nodes "in the given node" when we select an option
-    #  in a select and we don't want to select the other option
+        # we need to look for nodes "in the given node" when we select an option
+        #  in a select and we don't want to select the other option
 
-    xpath1_query = ".//%(tagname)s[translate(normalize-space(.), '%(from_translate)s', '%(to_translate)s') ='%(text)s'%(class_attr)s]" % data
-    xpath2_query = ".//%(tagname)s//*[translate(normalize-space(.), '%(from_translate)s', '%(to_translate)s') ='%(text)s'%(class_attr)s]" % data
-    possibilities.append(xpath1_query)
-    possibilities.append(xpath2_query)
+        xpath1_query = ".//%(tagname)s[translate(normalize-space(.), '%(from_translate)s', '%(to_translate)s') ='%(text)s'%(class_attr)s]" % data
+        xpath2_query = ".//%(tagname)s//*[translate(normalize-space(.), '%(from_translate)s', '%(to_translate)s') ='%(text)s'%(class_attr)s]" % data
+        possibilities.append(xpath1_query)
+        possibilities.append(xpath2_query)
 
-  xpath_query = '|'.join(possibilities)
+    xpath_query = '|'.join(possibilities)
 
-  if not wait:
-    ret = browser.find_elements_by_xpath(xpath_query)
-    return filter(lambda x : x.is_displayed(), ret)
-  else:
-    tick = monitor(browser)
-    while True:
+    if not wait:
+        ret = browser.find_elements_by_xpath(xpath_query)
+        return filter(lambda x : x.is_displayed(), ret)
+    else:
+        tick = monitor(browser, wait)
 
-      elems = browser.find_elements_by_xpath(xpath_query)
-      only_visible = filter(lambda x : x.is_displayed(), elems)
+        while True:
 
-      if only_visible:
-        return only_visible
+            elems = browser.find_elements_by_xpath(xpath_query)
+            only_visible = filter(lambda x : x.is_displayed(), elems)
 
-      tick()
-      time.sleep(TIME_TO_SLEEP)
+            if only_visible:
+                return only_visible
 
-      #browser.save_screenshot("get_elements_from_text.png")
+            time.sleep(TIME_TO_SLEEP)
+            tick()
 
-def get_element_from_text(browser, tag_name, text, class_attr='', wait=True):
-  '''
-  This method fetch a node among the DOM based on its text.
+def get_element_from_text(browser, tag_name, text, class_attr='', wait=False):
+    '''
+    This method fetch a node among the DOM based on its text.
 
-  To find it, you must provide the name of the tag and its text.
+    To find it, you must provide the name of the tag and its text.
 
-  You can indicate wether this method is expected to wait for this element to appear.
-  '''
-  #FIXME: We cannot crash if an element is not found (especially an IndexError...)
-  return get_elements_from_text(browser, tag_name, text, class_attr, wait)[0]
+    You can indicate wether this method is expected to wait for this element to appear.
+    '''
+    #FIXME: We cannot crash if an element is not found (especially an IndexError...)
+    return get_elements_from_text(browser, tag_name, text, class_attr, wait)[0]
 
 def get_column_position_in_table(maintable, columnname):
-    elems = get_elements_from_text(maintable, tag_name="th", text=columnname, wait=False)
+    message = "Cannot find column %s in table" % columnname
+
+    elems = get_elements_from_text(maintable, tag_name="th", text=columnname, wait=message)
     if not elems:
         return None
     elem = elems[0]
@@ -372,8 +389,8 @@ def get_table_row_from_hashes(world, keydict):
 #}%}
 
 # Wait {%{
-def wait_until_no_ajax(browser):
-    tick = monitor(browser)
+def wait_until_no_ajax(browser, message="A javascript operation is still ongoing"):
+    tick = monitor(browser, message)
     while True:
         # sometimes, openobject doesn't exist in some windows
         try:
@@ -447,48 +464,49 @@ def repeat_until_no_exception(action, exception, *params):
         except exception:
             time.sleep(TIME_TO_SLEEP)
 
-def wait_until_element_does_not_exist(browser, get_elem):
-  '''
-  This method tries to click on the elem(ent) until the click doesn't raise en exception.
-  '''
+def wait_until_element_does_not_exist(browser, get_elem, message=''):
+    '''
+    This method tries to click on the elem(ent) until the click doesn't raise en exception.
+    '''
 
-  tick = monitor(browser)
-  while True:
-    tick()
+    tick = monitor(browser, message)
+
+    while True:
+        tick()
+        try:
+            #browser.save_screenshot("wait_until_element_does_not_exist.png")
+            if not get_elem() or not get_elem().is_displayed():
+                return
+        except Exception as e:
+            return
+        time.sleep(TIME_TO_SLEEP)
+
+def wait_until_not_displayed(browser, get_elem, message, accept_failure=False):
+    '''
+    This method tries to click on the elem(ent) until the click doesn't raise en exception.
+    '''
+
+    tick = monitor(browser, message)
+    while True:
+        tick()
+        try:
+            #browser.save_screenshot("wait_until_not_displayed.png")
+            elem = get_elem()
+            if not elem.is_displayed():
+                return
+        except Exception as e:
+            if accept_failure:
+                return
+            else:
+                print(e)
+                raise
+        time.sleep(TIME_TO_SLEEP)
+
+def wait_until_not_loading(browser, wait="Loading takes too much time"):
     try:
-      #browser.save_screenshot("wait_until_element_does_not_exist.png")
-      if not get_elem() or not get_elem().is_displayed():
+        wait_until_not_displayed(browser, lambda : get_element(browser, tag_name="div", id_attr="ajax_loading", wait=wait), accept_failure=not wait)
+    except:
         return
-    except Exception as e:
-      return
-    time.sleep(TIME_TO_SLEEP)
-
-def wait_until_not_displayed(browser, get_elem, accept_failure=False):
-  '''
-  This method tries to click on the elem(ent) until the click doesn't raise en exception.
-  '''
-
-  tick = monitor(browser)
-  while True:
-    tick()
-    try:
-      #browser.save_screenshot("wait_until_not_displayed.png")
-      elem = get_elem()
-      if not elem.is_displayed():
-        return
-    except Exception as e:
-      if accept_failure:
-        return
-      else:
-        print(e)
-        raise
-    time.sleep(TIME_TO_SLEEP)
-
-def wait_until_not_loading(browser, wait=True):
-  try:
-    wait_until_not_displayed(browser, lambda : get_element(browser, tag_name="div", id_attr="ajax_loading", wait=wait), accept_failure=not wait)
-  except:
-    return
 #}%}
 
 def convert_input(world, content, localdict=dict()):
@@ -500,18 +518,18 @@ def convert_input(world, content, localdict=dict()):
 
 # Do something {%{
 def click_on(elem_fetcher):
-  '''
-  This method tries to click on the elem(ent) until the click doesn't raise en exception.
-  '''
-  while True:
-    try:
-      elem = elem_fetcher()
-      if elem and elem.is_displayed():
-        elem.click()
-      return
-    except Exception as e:
-      print(e)
-    time.sleep(TIME_TO_SLEEP)
+    '''
+    This method tries to click on the elem(ent) until the click doesn't raise en exception.
+    '''
+    while True:
+        try:
+            elem = elem_fetcher()
+            if elem and elem.is_displayed():
+                elem.click()
+            return
+        except Exception as e:
+            print(e)
+        time.sleep(TIME_TO_SLEEP)
 
 def action_write_in_element(txtinput, content):
     txtinput.clear()
@@ -519,7 +537,7 @@ def action_write_in_element(txtinput, content):
 
 def action_select_option(txtinput, content):
     txtinput.click()
-    option = get_element_from_text(txtinput, tag_name="option", text=content, wait=True)
+    option = get_element_from_text(txtinput, tag_name="option", text=content, wait='Cannot find option %s' % content)
     option.click()
     txtinput.click()
 
