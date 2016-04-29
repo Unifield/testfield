@@ -509,12 +509,13 @@ def remember_step(step, fieldname, variable):
 
 @step('I click on "([^"]*)" until not available$')
 def click_until_not_available2(step, button):
-    wait_until_not_loading(world.browser, wait="Loading before clicking takes too much time")
+    wait_until_not_loading(world.browser, wait=world.nbframes == 0)
+
     tick = monitor(world.browser)
     while True:
         tick()
         try:
-            elem = get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait="Cannot find button %s" % button)
+            elem = get_elements_from_text(world.browser, tag_name=["button", "a"], text=button)
             if elem:
                 elem[0].click()
                 time.sleep(TIME_TO_WAIT)
@@ -566,7 +567,7 @@ def close_window_if_necessary(step, button):
 
     # It seems that some action could still be launched when clicking on a button,
     #  we have to wait on them for completion
-    wait_until_not_loading(world.browser, wait="Loading before clicking takes too much time")
+    wait_until_not_loading(world.browser, wait=world.nbframes == 0)
 
     # what's the URL of the current frame?
     world.browser.switch_to_default_content()
@@ -620,7 +621,11 @@ def click_on_button(step, button):
     else:
         # But we have to take into account that such element doesn't exist when a user is not logged in...
         wait_until_not_loading(world.browser, wait=False)
-    click_on(lambda : get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait="Cannot find button %s" % button)[-1])
+
+    # we have an issue when the user is not logged in... the important buttons are "at the end of the page". We have to
+    #  fetch them in another order
+    position_element = 0 if world.logged_in else -1
+    click_on(lambda : get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait="Cannot find button %s" % button)[position_element])
 
     if world.nbframes != 0:
         wait_until_not_loading(world.browser, wait=False)
