@@ -12,3 +12,5 @@ files/*
 \.DS_Store
 bin/*
 *.bat
+ghostdriver.log
+waiting_too_long.*
