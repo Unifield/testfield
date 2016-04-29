@@ -49,6 +49,10 @@ def monitor(browser, explanation=''):
             raise TimeoutException(explanation or "We have waited for too long on an element")
 
         if here['val'] > LIMIT_COUNTER:
+
+            while browser.parent is not None:
+                browser = browser.parent
+
             browser.save_screenshot("waiting_too_long.png")
 
             for entry in browser.get_log('browser'):
@@ -196,7 +200,7 @@ def to_camel_case(text):
     words = map(lambda x : x[:1].upper() + x[1:].lower(), words)
     return ' '.join(words)
 
-def get_elements_from_text(browser, tag_name, text, class_attr='', wait=''):
+def get_elements_from_text(element, tag_name, text, class_attr='', wait=''):
     '''
     This method fetch a node among the DOM based on its text.
 
@@ -232,14 +236,14 @@ def get_elements_from_text(browser, tag_name, text, class_attr='', wait=''):
     xpath_query = '|'.join(possibilities)
 
     if not wait:
-        ret = browser.find_elements_by_xpath(xpath_query)
+        ret = element.find_elements_by_xpath(xpath_query)
         return filter(lambda x : x.is_displayed(), ret)
     else:
-        tick = monitor(browser, wait)
+        tick = monitor(element, wait)
 
         while True:
 
-            elems = browser.find_elements_by_xpath(xpath_query)
+            elems = element.find_elements_by_xpath(xpath_query)
             only_visible = filter(lambda x : x.is_displayed(), elems)
 
             if only_visible:
