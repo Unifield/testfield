@@ -161,27 +161,23 @@ def get_elements(browser, tag_name=None, id_attr=None, class_attr=None, attrs=di
 
         css_selector += "]"
 
-        nbtries = 0
-
-    tick = monitor(browser, wait)
-
     if not wait:
         elements = browser.find_elements_by_css_selector(css_selector)
     else:
+        tick = monitor(browser, wait)
+
         while True:
-            tick()
+
             try:
                 elements = browser.find_elements_by_css_selector(css_selector)
                 if len(elements) > atleast:
                     break
 
                 time.sleep(TIME_TO_SLEEP)
-                tick()
-
             except:
                 time.sleep(TIME_TO_SLEEP)
 
-            nbtries += 1
+            tick()
 
     return elements
 
@@ -318,7 +314,7 @@ def open_all_the_tables(world):
             select = Select(element)
             select.select_by_visible_text("unlimited")
 
-            wait_until_not_loading(world.browser, wait=False)
+            wait_until_not_loading(world.browser, wait="I cannot load the whole table")
 
 def get_options_for_table(world, columns):
     '''
@@ -355,7 +351,8 @@ def get_options_for_table(world, columns):
             values = []
 
             # we have to check all the columns
-            for column, position in position_per_column.iteritems():
+            for column in columns:
+                position = position_per_column[column]
                 td_node = get_element(row_node, class_attr="grid-cell", tag_name="td", position=position)
 
                 values.append(td_node.text.strip())
@@ -458,10 +455,13 @@ def wait_until_no_ajax(browser, message="A javascript operation is still ongoing
         return
 
 def repeat_until_no_exception(action, exception, *params):
+    #FIXME: We should add a monitor here. It's possible to loop for ages in this
+    # loop if we still getting StaleElementReferenceException...
     while True:
         try:
             return action(*params)
         except exception:
+            print "EXCEPTION"
             time.sleep(TIME_TO_SLEEP)
 
 def wait_until_element_does_not_exist(browser, get_elem, message=''):
@@ -486,11 +486,10 @@ def wait_until_not_displayed(browser, get_elem, message, accept_failure=False):
     This method tries to click on the elem(ent) until the click doesn't raise en exception.
     '''
 
-    tick = monitor(browser, message)
+    tick = monitor(browser, message or "An element doesn't disappear")
     while True:
         tick()
         try:
-            #browser.save_screenshot("wait_until_not_displayed.png")
             elem = get_elem()
             if not elem.is_displayed():
                 return
@@ -504,7 +503,7 @@ def wait_until_not_displayed(browser, get_elem, message, accept_failure=False):
 
 def wait_until_not_loading(browser, wait="Loading takes too much time"):
     try:
-        wait_until_not_displayed(browser, lambda : get_element(browser, tag_name="div", id_attr="ajax_loading", wait=wait), accept_failure=not wait)
+        wait_until_not_displayed(browser, lambda : get_element(browser, tag_name="div", id_attr="ajax_loading", wait=wait), message=wait, accept_failure=not wait)
     except:
         return
 #}%}

@@ -39,11 +39,11 @@
                                             {{sentence}}
 
                                             %if table:
-                                                <table class="table">
+                                                <table class="table table-condensed">
                                                     <thead>
                                                         <tr>
                                                             %for header in table[0]:
-                                                                <td>{{header}}</td>
+                                                                <th>{{header}}</th>
                                                             %end
                                                         </tr>
                                                     </thead>
@@ -66,7 +66,7 @@
                             </td>
                             <td>
                                 <div class="text-left">
-                                    <img src='{{printscreen.filename}}' width='400px'>
+                                    <img src='{{printscreen.filename}}' width='600px'>
                                 </div>
                             </td>
                         </tr>

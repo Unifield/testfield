@@ -51,6 +51,8 @@ def connect_to_db():
     file_path = os.path.join(base_dir, FILE_DIR)
     world.files_before = os.listdir(file_path)
 
+    world.logged_in = False
+
 @before.each_step
 def apply_monkey_patch(step):
     world.browser.execute_script(world.monkeypatch)
@@ -149,6 +151,7 @@ def connect_on_database(step, database_name):
 
     # select the database chosen by the user
     elem_select = get_element(world.browser, tag_name="select", id_attr="db")
+
     get_element(elem_select, tag_name="option", attrs={'value': database_name}).click()
 
     # fill in the credentials
@@ -160,10 +163,14 @@ def connect_on_database(step, database_name):
     ## if you want to open the debugger before starting any action in UniField
     #world.browser.find_element_by_tag_name('body').send_keys(Keys.COMMAND + Keys.ALT + 's')
 
+    world.logged_in = True
+
 @step('I log out')
 @output.add_printscreen
 def log_out(step):
     world.browser.get("%(url)s/openerp/logout" % dict(url=HTTP_URL_SERVER))
+
+    world.logged_in = False
 
 def run_script(dbname, script):
 
@@ -607,9 +614,12 @@ def click_on_button(step, button):
     #  we have to wait on them for completion
     # But we cannot do that for frames because the "loading" menu item doesn't exist
     #  at that time.
-    #wait_until_not_loading(world.browser, wait=world.nbframes == 0)
-    # But we have to take into account that such element doesn't exist when a user is not logged in...
-    wait_until_not_loading(world.browser, wait=False)
+
+    if world.logged_in:
+        wait_until_not_loading(world.browser, wait=world.nbframes == 0)
+    else:
+        # But we have to take into account that such element doesn't exist when a user is not logged in...
+        wait_until_not_loading(world.browser, wait=False)
     click_on(lambda : get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait="Cannot find button %s" % button)[-1])
 
     if world.nbframes != 0:
@@ -912,7 +922,10 @@ def check_line(step):
     def try_to_check_line(step):
         for hashes in values:
             if not list(get_table_row_from_hashes(world, hashes)):
-                raise Exception("I don't find: %s" % hashes)
+                columns = hashes.keys()
+                options = map(lambda x : x[1], get_options_for_table(world, columns))
+                options_txt =', '.join(map(lambda x : '|'.join(x), options))
+                raise Exception("I don't find: %s. My options where: %s" % (hashes, options_txt))
 
     repeat_until_no_exception(try_to_check_line, StaleElementReferenceException, step)
 

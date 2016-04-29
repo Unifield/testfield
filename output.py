@@ -39,7 +39,9 @@ def convert_hashes_to_table(hashes):
     for line in hashes:
         row = []
         for header in str_hashes:
-            row.append(line.get(header, ""))
+            value = line.get(header, "")
+            value = convert_input(world, value)
+            row.append(value)
         table.append(row)
 
     return table
@@ -137,7 +139,35 @@ def write_printscreen(world):
 
     filename = "printscreen%d.png" % world.idprintscreen
     path_printscreen = os.path.join(OUTPUT_DIR, filename)
-    world.browser.save_screenshot(path_printscreen)
+
+    elements = []
+    for classattr in ['#body_form', '.db-form', '.loginbox']:
+        if classattr[0] == '.':
+            elements = get_elements(world.browser, class_attr=classattr[1:])
+        elif classattr[0] == '#':
+            elements = get_elements(world.browser, id_attr=classattr[1:])
+        else:
+            assert False
+
+        if elements:
+            break
+
+    if elements:
+        import tempfile
+        tf = tempfile.NamedTemporaryFile()
+
+        world.browser.save_screenshot(tf.name)
+
+        from PIL import Image
+        im=Image.open(tf.name)
+        location = elements[0].location
+        size = elements[0].size
+        rect = (location['x'], location['y'], location['x'] + size['width'], location['y'] + size['height'])
+        new = im.crop(rect)
+        new.save(path_printscreen)
+    else:
+        world.browser.save_screenshot(path_printscreen)
+
     world.idprintscreen += 1
 
     world.printscreen_to_display.append(MyPrintscreen(filename, steps_to_print))
