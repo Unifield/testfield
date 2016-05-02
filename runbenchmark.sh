@@ -4,14 +4,16 @@ rm -rf results/* 2> /dev/null
 
 export TIME_BEFORE_FAILURE=
 
-for count in 2 4
+LETTUCE_PARAMS="${*:3}"
+
+for count in 5 10 15 20 25 30 35 40
 do
     export COUNT=$count
 
     # run the benchmark
-    for nb in `seq 1 2`;
+    for nb in `seq 1 3`;
     do
-        ./runtests_local.sh -t moi
+        ./runtests_local.sh $LETTUCE_PARAMS
     done
 done
 

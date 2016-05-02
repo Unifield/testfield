@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 
 set -o errexit
-set -o nounset
+#set -o nounset
 set -o pipefail
+
+if [[ $# -lt 2 || ( "$1" != benchmark && "$1" != "test" ) ]];
+then
+    echo "Usage: "
+    echo "  $0 benchmark name [server_branch] [web_branch] [tag]"
+    echo "  $0 test name [server_branch] [web_branch] [tag]"
+    exit 1
+fi
 
 source config.sh
 
@@ -14,13 +22,13 @@ WEBDIR=$MYTMPDIR/web
 
 SESSION_NAME=unifield-$$
 
-if [[ $# > 2 ]];
-then
-    exit 1
-fi
+VERB=${1:-test}
 
-SERVERBRANCH=${1:-lp:unifield-server}
-WEBBRANCH=${2:-lp:unifield-web}
+NAME=${2:-unkown}
+SERVERBRANCH=${3:-lp:unifield-server}
+WEBBRANCH=${4:-lp:unifield-web}
+
+LETTUCE_PARAMS="${*:5}"
 
 export PGPASSWORD=$DBPASSWORD
 
@@ -29,16 +37,17 @@ PARAM_UNIFIELD_SERVER="--db_user=$DBUSERNAME --db_password=$DBPASSWORD --db_host
 fetch_source_code()
 {
     # (1) fetch the source code
-    rm -rf $MYTMPDIR/server $MYTMPDIR/web
-    bzr checkout --lightweight "$SERVERBRANCH" "$SERVERDIR"
-    bzr checkout --lightweight "$WEBBRANCH" "$WEBDIR"
+    rm -rf $MYTMPDIR/server $MYTMPDIR/web || true
+    bzr checkout "$SERVERBRANCH" "$SERVERDIR"
+    bzr checkout "$WEBBRANCH" "$WEBDIR"
     echo
 }
 
 generate_configuration_file()
 {
     # 3. set up the configuration
-    rm $MYTMPDIR/openerp-web.cfg $MYTMPDIR/openerp-server.conf 2> /dev/null
+    rm $MYTMPDIR/openerp-web.cfg $MYTMPDIR/openerp-server.conf 2> /dev/null || true
+
     cp config/openerp-web.cfg $MYTMPDIR/openerp-web.cfg
     cp config/openerp-server.conf $MYTMPDIR/openerp-server.conf
     # add the specific rules
@@ -86,8 +95,55 @@ run_unifield()
         python $SERVERDIR/bin/openerp-server.py --db_user=$DBUSERNAME --db_password=$DBPASSWORD --db_host=$DBADDR -c $MYTMPDIR/openerp-server.conf
         \""
 
-    export COUNT=2;
-    ./runtests_local.sh;
+
+    case $VERB in
+
+    test)
+        export TIME_BEFORE_FAILURE=40
+        export COUNT=2;
+
+        export TEST_DESCRIPTION=$NAME
+        export TEST_NAME=$NAME
+
+        rm output/* || true
+
+        ./runtests_local.sh $LETTUCE_PARAMS
+
+        DIREXPORT=website/tests/last
+        if [[ -e "$DIREXPORT" ]]
+        then
+            rm -rf "$DIREXPORT" || true
+        fi
+        mkdir "$DIREXPORT"
+
+        cp output/* $DIREXPORT/ || true
+
+        ;;
+
+    benchmark)
+        rm -rf results/* 2> /dev/null || true
+        export TIME_BEFORE_FAILURE=
+
+        for count in 5 10 15 20 25 30 35 40
+        do
+            export COUNT=$count
+
+            # run the benchmark
+            for nb in `seq 1 3`;
+            do
+                ./runtests_local.sh $LETTUCE_PARAMS
+            done
+        done
+
+        DIR_EXPORT="website/performances/$1"
+
+        mkdir $DIR_EXPORT
+        cp -R results/* "$DIR_EXPORT/"
+
+        ;;
+
+    esac
+
     tmux kill-session -t $SESSION_NAME
 }
 
@@ -101,19 +157,19 @@ do
 done
 FIRST_DATABASE=`echo $DATABASES | cut -d " " -f1`
 
+./generate_credentials.sh $FIRST_DATABASE
 fetch_source_code;
 python restore.py $ENVNAME
 generate_configuration_file;
 
 #FIXME: We should do it only if necessary. How can we check that?
-upgrade_server;
+#upgrade_server;
 
-if [[ ! $DISPLAY ]];
+if [[ -z "$DISPLAY" ]];
 then
     tmux new -d -s X_$$ "Xvfb :99"
     export DISPLAY=:99
 fi
 
-./generate_credentials.sh $FIRST_DATABASE
 run_unifield;
 

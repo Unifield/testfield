@@ -13,7 +13,7 @@ import os
 # The time (in seconds) that we wait when we know that an action has still to be performed
 TIME_TO_SLEEP = 0.3
 # The time that we wait when we now that a change is almost immediate
-TIME_TO_WAIT = 0.4
+TIME_TO_WAIT = 1.0
 
 # the maximum amount of time that we expect to wait on one element
 def get_TIME_BEFORE_FAILURE():
