@@ -77,23 +77,18 @@ upgrade_server()
 
 run_unifield()
 {
-    tmux new -d -s $SESSION_NAME "
+    tmux new -d -s $SESSION_NAME -n server "
 
         tmux new-window -n web \"
         python $WEBDIR/openerp-web.py -c $MYTMPDIR/openerp-web.cfg
         \";
 
-        tmux new-window -n web \"
         python $SERVERDIR/bin/openerp-server.py --db_user=$DBUSERNAME --db_password=$DBPASSWORD --db_host=$DBADDR -c $MYTMPDIR/openerp-server.conf
-        \";
-
-        tmux new-window -n tests \"
-        tmux set-option -g history-limit 3000;
-        export COUNT=2;
-        ./runtests_local.sh;
-        tmux kill-session -t $SESSION_NAME
-        \";
         \""
+
+    export COUNT=2;
+    ./runtests_local.sh;
+    tmux kill-session -t $SESSION_NAME
 }
 
 DATABASES=

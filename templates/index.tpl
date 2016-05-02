@@ -1,81 +1,62 @@
-<!DOCTYPE HTML>
-<html>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Type</th>
+            <th>Scenario</th>
+            <th>Percentage</th>
+            <th>Time [s]</th>
+            <th>Result</th>
+        </tr>
+    </thead>
 
-    <head>
-        <title>Results - 12.04.2015</title>
+    <tbody>
+        %for valid, scenario, ratio, time, url, tags in scenarios:
+            <tr class="{{'danger' if not valid else ''}}">
 
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+                <td>
+                    <div class="text-center">
 
-    </head>
+                        %if 'it' in tags:
+                            <span class="label label-primary">IT</span>
+                        %end
 
-    <body>
-        <div class="container">
-            <h1>UniField - Functional tests</h1>
+                        %if 'supply' in tags:
+                            <span class="label label-success">Supply</span>
+                        %end
 
-            <p>
-                This test was launched the {{date}}.
-            </p>
+                        %if 'finance' in tags:
+                            <span class="label label-warning">Finance</span>
+                        %end
 
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Type</th>
-                        <th>Result</th>
-                        <th>Scenario</th>
-                        <th>Percentage</th>
-                        <th>Time [s]</th>
-                    </tr>
-                </thead>
+                        %if 'testperf' in tags:
+                            <span class="label label-info">Perf</span>
+                        %end
 
-                <tbody>
-                    %for valid, scenario, ratio, time, url, tags in scenarios:
-                        <tr>
+                    </div>
+                </td>
 
-                            <td>
-                                <div class="text-center">
+                <td>
+                    <a href="{{ url }}">
+                        {{ scenario }}
+                    </a>
+                </td>
 
-                                    %if 'it' in tags:
-                                        <span class="label label-primary">IT</span>
-                                    %end
+                <td>{{ ratio }}</td>
 
-                                    %if 'supply' in tags:
-                                        <span class="label label-success">Supply</span>
-                                    %end
+                <td>{{ time }}</td>
 
-                                    %if 'finance' in tags:
-                                        <span class="label label-warning">Finance</span>
-                                    %end
+                <td>
+                    <div class="text-center">
+                        %if valid:
+                            <span class="glyphicon glyphicon-ok"></span>
+                        %else:
+                            <span class="glyphicon glyphicon-remove"></span>
+                        %end
+                    </div>
+                </td>
 
-                                </div>
-                            </td>
-
-                            <td>
-                                <div class="text-center">
-                                    %if valid:
-                                        <img width="20px" src="res/success.png"/>
-                                    %else:
-                                        <img width="20px" src="res/failure.png"/>
-                                    %end
-                                </div>
-                            </td>
-
-                            <td>
-                                <a href="{{ url }}">
-                                    {{ scenario }}
-                                </a>
-                            </td>
-
-                            <td>{{ ratio }}</td>
-
-                            <td>{{ time }}</td>
-
-                        </tr>
-                    %end
-                </tbody>
-            </table>
-        </div>
-    </body>
-
-</html>
+            </tr>
+        %end
+    </tbody>
+</table>
 

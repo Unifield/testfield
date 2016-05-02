@@ -11,20 +11,46 @@ TEMPLATES_DIR = 'templates/'
 
 from bottle import SimpleTemplate
 
-class MyPrintscreen(object):
+class Printscreen(object):
 
-    def __init__(self, filename, steps):
-        self.__steps = steps
+    def __init__(self, filename):
         self.__filename = filename
-
-    def getSteps(self):
-        return self.__steps
 
     def getFilename(self):
         return self.__filename
 
-    steps = property(getSteps)
+    def is_error(self):
+        raise NotImplementedError
+
     filename = property(getFilename)
+
+class RegularPrintscreen(Printscreen):
+
+    def __init__(self, filename, steps):
+        super(RegularPrintscreen, self).__init__(filename)
+        self.__steps = steps
+
+    def is_error(self):
+        return False
+
+    def getSteps(self):
+        return self.__steps
+
+    steps = property(getSteps)
+
+class ErrorPrintscreen(Printscreen):
+
+    def __init__(self, filename, description):
+        super(ErrorPrintscreen, self).__init__(filename)
+        self.__description = description
+
+    def is_error(self):
+        return True
+
+    def getDescription(self):
+        return self.__description
+
+    description = property(getDescription)
 
 def convert_hashes_to_table(hashes):
     import itertools
@@ -80,11 +106,8 @@ def create_real_repport(total):
     with open(path_tpl, 'r') as f:
         content = ''.join(f.xreadlines())
 
-        now = datetime.datetime.now()
-        str_date = now.strftime('%m/%d/%Y')
-
         mytemplate = SimpleTemplate(content)
-        content = mytemplate.render(scenarios=world.scenarios, date=str_date)
+        content = mytemplate.render(scenarios=world.scenarios)
 
         path_html = os.path.join(OUTPUT_DIR, "index.html")
         output_index_file = open(path_html, 'w')
@@ -107,10 +130,20 @@ def write_end_of_section(scenario):
     index_page = 'index%d.html' % world.idscenario
     tags = scenario.tags
 
-    world.scenarios.append((all_ok, scenario.name, percentage_ok, time_total, index_page, tags))
-
     # we have to add the steps that haven't been included
     write_printscreen(world)
+
+    # we have to add en explanation "why" the scenario has failed
+    if not all_ok:
+        first_failure = filter(lambda x : not x.passed, scenario.steps)[0]
+        exception_failure = first_failure.why.exception
+
+        msg_error = str(exception_failure)
+
+        write_errorscreen(world, msg_error)
+
+    world.scenarios.append((all_ok, scenario.name, percentage_ok, time_total, index_page, tags))
+
 
     path_html = os.path.join(OUTPUT_DIR, index_page)
 
@@ -129,13 +162,7 @@ def write_end_of_section(scenario):
 
     world.idscenario += 1
 
-def write_printscreen(world):
-
-    if not world.steps_to_display:
-        return
-
-    steps_to_print = world.steps_to_display
-    world.steps_to_display = []
+def get_printscreen(world):
 
     filename = "printscreen%d.png" % world.idprintscreen
     path_printscreen = os.path.join(OUTPUT_DIR, filename)
@@ -170,5 +197,32 @@ def write_printscreen(world):
 
     world.idprintscreen += 1
 
-    world.printscreen_to_display.append(MyPrintscreen(filename, steps_to_print))
+    return filename
+
+def write_errorscreen(world, error_message):
+
+    filename = get_printscreen(world)
+
+    world.printscreen_to_display.append(ErrorPrintscreen(filename, error_message))
+
+def write_printscreen(world):
+
+    if not world.steps_to_display:
+        return
+
+    steps_to_print = world.steps_to_display
+    world.steps_to_display = []
+
+    filename = get_printscreen(world)
+
+    world.printscreen_to_display.append(RegularPrintscreen(filename, steps_to_print))
+
+@after.all
+def save_meta(total):
+    path_meta = os.path.join(OUTPUT_DIR, 'meta')
+    f = open(path_meta, 'w')
+    f.write('name=%s\r\n' % (os.environ['TEST_NAME'] if 'TEST_NAME' in os.environ else 'Unknown'))
+    f.write('description=%s\r\n' % (os.environ['TEST_DESCRIPTION'] if 'TEST_DESCRIPTION' in os.environ else 'Unknown'))
+    f.write('result=%s\r\n' % ('ok' if total.scenarios_ran == total.scenarios_passed else 'ko'))
+    f.close()
 

@@ -1,18 +1,29 @@
 
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.keys import Keys
 import datetime
 import time
 import re
+import os
 
 # The time (in seconds) that we wait when we know that an action has still to be performed
-TIME_TO_SLEEP = 0.0
+TIME_TO_SLEEP = 0.3
 # The time that we wait when we now that a change is almost immediate
-TIME_TO_WAIT = 0.1
+TIME_TO_WAIT = 0.4
 
 # the maximum amount of time that we expect to wait on one element
-TIME_BEFORE_FAILURE = 10000.0
+def get_TIME_BEFORE_FAILURE():
+    if 'TIME_BEFORE_FAILURE' in os.environ:
+        if os.environ['TIME_BEFORE_FAILURE'].isdigit():
+            return int(os.environ['TIME_BEFORE_FAILURE'])
+        else:
+            return None
+    else:
+        return 50
 TIME_BEFORE_FAILURE_SYNCHRONIZATION = 200.0
 
 def timedelta_total_seconds(timedelta):
@@ -28,14 +39,21 @@ def create_regex(raw_text):
     else:
         return '^%s$' % re.escape(raw_text)
 
-class TimeoutException(Exception):
+class UnifieldException(Exception):
     pass
+
+class TimeoutException(UnifieldException):
+    pass
+
+class UniFieldElementException(UnifieldException):
+    pass
+
 
 # Get an element {%{
 
 def monitor(browser, explanation=''):
     start_datetime = datetime.datetime.now()
-    here = {'val': 0, 'start_datetime': start_datetime}
+    here = {'val': 0, 'start_datetime': start_datetime, 'browser': browser}
     LIMIT_COUNTER = 30
     found_message = set([])
 
@@ -45,13 +63,16 @@ def monitor(browser, explanation=''):
         now = datetime.datetime.now()
         time_spent_waiting = timedelta_total_seconds(now - here['start_datetime'])
 
-        if time_spent_waiting > TIME_BEFORE_FAILURE:
+        TIME_BEFORE_FAILURE = get_TIME_BEFORE_FAILURE()
+        if TIME_BEFORE_FAILURE is not None and time_spent_waiting > TIME_BEFORE_FAILURE:
             raise TimeoutException(explanation or "We have waited for too long on an element")
 
         if here['val'] > LIMIT_COUNTER:
+            browser = here['browser']
 
-            while browser.parent is not None:
-                browser = browser.parent
+            if isinstance(browser, WebElement):
+                while not isinstance(browser, WebDriver):
+                    browser = browser.parent
 
             browser.save_screenshot("waiting_too_long.png")
 
@@ -520,10 +541,11 @@ def convert_input(world, content, localdict=dict()):
     return content
 
 # Do something {%{
-def click_on(elem_fetcher):
+def click_on(browser, elem_fetcher, msg):
     '''
     This method tries to click on the elem(ent) until the click doesn't raise en exception.
     '''
+    tick = monitor(browser, msg or "An element cannot be clicked")
     while True:
         try:
             elem = elem_fetcher()
@@ -532,6 +554,7 @@ def click_on(elem_fetcher):
             return
         except Exception as e:
             print(e)
+        tick()
         time.sleep(TIME_TO_SLEEP)
 
 def action_write_in_element(txtinput, content):

@@ -14,3 +14,5 @@ bin/*
 *.bat
 ghostdriver.log
 waiting_too_long.*
+website/performances/*
+website/tests/*

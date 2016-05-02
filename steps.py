@@ -35,6 +35,12 @@ def connect_to_db():
     world.browser = webdriver.Firefox()
     #world.browser = webdriver.PhantomJS()
     #world.browser = webdriver.Chrome()
+
+    TIME_BEFORE_FAILURE = get_TIME_BEFORE_FAILURE()
+    if TIME_BEFORE_FAILURE is not None:
+        world.browser.set_page_load_timeout(TIME_BEFORE_FAILURE)
+        world.browser.set_script_timeout(TIME_BEFORE_FAILURE)
+
     world.browser.set_window_size(1600, 1200)
     world.nbframes = 0
 
@@ -52,6 +58,8 @@ def connect_to_db():
     world.files_before = os.listdir(file_path)
 
     world.logged_in = False
+
+
 
 @before.each_step
 def apply_monkey_patch(step):
@@ -145,23 +153,51 @@ def go_home_page(step):
 @step('I log into instance "([^"]*)"')
 @output.register_for_printscreen
 def connect_on_database(step, database_name):
-    # we would like to get back to the the login page
-    world.browser.delete_all_cookies()
-    world.browser.get(HTTP_URL_SERVER)
 
-    # select the database chosen by the user
-    elem_select = get_element(world.browser, tag_name="select", id_attr="db")
+    tick = monitor(world.browser, "I cannot login with %s/%s" % (UNIFIELD_ADMIN, UNIFIELD_PASSWORD))
 
-    get_element(elem_select, tag_name="option", attrs={'value': database_name}).click()
+    while True:
+        # we would like to get back to the the login page
+        world.browser.delete_all_cookies()
+        world.browser.get(HTTP_URL_SERVER)
 
-    # fill in the credentials
-    get_element(world.browser, tag_name="input", id_attr="user").send_keys(UNIFIELD_ADMIN)
-    get_element(world.browser, tag_name="input", id_attr="password").send_keys(UNIFIELD_PASSWORD)
-    # log in
-    get_element(world.browser, tag_name="button", attrs={'type': 'submit'}).click()
+        # select the database chosen by the user
+        elem_select = get_element(world.browser, tag_name="select", id_attr="db")
 
-    ## if you want to open the debugger before starting any action in UniField
-    #world.browser.find_element_by_tag_name('body').send_keys(Keys.COMMAND + Keys.ALT + 's')
+        get_element(elem_select, tag_name="option", attrs={'value': database_name}).click()
+
+        # fill in the credentials
+        get_element(world.browser, tag_name="input", id_attr="user").send_keys(UNIFIELD_ADMIN)
+        get_element(world.browser, tag_name="input", id_attr="password").send_keys(UNIFIELD_PASSWORD)
+        # log in
+        get_element(world.browser, tag_name="button", attrs={'type': 'submit'}).click()
+
+        redo = False
+
+        # we have to check
+        while True:
+            tick()
+
+            elements_error = get_elements(world.browser, tag_name="div", class_attr="login_error_message")
+            elements_error = map(lambda x : x.text, elements_error)
+
+            elements_menu = get_elements(world.browser, tag_name="td", id_attr="main_nav")
+            elements_menu = map(lambda x : x.text, elements_menu)
+
+            if elements_menu:
+                redo = False
+                break
+            elif elements_error:
+                redo = True
+                break
+
+            time.sleep(TIME_TO_SLEEP)
+
+        if not redo:
+            break
+
+        ## if you want to open the debugger before starting any action in UniField
+        #world.browser.find_element_by_tag_name('body').send_keys(Keys.COMMAND + Keys.ALT + 's')
 
     world.logged_in = True
 
@@ -255,7 +291,7 @@ def open_tab(step, tab_to_open):
     tab_to_open_normalized = to_camel_case(tab_to_open)
 
     elem_menu = get_element(world.browser, tag_name="div", id_attr="applications_menu")
-    button_label = get_element_from_text(elem_menu, tag_name="span", text=tab_to_open_normalized, wait="Cannot find tab menu %s" % elem_menu)
+    button_label = get_element_from_text(elem_menu, tag_name="span", text=tab_to_open_normalized, wait="Cannot find tab menu %s" % tab_to_open)
     button_label.click()
 
     wait_until_not_loading(world.browser, wait="We cannot open fully tab menu '%s'. Something is still processing" % tab_to_open)
@@ -367,7 +403,8 @@ def open_tab(step, menu_to_click_on):
 @step('I open tab "([^"]*)"')
 @output.add_printscreen
 def open_tab(step, tabtoopen):
-    click_on(lambda : get_element_from_text(world.browser, class_attr="tab-title", tag_name="span", text=tabtoopen, wait="Cannot find tab %s" % tabtoopen))
+    msg = "Cannot find tab %s" % tabtoopen
+    click_on(world.browser, lambda : get_element_from_text(world.browser, class_attr="tab-title", tag_name="span", text=tabtoopen, wait=msg), msg)
     wait_until_not_loading(world.browser, wait="Cannot open the tab. Loading takes too much time")
 
 #}%}
@@ -403,12 +440,12 @@ def fill_field(step, fieldname, content):
         content_path = os.path.join(base_dir, FILE_DIR, content)
 
         if not os.path.isfile(content_path):
-            raise Exception("%s is not a file" % content_path)
+            raise UniFieldElementException("%s is not a file" % content_path)
         my_input.send_keys(content_path)
     elif my_input.tag_name == "input" and my_input.get_attribute("type") and my_input.get_attribute("type") == "checkbox":
 
         if content.lower() not in ["yes", "no"]:
-            raise Exception("You cannot defined any value except no and yes for a checkbox")
+            raise UniFieldElementException("You cannot defined any value except no and yes for a checkbox")
 
         if content.lower() == "yes":
             if not my_input.is_selected():
@@ -445,7 +482,7 @@ def fill_field(step, fieldname, content):
 @output.register_for_printscreen
 def fill_field(step, fieldname):
     if not step.hashes:
-        raise Exception("Why don't you define at least one row?")
+        raise UniFieldElementException("Why don't you define at least one row?")
 
     TEMP_FILENAME = 'tempfile'
 
@@ -497,9 +534,9 @@ def remember_step(step, fieldname, variable):
     values = get_values(fieldname)
 
     if not values:
-        raise Exception("No field named %s" % fieldname)
+        raise UniFieldElementException("No field named %s" % fieldname)
     elif len(values) > 1:
-        raise Exception("Several values found for %s (values: %s)" % (fieldname, ', '.join(values)))
+        raise UniFieldElementException("Several values found for %s (values: %s)" % (fieldname, ', '.join(values)))
 
     world.FEATURE_VARIABLE[variable.strip()] = values[0].strip()
 
@@ -577,7 +614,8 @@ def close_window_if_necessary(step, button):
     previous_url = last_frame.get_attribute("src")
     world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes-1, wait="Cannot find the window in which the button is located"))
 
-    click_on(lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait="Cannot find button %s" % button))
+    msg = "Cannot find button %s" % button
+    click_on(world.browser, lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg), msg)
 
     world.browser.switch_to_default_content()
     tick = monitor(world.browser)
@@ -600,7 +638,7 @@ def close_window_if_necessary(step, button):
             if current_url != previous_url:
                 #TODO ADD AN EXPLANATION HERE ET BELOW
                 #TODO GIVE AN EXPLANATION FOR ALL THE CALLS TO monitor(...) and the others (except get_element(s) and get_elemnets_from_text...)
-                world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait=True))
+                world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait="I cannot find the new window"))
                 return
 
             time.sleep(TIME_TO_SLEEP)
@@ -625,13 +663,14 @@ def click_on_button(step, button):
     # we have an issue when the user is not logged in... the important buttons are "at the end of the page". We have to
     #  fetch them in another order
     position_element = 0 if world.logged_in else -1
-    click_on(lambda : get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait="Cannot find button %s" % button)[position_element])
+    msg = "Cannot find button %s" % button
+    click_on(world.browser, lambda : get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg)[position_element], msg)
 
     if world.nbframes != 0:
         wait_until_not_loading(world.browser, wait=False)
 
         world.browser.switch_to_default_content()
-        world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", wait=True, position=world.nbframes-1))
+        world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", wait="I cannot select the current window", position=world.nbframes-1))
 
         wait_until_not_loading(world.browser, wait=False)
         wait_until_no_ajax(world.browser)
@@ -646,12 +685,13 @@ def click_on_button_and_open(step, button):
 
     wait_until_not_loading(world.browser, wait=False)
     wait_until_no_ajax(world.browser)
-    click_on(lambda : get_element_from_text(world.browser, tag_name="button", text=button, wait="Cannot find button %s" % button))
+    msg = "Cannot find button %s" % button
+    click_on(world.browser, lambda : get_element_from_text(world.browser, tag_name="button", text=button, wait=msg), msg)
 
     wait_until_not_loading(world.browser, wait=False)
 
     world.browser.switch_to_default_content()
-    world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes, tag_name="iframe", wait=True))
+    world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes, tag_name="iframe", wait="I don't find the new window"))
     world.nbframes += 1
 
     wait_until_no_ajax(world.browser)
@@ -667,7 +707,7 @@ def close_the_window(step):
 
     world.nbframes -= 1
     if world.nbframes > 0:
-        world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait=True))
+        world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait="I don't find the previous window"))
     else:
         wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe"))
 
@@ -677,12 +717,13 @@ def close_the_window(step):
 @output.add_printscreen
 def click_on_button_and_close(step, button):
 
-    click_on(lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait="Cannot find the button to close the window"))
+    msg = "Cannot find the button to close the window"
+    click_on(world.browser,  lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg), msg)
     world.nbframes -= 1
 
     world.browser.switch_to_default_content()
     if world.nbframes > 0:
-        world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait=True))
+        world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait="I don't find the previous window"))
     else:
         wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe"))
 
@@ -738,31 +779,31 @@ def should_see(step, content, fieldname):
     content_found = get_values(fieldname)
 
     if content not in content_found:
-        raise Exception("%s doesn't contain %s (values found: %s)" % (fieldname, content, ', '.join(content_found)))
+        raise UniFieldElementException("%s doesn't contain %s (values found: %s)" % (fieldname, content, ', '.join(content_found)))
 
 @step('I should see a text status with "([^"]*)"')
 @output.register_for_printscreen
 def see_status(step, message_to_see):
     wait_until_not_loading(world.browser)
-    elem = get_element(world.browser, tag_name="tr", id_attr="actions_row", wait=True)
+    elem = get_element(world.browser, tag_name="tr", id_attr="actions_row", wait="I don't see any text status")
 
     reg = create_regex(message_to_see)
 
     if re.match(reg, elem.text, flags=re.DOTALL) is None:
         print "No '%s' found in '%s'" % (message_to_see, elem.text)
-        raise Exception("No '%s' found in '%s'" % (message_to_see, elem.text))
+        raise UniFieldElementException("No '%s' found in '%s'" % (message_to_see, elem.text))
 
 @step('I should see a popup with "([^"]*)"$')
 @output.register_for_printscreen
 def see_popup(step, message_to_see):
     wait_until_not_loading(world.browser)
-    elem = get_element(world.browser, tag_name="td", class_attr="error_message_content", wait=True)
+    elem = get_element(world.browser, tag_name="td", class_attr="error_message_content", wait="I don't find any popup")
 
     reg = create_regex(message_to_see)
 
     if re.match(reg, elem.text, flags=re.DOTALL) is None:
         print "No '%s' found in '%s'" % (message_to_see, elem.text)
-        raise Exception("No '%s' found in '%s'" % (message_to_see, elem.text))
+        raise UniFieldElementException("No '%s' found in '%s'" % (message_to_see, elem.text))
 #}%}
 
 # Table management {%{
@@ -793,11 +834,11 @@ def fill_column(step, content, fieldname):
             pass
 
     if right_pos is None:
-        raise Exception("Cannot find column '%s'" % fieldname)
+        raise UniFieldElementException("Cannot find column '%s'" % fieldname)
 
     #FIXME: This method should use the same behaviour as "I fill ... with ..."
     def get_text_box():
-        row_in_edit_mode = get_element(world.browser, tag_name="tr", class_attr="editors", wait=True)
+        row_in_edit_mode = get_element(world.browser, tag_name="tr", class_attr="editors", wait="I don't find any line to edit")
 
         td_node = get_element(row_in_edit_mode, class_attr="grid-cell", tag_name="td", position=right_pos)
 
@@ -839,7 +880,7 @@ def click_on_line(step, action):
     wait_until_not_loading(world.browser, wait=False)
 
     if not step.hashes:
-        raise Exception("You have to click on at least one line")
+        raise UniFieldElementException("You have to click on at least one line")
 
     import collections
     no_by_fingerprint = collections.defaultdict(lambda : 0)
@@ -886,7 +927,7 @@ def click_on_line(step, action):
             columns = i_hash.keys()
             options = map(lambda x : x[1], get_options_for_table(world, columns))
             options_txt =', '.join(map(lambda x : '|'.join(x), options))
-            raise Exception("A line hasn't been found among the following values: %s" % options_txt)
+            raise UniFieldElementException("A line hasn't been found among the following values: %s" % options_txt)
 
         repeat_until_no_exception(try_to_click_on_line, StaleElementReferenceException, step, action)
 
@@ -912,7 +953,7 @@ def click_on_line_and_open_the_window(step, action):
     click_on_line(step, action)
 
     world.browser.switch_to_default_content()
-    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait=True))
+    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait="I don't find the new window"))
     world.nbframes += 1
 
     wait_until_no_ajax(world.browser)
@@ -930,13 +971,13 @@ def check_line(step):
                 columns = hashes.keys()
                 options = map(lambda x : x[1], get_options_for_table(world, columns))
                 options_txt =', '.join(map(lambda x : '|'.join(x), options))
-                raise Exception("I don't find: %s. My options where: %s" % (hashes, options_txt))
+                raise UniFieldElementException("I don't find: %s. My options where: %s" % (hashes, options_txt))
 
     repeat_until_no_exception(try_to_check_line, StaleElementReferenceException, step)
 
 def search_until_I(step, action_search, see):
     if not step.hashes:
-        raise Exception("Why don't you define at least one row?")
+        raise UniFieldElementException("Why don't you define at least one row?")
 
     def try_to_check_line(myhashes):
         for hashes in myhashes:
@@ -971,13 +1012,13 @@ def open_side_panel(step, menuname):
     wait_until_not_loading(world.browser)
 
     if world.nbframes != 0:
-        raise Exception("You cannot open the side panel if you have just opened a window")
+        raise UniFieldElementException("You cannot open the side panel if you have just opened a window")
 
     # sometimes the click is not done (or at least the side panel doesn't open...)
     #  it seems that this is related to a new
     #FIXME: On Firefox, this click sometimes doesn't work because it click on the window
     #  and not on the small button to open the window...
-    element = get_element(world.browser, id_attr="a_main_sidebar", wait=True)
+    element = get_element(world.browser, id_attr="a_main_sidebar", wait="I don't find the side bar")
     tick = monitor(world.browser)
     while 'closed' in element.get_attribute("class"):
         tick()
@@ -996,7 +1037,7 @@ def open_side_panel_and_open(step, menuname):
     open_side_panel(step, menuname)
 
     world.browser.switch_to_default_content()
-    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait=True))
+    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait="I don't find the new window"))
     world.nbframes += 1
 
     wait_until_no_ajax(world.browser)
@@ -1083,7 +1124,7 @@ def save_time_results(step, counters, filename):
     for counter in counters.split():
         values.append(str(world.durations.get(counter, '')))
 
-    results_path = os.path.join(RESULTS_DIR, filename)
+    results_path = os.path.join(RESULTS_DIR, '%s.csv' % filename)
 
     # let's create a title
     ret = ['COUNT'] if 'COUNT' in os.environ else []
@@ -1105,6 +1146,11 @@ def save_time_results(step, counters, filename):
 
     line = ';'.join(values)
     f.write(line + '\r\n')
+    f.close()
+
+    meta_path = os.path.join(RESULTS_DIR, '%s.meta' % filename)
+    f = open(meta_path, 'w')
+    f.write("description=%s" % step.scenario.name)
     f.close()
 
 #}%}
