@@ -21,5 +21,5 @@ then
 fi
 mkdir "$DIREXPORT"
 
-cp output/* website/tests/last/
+cp output/* $DIREXPORT/
 

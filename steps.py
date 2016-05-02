@@ -564,8 +564,9 @@ def click_until_not_available2(step, button):
 @step('I click on "([^"]*)" until "([^"]*)" in "([^"]*)"$')
 def click_until_not_available1(step, button, value, fieldname):
 
-    wait_until_not_loading(world.browser, wait="Loading before clicking takes too much time")
+    wait_until_not_loading(world.browser, wait = "Loading before clicking takes too much time" if world.nbframes == 0 else '')
     tick = monitor(world.browser)
+
     while True:
         tick()
         try:
@@ -585,10 +586,11 @@ def click_until_not_available1(step, button, value, fieldname):
                 time.sleep(TIME_TO_WAIT)
             else:
                 break
-        except (AssertionError, StaleElementReferenceException, ElementNotVisibleException):
+        except (AssertionError, StaleElementReferenceException, ElementNotVisibleException) as e:
             # AssertionError is used if the frame is not the good one (because it was replaced with
             #  another one)
             pass
+            print e
 
 # I click on ... {%{
 # I click on "Search/New/Clear"
@@ -990,7 +992,7 @@ def search_until_I(step, action_search, see):
 
     step.given('I click on "%s"' % action_search)
 
-    tick = monitor(world.browser)
+    tick = monitor(world.browser, ("I don't find the following row(s): %s" if see else "I still see %s") % myhashes)
 
     while repeat_until_no_exception(try_to_check_line, StaleElementReferenceException, myhashes) != see:
         step.given('I click on "%s"' % action_search)
