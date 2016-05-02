@@ -515,7 +515,10 @@ def fill_field(step, fieldname):
 
             localdict = dict(ROW=str(row_number))
 
-            f.write('<ss:Data ss:Type="%s">%s</ss:Data>' % (celltype, convert_input(world, cell, localdict)))
+            def encode(s):
+                return s.encode('utf-8').replace('&', '&amp;')
+
+            f.write('<ss:Data ss:Type="%s">%s</ss:Data>' % (encode(celltype), encode(convert_input(world, cell, localdict))))
             f.write('</ss:Cell>')
         f.write('</ss:Row>')
 

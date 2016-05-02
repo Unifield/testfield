@@ -25,6 +25,8 @@ RUN ls && ls && ls && ls && ls && git clone https://github.com/hectord/testfield
 
 WORKDIR /root/testfield
 
+RUN mkdir output
+
 ADD instances instances
 ADD meta_features meta_features
 
