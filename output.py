@@ -188,7 +188,7 @@ def get_printscreen(world):
         world.browser.save_screenshot(filename)
 
         from PIL import Image
-        im=Image.open(tf.name)
+        im=Image.open(filename)
         location = elements[0].location
         size = elements[0].size
         rect = (location['x'], location['y'], location['x'] + size['width'], location['y'] + size['height'])

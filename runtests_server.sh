@@ -160,7 +160,7 @@ run_unifield()
 }
 
 DATABASES=
-for FILENAME in `find instances/$ENVNAME -name *.dump`;
+for FILENAME in `find instances/$ENVNAME -name *.dump | sort`;
 do
     F_WITHOUT_EXTENSION=${FILENAME%.dump}
     DBNAME=${F_WITHOUT_EXTENSION##*/}
@@ -175,7 +175,7 @@ python restore.py --reset-versions $ENVNAME
 generate_configuration_file;
 
 #FIXME: We should do it only if necessary. How can we check that?
-#upgrade_server;
+upgrade_server;
 
 if [[ -z "$DISPLAY" ]];
 then
