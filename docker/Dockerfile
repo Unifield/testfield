@@ -34,5 +34,6 @@ RUN chmod +x docker-entrypoint.sh
 ENTRYPOINT ["/root/docker-entrypoint.sh"]
 
 EXPOSE 8080
+EXPOSE 8003
 
 RUN apt-get install -y locales

@@ -42,8 +42,10 @@ fetch_source_code()
     bzr checkout "$WEBBRANCH" "$WEBDIR"
 
     # we have to get rid of the versions we don't want
-    echo "88888888888888888888888888888888\r\n" \
-         "66f490e4359128c556be7ea2d152e03b 2013-04-27 16:49:56" > $MYTMPDIR/server/bin/unifield-version.txt
+    echo "88888888888888888888888888888888
+66f490e4359128c556be7ea2d152e03b 2013-04-27 16:49:56" > $MYTMPDIR/server/bin/unifield-version.txt
+
+    cat $SERVERDIR/bin/openerp-server.py | sed s/"root"/"ssssb"/ >  $SERVERDIR/bin/openerp-server.py
 }
 
 generate_configuration_file()

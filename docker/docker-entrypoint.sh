@@ -7,6 +7,7 @@ set -o pipefail
 
 git clone https://github.com/hectord/testfield.git && cd testfield
 
+mkdir output
 cp -R /data/* .
 
 chmod +x run.sh
