@@ -137,7 +137,7 @@ def write_end_of_section(scenario):
     if not all_ok:
         # we cannot rely on "passed" because it seems that the exception is sometimes attached to
         #  another step
-        first_failure = filter(lambda x : x.why, scenario.steps)[0]
+        first_failure = filter(lambda x : x.why, (scenario.background.steps if scenario.background else []) + scenario.steps)[0]
         exception_failure = first_failure.why.exception
 
         msg_error = str(exception_failure)

@@ -59,7 +59,29 @@ def connect_to_db():
 
     world.logged_in = False
 
+# Dirty hack to display an error message when a step goes wrong in the background {%{
+@before.each_background
+def do_not_crash(background):
+    world.must_fail = None
 
+@after.each_background
+def cancel_background(background, results):
+    if len(background.steps) != len(results):
+        # we have to check what's the exception to reraise it (we don't want to fail silently)
+        for step in background.steps:
+            if step.why is not None and step.why.exception is not None:
+                world.must_fail = step.why.exception
+                break
+        else:
+            world.must_fail = Exception("Unknown error while executing the background")
+
+@before.each_step
+def fail_if_background(step):
+    if world.must_fail is not None:
+        e = world.must_fail
+        world.must_fail = None
+        raise e
+#}%}
 
 @before.each_step
 def apply_monkey_patch(step):
