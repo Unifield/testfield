@@ -40,7 +40,10 @@ fetch_source_code()
     rm -rf $MYTMPDIR/server $MYTMPDIR/web || true
     bzr checkout "$SERVERBRANCH" "$SERVERDIR"
     bzr checkout "$WEBBRANCH" "$WEBDIR"
-    echo
+
+    # we have to get rid of the versions we don't want
+    echo "88888888888888888888888888888888\r\n" \
+         "66f490e4359128c556be7ea2d152e03b 2013-04-27 16:49:56" > $MYTMPDIR/server/bin/unifield-version.txt
 }
 
 generate_configuration_file()
@@ -99,7 +102,7 @@ run_unifield()
     case $VERB in
 
     test)
-        export TIME_BEFORE_FAILURE=40
+        export TIME_BEFORE_FAILURE=${TIME_BEFORE_FAILURE:-40}
         export COUNT=2;
 
         export TEST_DESCRIPTION=$NAME

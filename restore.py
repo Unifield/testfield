@@ -107,8 +107,10 @@ if __name__ == '__main__':
             if filter(lambda x : x, ret.split('\n')):
                 hwid = get_hardware_id()
                 run_script(dbname, "UPDATE sync_server_entity SET hardware_id = '%s'" % hwid)
+                run_script(dbname, "DELETE FROM sync_server_version WHERE sum NOT IN ('88888888888888888888888888888888', '66f490e4359128c556be7ea2d152e03b')")
             else:
                 run_script(dbname, "UPDATE sync_client_sync_server_connection SET host = 'localhost', protocol = 'netrpc_gzip', port = %d" % NETRPC_PORT)
+                run_script(dbname, "DELETE FROM sync_client_version WHERE sum NOT IN ('88888888888888888888888888888888', '66f490e4359128c556be7ea2d152e03b')")
 
     except (OSError, IOError) as e:
         raise Exception("Unable to access an environment (cause: %s)" % e)
