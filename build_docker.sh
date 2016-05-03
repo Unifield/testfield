@@ -3,9 +3,14 @@
 rm docker/requirements.txt
 cp requirements.txt docker/
 
-rm -rf docker/data
+rm -rf docker/input
+rm -rf docker/output
 
-mkdir docker/data
-cp -R meta_features docker/data/
-cp -R instances docker/data/
+mkdir docker/input
+mkdir docker/output
+mkdir docker/output/benchmarks
+mkdir docker/output/tests
+
+cp -R meta_features docker/input/
+cp -R instances docker/input/
 

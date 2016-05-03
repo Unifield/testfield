@@ -26,7 +26,9 @@ RUN bzr init-repo --no-trees repo
 RUN cd repo && bzr checkout lp:unifield-server server
 RUN cd repo && bzr checkout lp:unifield-web web
 
-VOLUME ["/data"]
+VOLUME ["/input"]
+
+VOLUME ["/output"]
 
 ADD docker-entrypoint.sh .
 RUN chmod +x docker-entrypoint.sh
@@ -34,5 +36,5 @@ RUN chmod +x docker-entrypoint.sh
 ENTRYPOINT ["/root/docker-entrypoint.sh"]
 
 EXPOSE 8080
+EXPOSE 8003
 
-RUN apt-get install -y locales

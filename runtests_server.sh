@@ -42,8 +42,13 @@ fetch_source_code()
     bzr checkout "$WEBBRANCH" "$WEBDIR"
 
     # we have to get rid of the versions we don't want
-    echo "88888888888888888888888888888888\r\n" \
-         "66f490e4359128c556be7ea2d152e03b 2013-04-27 16:49:56" > $MYTMPDIR/server/bin/unifield-version.txt
+    echo "88888888888888888888888888888888
+66f490e4359128c556be7ea2d152e03b 2013-04-27 16:49:56" > $MYTMPDIR/server/bin/unifield-version.txt
+
+    cat $SERVERDIR/bin/openerp-server.py | sed s/"root"/"ssssb"/ >  $SERVERDIR/bin/openerp-server.py.bak
+    rm $SERVERDIR/bin/openerp-server.py
+    mv $SERVERDIR/bin/openerp-server.py.bak $SERVERDIR/bin/openerp-server.py
+
 }
 
 generate_configuration_file()
@@ -112,14 +117,14 @@ run_unifield()
 
         ./runtests_local.sh $LETTUCE_PARAMS
 
-        DIREXPORT=website/tests/last
+        DIREXPORT=website/tests/$NAME
         if [[ -e "$DIREXPORT" ]]
         then
             rm -rf "$DIREXPORT" || true
         fi
         mkdir "$DIREXPORT"
 
-        cp output/* $DIREXPORT/ || true
+        cp -R output/* $DIREXPORT/ || true
 
         ;;
 
@@ -138,10 +143,14 @@ run_unifield()
             done
         done
 
-        DIR_EXPORT="website/performances/$1"
+        DIREXPORT="website/performances/$NAME"
+        if [[ -e "$DIREXPORT" ]]
+        then
+            rm -rf "$DIREXPORT" || true
+        fi
+        mkdir "$DIREXPORT"
 
-        mkdir $DIR_EXPORT
-        cp -R results/* "$DIR_EXPORT/"
+        cp -R results/* "$DIREXPORT/"
 
         ;;
 
