@@ -171,7 +171,7 @@ FIRST_DATABASE=`echo $DATABASES | cut -d " " -f1`
 
 ./generate_credentials.sh $FIRST_DATABASE
 fetch_source_code;
-python restore.py $ENVNAME
+python restore.py --reset-versions $ENVNAME
 generate_configuration_file;
 
 #FIXME: We should do it only if necessary. How can we check that?
