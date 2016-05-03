@@ -11,6 +11,10 @@ RUN python get-pip.py
 ADD requirements.txt .
 RUN pip install -r requirements.txt
 
+RUN bzr init-repo --no-trees repo
+RUN cd repo && bzr checkout lp:unifield-server server
+RUN cd repo && bzr checkout lp:unifield-web web
+
 RUN /etc/init.d/postgresql start && \
     runuser -l  postgres -c "psql -c \"CREATE USER unifield_dev WITH PASSWORD 'unifield_dev';\"" && \
     runuser -l  postgres -c "psql -c \"ALTER USER unifield_dev WITH CREATEDB\"" && \
@@ -20,11 +24,6 @@ RUN /etc/init.d/postgresql start && \
     runuser -l  postgres -c "psql -c \"CREATE DATABASE template1 with template = template0 encoding = 'UTF8'\"" && \
     runuser -l  postgres -c "psql -c \"UPDATE pg_database set datistemplate = TRUE where datname = 'template1';\" template0" && \
     runuser -l  postgres -c "psql -c \"UPDATE pg_database set datallowconn = FALSE where datname = 'template0';\" template1"
-
-RUN bzr init-repo --no-trees repo
-
-RUN cd repo && bzr checkout lp:unifield-server server
-RUN cd repo && bzr checkout lp:unifield-web web
 
 VOLUME ["/input"]
 
