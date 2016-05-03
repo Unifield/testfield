@@ -183,9 +183,9 @@ def get_printscreen(world):
 
     if elements:
         import tempfile
-        tf = tempfile.NamedTemporaryFile()
+        filename = tempfile.mktemp()
 
-        world.browser.save_screenshot(tf.name)
+        world.browser.save_screenshot(filename)
 
         from PIL import Image
         im=Image.open(tf.name)
@@ -194,6 +194,11 @@ def get_printscreen(world):
         rect = (location['x'], location['y'], location['x'] + size['width'], location['y'] + size['height'])
         new = im.crop(rect)
         new.save(path_printscreen)
+
+        try:
+            os.unlink(filename)
+        except (IOError, OSError):
+            pass
     else:
         world.browser.save_screenshot(path_printscreen)
 
