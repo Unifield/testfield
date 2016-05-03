@@ -61,7 +61,7 @@
                 </td>
                 <td>
                     <div class="text-left">
-                        <img src='{{printscreen.filename}}' width='600px'>
+                        <a href="{{printscreen.filename}}"><img src='{{printscreen.filename}}' width='600px'></a>
                     </div>
                 </td>
             </tr>
