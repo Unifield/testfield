@@ -58,6 +58,7 @@ def connect_to_db():
     world.files_before = os.listdir(file_path)
 
     world.logged_in = False
+    world.must_fail = None
 
 # Dirty hack to display an error message when a step goes wrong in the background {%{
 @before.each_background

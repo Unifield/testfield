@@ -448,7 +448,7 @@ def wait_until_no_ajax(browser, message="A javascript operation is still ongoing
                         return "BLOCKED IN INFRAME WINDOW " + i;
                     }
 
-                    var local_ajaxcount1 = (typeof elements[i].contentWindow.openobject == 'undefined') ? 0 : elements[i].contentWindow.openobject.http.AJAX_COUNT;
+                    var local_ajaxcount1 = (typeof elements[i].contentWindow.openobject == 'undefined' || typeof elements[i].contentWindow.openobject.http == 'undefined') ? 0 : elements[i].contentWindow.openobject.http.AJAX_COUNT;
                     if(local_ajaxcount1 > 0){
                         return "BLOCKED IN AJAXCOUNT WINDOW";
                     }

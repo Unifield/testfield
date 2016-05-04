@@ -4,7 +4,11 @@ MAINTAINER hectord
 WORKDIR /root
 
 RUN apt-get update
-RUN apt-get install -y tmux libxml2-dev libxslt1-dev python-dev libjpeg-dev libpng-dev libfreetype6-dev build-essential xvfb firefox wget pkg-config libpq-dev python-dev bzr git postgresql-9.5 vim telnet
+RUN apt-get install -y tmux libxml2-dev libxslt1-dev python-dev libjpeg-dev libpng-dev libfreetype6-dev build-essential xvfb firefox wget pkg-config libpq-dev python-dev bzr git vim telnet
+
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+apt-get update
+apt-get install -y --allow-unauthenticated postgresql-8.4
 
 RUN wget https://bootstrap.pypa.io/get-pip.py
 RUN python get-pip.py
