@@ -4,7 +4,7 @@ rm -rf results/* 2> /dev/null
 
 export TIME_BEFORE_FAILURE=
 
-LETTUCE_PARAMS="${*:3}"
+LETTUCE_PARAMS="${*:2}"
 
 for count in 5 10 15 20 25 30 35 40
 do

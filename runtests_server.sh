@@ -49,6 +49,7 @@ fetch_source_code()
     rm $SERVERDIR/bin/openerp-server.py
     mv $SERVERDIR/bin/openerp-server.py.bak $SERVERDIR/bin/openerp-server.py
 
+    sed -i.bak "s/FOR UPDATE NOWAIT//gi" $SERVERDIR/bin/addons/base/ir/ir_sequence.py
 }
 
 generate_configuration_file()
@@ -132,12 +133,12 @@ run_unifield()
         rm -rf results/* 2> /dev/null || true
         export TIME_BEFORE_FAILURE=
 
-        for count in 5 10 15 20 25 30 35 40
+        for count in 5 10 15 20
         do
             export COUNT=$count
 
             # run the benchmark
-            for nb in `seq 1 3`;
+            for nb in `seq 1 2`;
             do
                 ./runtests_local.sh $LETTUCE_PARAMS
             done
@@ -175,7 +176,7 @@ python restore.py --reset-versions $ENVNAME
 generate_configuration_file;
 
 #FIXME: We should do it only if necessary. How can we check that?
-upgrade_server;
+#upgrade_server;
 
 if [[ -z "$DISPLAY" ]];
 then

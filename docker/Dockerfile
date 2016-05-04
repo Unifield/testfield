@@ -7,8 +7,8 @@ RUN apt-get update
 RUN apt-get install -y tmux libxml2-dev libxslt1-dev python-dev libjpeg-dev libpng-dev libfreetype6-dev build-essential xvfb firefox wget pkg-config libpq-dev python-dev bzr git vim telnet
 
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main" > /etc/apt/sources.list.d/pgdg.list
-apt-get update
-apt-get install -y --allow-unauthenticated postgresql-8.4
+RUN apt-get update
+RUN apt-get install -y --allow-unauthenticated postgresql-8.4
 
 RUN wget https://bootstrap.pypa.io/get-pip.py
 RUN python get-pip.py
@@ -29,12 +29,28 @@ RUN /etc/init.d/postgresql start && \
     runuser -l  postgres -c "psql -c \"UPDATE pg_database set datistemplate = TRUE where datname = 'template1';\" template0" && \
     runuser -l  postgres -c "psql -c \"UPDATE pg_database set datallowconn = FALSE where datname = 'template0';\" template1"
 
-VOLUME ["/input"]
+RUN apt-get install -y net-tools
 
 VOLUME ["/output"]
 
 ADD docker-entrypoint.sh .
 RUN chmod +x docker-entrypoint.sh
+
+# Option (1): use a separate volume
+#VOLUME ["/input"]
+
+# Option (2): import everything in the image
+RUN mkdir /input
+
+RUN mkdir /input/instances
+WORKDIR /input/instances
+ADD input/instances .
+
+RUN mkdir /input/meta_features
+WORKDIR /input/meta_features
+ADD input/meta_features .
+
+WORKDIR /root
 
 ENTRYPOINT ["/root/docker-entrypoint.sh"]
 
