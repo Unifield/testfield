@@ -7,8 +7,8 @@ set -o pipefail
 if [[ $# -lt 2 || ( "$1" != benchmark && "$1" != "test" ) ]];
 then
     echo "Usage: "
-    echo "  $0 benchmark name [server_branch] [web_branch] [tag]"
-    echo "  $0 test name [server_branch] [web_branch] [tag]"
+    echo "  $0 benchmark name [server_branch[:rev_number]] [web_branch[:rev_number]] [tag]"
+    echo "  $0 test name [server_branch[:rev_number]] [web_branch[:rev_number]] [tag]"
     exit 1
 fi
 
@@ -34,12 +34,26 @@ export PGPASSWORD=$DBPASSWORD
 
 PARAM_UNIFIELD_SERVER="--db_user=$DBUSERNAME --db_password=$DBPASSWORD --db_host=$DBADDR -c $MYTMPDIR/openerp-server.conf"
 
+checkout_revision_in()
+{
+    REVISION=`python -c "import sys; print '' if '/' not in sys.argv[1] else sys.argv[1][sys.argv[1].index('/')+1:]" "$1"`
+    BRANCH=`python -c "import sys; print sys.argv[1] if '/' not in sys.argv[1] else sys.argv[1][:sys.argv[1].index('/'):]" "$1"`
+
+    bzr checkout "$BRANCH" "$2" || { echo Cannot checkout $BRANCH; exit 1; }
+
+    if [[ ! ( -z "$REVISION" ) ]];
+    then
+        bzr revert -r "$REVISION" "$2" || { echo Cannot revert $BRANCH to revision $REVISION; exit 1; }
+    fi
+}
+
 fetch_source_code()
 {
     # (1) fetch the source code
     rm -rf $MYTMPDIR/server $MYTMPDIR/web || true
-    bzr checkout "$SERVERBRANCH" "$SERVERDIR"
-    bzr checkout "$WEBBRANCH" "$WEBDIR"
+
+    checkout_revision_in "$SERVERBRANCH" "$SERVERDIR"
+    checkout_revision_in "$WEBBRANCH" "$WEBDIR"
 
     # we have to get rid of the versions we don't want
     echo "88888888888888888888888888888888
