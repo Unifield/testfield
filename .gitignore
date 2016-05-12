@@ -1,8 +1,6 @@
-*.dump
 *.pyc
 results/*
 *.feature
-*.meta_feature
 run
 output/*.png
 output/*.html

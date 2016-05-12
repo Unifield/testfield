@@ -33,7 +33,7 @@ RUN apt-get install -y net-tools
 
 VOLUME ["/output"]
 
-ADD docker-entrypoint.sh .
+ADD docker/docker-entrypoint.sh .
 RUN chmod +x docker-entrypoint.sh
 
 # Option (1): use a separate volume
@@ -44,11 +44,11 @@ RUN mkdir /input
 
 RUN mkdir /input/instances
 WORKDIR /input/instances
-ADD input/instances .
+#ADD instances .
 
 RUN mkdir /input/meta_features
 WORKDIR /input/meta_features
-ADD input/meta_features .
+#ADD meta_features .
 
 WORKDIR /root
 
@@ -56,4 +56,6 @@ ENTRYPOINT ["/root/docker-entrypoint.sh"]
 
 EXPOSE 8080
 EXPOSE 8003
+
+RUN apt-get install -y curl
 

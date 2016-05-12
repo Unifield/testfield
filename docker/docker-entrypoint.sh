@@ -52,16 +52,21 @@ fi
 if [[ $# -lt 2 || ( "$1" != benchmark && "$1" != "test" ) ]];
 then
     echo "Usage: "
-    echo "  $0 benchmark name [--quick] [server_branch] [web_branch] [tag]"
-    echo "  $0 test name [--quick] [server_branch] [web_branch] [tag]"
+    echo "  $0 benchmark name [--quick] [--refresh] [server_branch] [web_branch] [tag]"
+    echo "  $0 test name [--quick] [--refresh] [server_branch] [web_branch] [tag]"
     echo "  $0 web"
     exit 1
 fi
 
 # if you want to create a RAMFS with the database
 PARAMS=$@
+
+HAS_REFRESH=`echo $PARAMS | sed -n 's/.*--refresh.*/YES/p'`
+PARAMS=`echo $PARAMS | sed 's/--refresh//'`
+
 HAS_QUICK=`echo $PARAMS | sed -n 's/.*--quick.*/YES/p'`
 PARAMS=`echo $PARAMS | sed 's/--quick//'`
+
 ARRPARAMS=($PARAMS)
 
 TO_PATH=
@@ -86,6 +91,24 @@ fi
 
 get_repo;
 
+BACKUP_NAME=backup.tar.gz
+PATH_CACHE=/output/$BACKUP_NAME
+if [[ ! ( -z "$HAS_REFRESH" ) || ! ( -e "$PATH_CACHE" ) ]]
+then
+    if [[ -e "$PATH_CACHE" ]]
+    then
+        rm -f "$PATH_CACHE"
+    fi
+
+    echo "Downloading the tests..."
+    curl http://uf0003.unifield.org/backup.tar.gz > $PATH_CACHE
+fi
+
+cp $PATH_CACHE $BACKUP_NAME
+gunzip $BACKUP_NAME -c > tmp.tar
+tar -xvvf tmp.tar
+
+
 if [[ ! ( -z "$HAS_QUICK" ) ]]
 then
     PG_DATA_DIR=/var/lib/postgresql/8.4/main/
@@ -101,7 +124,6 @@ fi
 
 # we have to create the directories for the input/output files (features & dumps)
 mkdir output || true
-cp -R /input/* .
 
 /etc/init.d/postgresql start
 cd /root/testfield
