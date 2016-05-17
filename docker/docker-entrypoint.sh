@@ -2,8 +2,27 @@
 
 export LANG=C.UTF-8
 
-#set -o errexit
+set -o errexit
 #set -o pipefail
+
+# if you want to create a RAMFS with the database
+PARAMS=$@
+
+HAS_REFRESH=`echo $PARAMS | sed -n 's/.*--refresh.*/YES/p'`
+PARAMS=`echo $PARAMS | sed 's/--refresh//'`
+
+HAS_QUICK=`echo $PARAMS | sed -n 's/.*--quick.*/YES/p'`
+PARAMS=`echo $PARAMS | sed 's/--quick//'`
+
+BRANCH_TOO_CLONE=`echo $PARAMS | sed 's/.*--branch=\([^ ]*\).*/\1/'`
+PARAMS=`echo $PARAMS | sed 's/--branch=[^ ]*//'`
+
+if [[ -z "$BRANCH_TOO_CLONE" ]]
+then
+    BRANCH_TOO_CLONE=master
+fi
+
+ARRPARAMS=($PARAMS)
 
 function make_ramfs
 {
@@ -38,9 +57,8 @@ function run_website
 
 function get_repo
 {
-    git clone https://github.com/hectord/testfield.git && cd testfield
+    git clone -b $BRANCH_TOO_CLONE https://github.com/hectord/testfield.git && cd testfield
 }
-
 
 if [[ "$1" == "web" && $# == 1 ]];
 then
@@ -52,22 +70,11 @@ fi
 if [[ $# -lt 2 || ( "$1" != benchmark && "$1" != "test" ) ]];
 then
     echo "Usage: "
-    echo "  $0 benchmark name [--quick] [--refresh] [server_branch] [web_branch] [tag]"
-    echo "  $0 test name [--quick] [--refresh] [server_branch] [web_branch] [tag]"
+    echo "  $0 benchmark name [--quick] [--refresh] [--branch=git_branch] [server_branch] [web_branch] [tag]"
+    echo "  $0 test name [--quick] [--refresh] [--branch=git_branch] [server_branch] [web_branch] [tag]"
     echo "  $0 web"
     exit 1
 fi
-
-# if you want to create a RAMFS with the database
-PARAMS=$@
-
-HAS_REFRESH=`echo $PARAMS | sed -n 's/.*--refresh.*/YES/p'`
-PARAMS=`echo $PARAMS | sed 's/--refresh//'`
-
-HAS_QUICK=`echo $PARAMS | sed -n 's/.*--quick.*/YES/p'`
-PARAMS=`echo $PARAMS | sed 's/--quick//'`
-
-ARRPARAMS=($PARAMS)
 
 TO_PATH=
 FROM_PATH=
