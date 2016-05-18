@@ -14,12 +14,14 @@ PARAMS=`echo $PARAMS | sed 's/--refresh//'`
 HAS_QUICK=`echo $PARAMS | sed -n 's/.*--quick.*/YES/p'`
 PARAMS=`echo $PARAMS | sed 's/--quick//'`
 
-BRANCH_TOO_CLONE=`echo $PARAMS | sed 's/.*--branch=\([^ ]*\).*/\1/'`
-PARAMS=`echo $PARAMS | sed 's/--branch=[^ ]*//'`
+HAS_RELOAD=`echo $PARAMS | sed -n 's/.*--reload.*/YES/p'`
+PARAMS=`echo $PARAMS | sed 's/--reload//'`
 
-if [[ -z "$BRANCH_TOO_CLONE" ]]
+BRANCH_TOO_CLONE=master
+if [[ ! -z "`echo $PARAMS | sed -n 's/.*--branch*/YES/p'`" ]]
 then
-    BRANCH_TOO_CLONE=master
+    BRANCH_TOO_CLONE=`echo $PARAMS | sed 's/.*--branch=\([^ ]*\).*/\1/'`
+    PARAMS=`echo $PARAMS | sed 's/--branch=[^ ]*//'`
 fi
 
 ARRPARAMS=($PARAMS)
@@ -70,8 +72,8 @@ fi
 if [[ $# -lt 2 || ( "$1" != benchmark && "$1" != "test" ) ]];
 then
     echo "Usage: "
-    echo "  $0 benchmark name [--quick] [--refresh] [--branch=git_branch] [server_branch] [web_branch] [tag]"
-    echo "  $0 test name [--quick] [--refresh] [--branch=git_branch] [server_branch] [web_branch] [tag]"
+    echo "  $0 benchmark name [--quick] [--refresh] [--reload] [--branch=git_branch] [server_branch] [web_branch] [tag]"
+    echo "  $0 test name [--quick] [--refresh] [--reload] [--branch=git_branch] [server_branch] [web_branch] [tag]"
     echo "  $0 web"
     exit 1
 fi
@@ -115,7 +117,6 @@ cp $PATH_CACHE $BACKUP_NAME
 gunzip $BACKUP_NAME -c > tmp.tar
 tar -xvvf tmp.tar
 
-
 if [[ ! ( -z "$HAS_QUICK" ) ]]
 then
     PG_DATA_DIR=/var/lib/postgresql/8.4/main/
@@ -134,6 +135,12 @@ mkdir output || true
 
 /etc/init.d/postgresql start
 cd /root/testfield
+
+export RELOAD_BASE_MODULE=no
+if [[ ! ( -z "$HAS_RELOAD" ) ]]
+then
+    export RELOAD_BASE_MODULE=yes
+fi
 
 ./runtests_server.sh $PARAMS
 

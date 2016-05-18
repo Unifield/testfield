@@ -190,7 +190,11 @@ python restore.py --reset-versions $ENVNAME
 generate_configuration_file;
 
 #FIXME: We should do it only if necessary. How can we check that?
-#upgrade_server;
+if [[ $RELOAD_BASE_MODULE == 'yes' ]]
+then
+    upgrade_server;
+fi
+
 
 if [[ -z "$DISPLAY" ]];
 then
