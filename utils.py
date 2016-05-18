@@ -479,13 +479,13 @@ def wait_until_no_ajax(browser, message="A javascript operation is still ongoing
 
         return
 
-def repeat_until_no_exception(action, exception, *params):
+def repeat_until_no_exception(action, exceptions, *params):
     #FIXME: We should add a monitor here. It's possible to loop for ages in this
     # loop if we still getting StaleElementReferenceException...
     while True:
         try:
             return action(*params)
-        except exception:
+        except exceptions:
             print "EXCEPTION"
             time.sleep(TIME_TO_SLEEP)
 

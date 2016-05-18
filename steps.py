@@ -943,6 +943,8 @@ def click_on_line(step, action):
 
                 if no_matched_row == matched_row_to_click_on:
                     action_to_click = actions_to_click[0]
+                    if not action_to_click.is_displayed():
+                        continue
                     action_to_click.click()
                     no_by_fingerprint[hash_key_value] += 1
                     # we have found the line, the action has already been found.
@@ -957,7 +959,7 @@ def click_on_line(step, action):
             options_txt =', '.join(map(lambda x : '|'.join(x), options))
             raise UniFieldElementException("A line hasn't been found among the following values: %s" % options_txt)
 
-        repeat_until_no_exception(try_to_click_on_line, StaleElementReferenceException, step, action)
+        repeat_until_no_exception(try_to_click_on_line, (ElementNotVisibleException, StaleElementReferenceException), step, action)
 
         # we have to execute that outside the function because it cannot raise an exception
         #  (we would do the action twice)
