@@ -847,6 +847,9 @@ def get_values(fieldname):
 @step('I should see "([^"]*)" in "([^"]*)"')
 @output.register_for_printscreen
 def should_see(step, content, fieldname):
+
+    wait_until_not_loading(world.browser, wait=False)
+
     content = convert_input(world, content)
     reg = create_regex(content)
 
