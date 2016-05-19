@@ -415,7 +415,7 @@ def open_tab(step, menu_to_click_on):
     world.browser.switch_to_default_content()
     world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait="Cannot find the window"))
     world.nbframes += 1
-    wait_until_no_ajax(world.browser)
+    wait_until_no_ajax(world)
 
 @step('I click on menu "([^"]*)"$')
 @output.register_for_printscreen
@@ -449,7 +449,7 @@ def fill_field(step, fieldname, content):
         select = Select(my_input)
         select.select_by_visible_text(content)
 
-        wait_until_no_ajax(world.browser)
+        wait_until_no_ajax(world)
 
         ## This version is quite the same as the previous one except that it sometimes fail
         #   to select the right text (but the selected value is correct)
@@ -480,7 +480,7 @@ def fill_field(step, fieldname, content):
         #WARNING: the attribute's name is different in PhantomJS and Firefox. Firefox change it into lower case.
         #  That's not the case of PhantomJS (chromium?). We have to take both cases into account.
     elif my_input.get_attribute("autocomplete") and my_input.get_attribute("autocomplete").lower() == "off" and '_text' in idattr:
-        select_in_field_an_option(world.browser,
+        select_in_field_an_option(world,
                                   lambda : (get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait="Cannot find the field for this input"), action_write_in_element, True),
                                   content)
     else:
@@ -492,14 +492,14 @@ def fill_field(step, fieldname, content):
             my_input.send_keys((100*Keys.BACKSPACE) + input_text + Keys.TAB)
 
             #world.browser.execute_script("$('#%s').change()" % my_input.get_attribute("id"))
-            wait_until_no_ajax(world.browser)
+            wait_until_no_ajax(world)
 
             if my_input.get_attribute("value") == input_text:
                 break
 
             time.sleep(TIME_TO_SLEEP)
 
-    wait_until_no_ajax(world.browser)
+    wait_until_no_ajax(world)
 
 @step('I fill "([^"]*)" with table:$')
 @output.register_for_printscreen
@@ -701,10 +701,10 @@ def click_on_button(step, button):
         world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", wait="I cannot select the current window", position=world.nbframes-1))
 
         wait_until_not_loading(world.browser, wait=False)
-        wait_until_no_ajax(world.browser)
+        wait_until_no_ajax(world)
     else:
         wait_until_not_loading(world.browser, wait=False)
-        wait_until_no_ajax(world.browser)
+        wait_until_no_ajax(world)
         #world.browser.save_screenshot('mourge.png')
 
 @step('I click on "([^"]*)" and open the window$')
@@ -712,7 +712,7 @@ def click_on_button(step, button):
 def click_on_button_and_open(step, button):
 
     wait_until_not_loading(world.browser, wait=False)
-    wait_until_no_ajax(world.browser)
+    wait_until_no_ajax(world)
     msg = "Cannot find button %s" % button
     click_on(world.browser, lambda : get_element_from_text(world.browser, tag_name="button", text=button, wait=msg), msg)
 
@@ -722,7 +722,7 @@ def click_on_button_and_open(step, button):
     world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes, tag_name="iframe", wait="I don't find the new window"))
     world.nbframes += 1
 
-    wait_until_no_ajax(world.browser)
+    wait_until_no_ajax(world)
 
 @step('I close the window$')
 @output.add_printscreen
@@ -756,7 +756,7 @@ def click_on_button_and_close(step, button):
         wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe"))
 
     #wait_until_not_loading(world.browser)
-    wait_until_no_ajax(world.browser)
+    wait_until_no_ajax(world)
 
 def click_if_toggle_button_is(btn_name, from_class_name):
     btn_name = to_camel_case(btn_name)
@@ -885,14 +885,14 @@ def fill_column(step, content, fieldname):
 
         return get_element(td_node, tag_name="input", attrs={'type': 'text'})
 
-    select_in_field_an_option(world.browser, get_text_box, content)
+    select_in_field_an_option(world, get_text_box, content)
 
 @step('I tick all the lines')
 @output.register_for_printscreen
 def click_on_all_line(step):
 
     wait_until_not_loading(world.browser, wait=False)
-    wait_until_no_ajax(world.browser)
+    wait_until_no_ajax(world)
 
     open_all_the_tables(world)
 
@@ -900,7 +900,7 @@ def click_on_all_line(step):
         get_element(elem, tag_name="input", attrs={'type': 'checkbox'}).click()
 
     wait_until_not_loading(world.browser, wait=False)
-    wait_until_no_ajax(world.browser)
+    wait_until_no_ajax(world)
 
 def click_on_line(step, action):
     # This is important because we cannot click on lines belonging
@@ -964,7 +964,7 @@ def click_on_line(step, action):
         # we have to execute that outside the function because it cannot raise an exception
         #  (we would do the action twice)
         wait_until_not_loading(world.browser, wait=False)
-        wait_until_no_ajax(world.browser)
+        wait_until_no_ajax(world)
 
 
 @step('I click on line:')
@@ -986,7 +986,7 @@ def click_on_line_and_open_the_window(step, action):
     world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait="I don't find the new window"))
     world.nbframes += 1
 
-    wait_until_no_ajax(world.browser)
+    wait_until_no_ajax(world)
 
 @step('I should see in the main table the following data:')
 @output.register_for_printscreen
@@ -1038,7 +1038,7 @@ def click_on_search_until(step, action_search):
 @step('I click "([^"]*)" in the side panel$')
 @output.add_printscreen
 def open_side_panel(step, menuname):
-    wait_until_no_ajax(world.browser)
+    wait_until_no_ajax(world)
     wait_until_not_loading(world.browser)
 
     if world.nbframes != 0:
@@ -1070,12 +1070,12 @@ def open_side_panel_and_open(step, menuname):
     world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait="I don't find the new window"))
     world.nbframes += 1
 
-    wait_until_no_ajax(world.browser)
+    wait_until_no_ajax(world)
 
 @step('I validate the line')
 @output.register_for_printscreen
 def choose_field(step):
-    wait_until_no_ajax(world.browser)
+    wait_until_no_ajax(world)
     wait_until_not_loading(world.browser)
 
     # We have to ensure that the number of rows changes, otherwise, we could continue
@@ -1093,7 +1093,7 @@ def choose_field(step):
         world.browser.execute_script("$('img[title=Update]').first().triggerHandler('click')")
         #click_on(lambda : get_element(world.browser, tag_name="img", attrs={'title': 'Update'}, wait=True))
 
-        wait_until_no_ajax(world.browser)
+        wait_until_no_ajax(world)
         wait_until_not_loading(world.browser)
 
         try:
@@ -1111,6 +1111,9 @@ def choose_field(step):
             break
 
         time.sleep(TIME_TO_SLEEP)
+
+        # we don't need to check the change of IDs since it's always validates with the waits above
+        break
 
 
 #}%}

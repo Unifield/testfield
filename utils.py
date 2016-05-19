@@ -5,6 +5,7 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import NoSuchFrameException
 import datetime
 import time
 import re
@@ -64,10 +65,10 @@ def monitor(browser, explanation=''):
         time_spent_waiting = timedelta_total_seconds(now - here['start_datetime'])
 
         TIME_BEFORE_FAILURE = get_TIME_BEFORE_FAILURE()
-        if TIME_BEFORE_FAILURE is not None and time_spent_waiting > TIME_BEFORE_FAILURE:
-            raise TimeoutException(explanation or "We have waited for too long on an element")
 
-        if here['val'] > LIMIT_COUNTER:
+        timeout_detected = TIME_BEFORE_FAILURE is not None and time_spent_waiting > TIME_BEFORE_FAILURE
+
+        if here['val'] > LIMIT_COUNTER or timeout_detected:
             browser = here['browser']
 
             if isinstance(browser, WebElement):
@@ -90,6 +91,9 @@ def monitor(browser, explanation=''):
             f = open("waiting_too_long.html", 'w')
             f.write(content.encode('utf-8'))
             f.close()
+
+        if timeout_detected:
+            raise TimeoutException(explanation or "We have waited for too long on an element")
 
     return counter
 
@@ -411,12 +415,24 @@ def get_table_row_from_hashes(world, keydict):
 #}%}
 
 # Wait {%{
-def wait_until_no_ajax(browser, message="A javascript operation is still ongoing"):
-    tick = monitor(browser, message)
+def wait_until_no_ajax(world, message="A javascript operation is still ongoing"):
+    tick = monitor(world.browser, message)
     while True:
         # sometimes, openobject doesn't exist in some windows
         try:
-            ret = browser.execute_script('''
+
+            # we have to check if the frame is still visible because we sometimes reload another one
+            #  If we run a javascript code in the old frame it blocks.
+            try:
+                world.browser.find_element_by_tag_name("html")
+                world.browser.find_element_by_tag_name("html").is_displayed()
+            except NoSuchFrameException as e:
+                # we have to reload the new frame
+                world.browser.switch_to_default_content()
+                if world.nbframes != 0:
+                    world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait="Cannot find the frame in which the button is located"))
+
+            ret = world.browser.execute_script('''
 
                 function check(tab){
                     for(i in tab){
@@ -471,11 +487,11 @@ def wait_until_no_ajax(browser, message="A javascript operation is still ongoing
         except WebDriverException as e:
             raise
 
-        if str(ret) != "0":
-            continue
-
         tick()
         time.sleep(TIME_TO_SLEEP)
+
+        if str(ret) != "0":
+            continue
 
         return
 
@@ -567,7 +583,7 @@ def action_select_option(txtinput, content):
     option.click()
     txtinput.click()
 
-def select_in_field_an_option(browser, fieldelement, content):
+def select_in_field_an_option(world, fieldelement, content):
     '''
     Find a field according to its label
     '''
@@ -580,7 +596,7 @@ def select_in_field_an_option(browser, fieldelement, content):
     end_value = "_text"
     if idattr[-len(end_value):] == end_value:
         idvalue_before = idattr[:-len(end_value)]
-        txtidinput = get_element(browser, id_attr=idvalue_before.replace('/', '\\/'), wait=True)
+        txtidinput = get_element(world.browser, id_attr=idvalue_before.replace('/', '\\/'), wait=True)
         value_before = txtidinput.get_attribute("value")
 
     txtinput, _, _ = fieldelement()
@@ -588,7 +604,7 @@ def select_in_field_an_option(browser, fieldelement, content):
     action(txtinput, content)
 
     # We have to wait until the information is completed
-    wait_until_no_ajax(browser)
+    wait_until_no_ajax(world)
 
 #}%}
 
