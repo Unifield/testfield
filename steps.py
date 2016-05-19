@@ -842,7 +842,7 @@ def see_popup(step, message_to_see):
 
 # Table management {%{
 
-@step('I fill "([^"]*)" within column "([^"]*)"')
+@step('I fill "([^"]*)" within column "([^"]*)"$')
 @output.register_for_printscreen
 def fill_column(step, content, fieldname):
 
@@ -892,6 +892,17 @@ def fill_column(step, content, fieldname):
         return get_element(td_node, tag_name="input", attrs={'type': 'text'})
 
     select_in_field_an_option(world, get_text_box, content)
+
+@step('I fill "([^"]*)" within column "([^"]*)" and open the window')
+@output.register_for_printscreen
+def fill_column_with_window(step, content, fieldname):
+    fill_column(step, content, fieldname)
+
+    world.browser.switch_to_default_content()
+    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait="I don't find the new window"))
+    world.nbframes += 1
+
+    wait_until_no_ajax(world)
 
 @step('I tick all the lines')
 @output.register_for_printscreen
