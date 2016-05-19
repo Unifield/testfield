@@ -803,10 +803,16 @@ def get_values(fieldname):
 @output.register_for_printscreen
 def should_see(step, content, fieldname):
     content = convert_input(world, content)
+    reg = create_regex(content)
 
     content_found = get_values(fieldname)
 
-    if content not in content_found:
+    if not content_found:
+        raise UniFieldElementException("No field named %s" % fieldname)
+    elif len(content_found) > 1:
+        raise UniFieldElementException("Several values found for %s (values: %s)" % (fieldname, ', '.join(content_found)))
+
+    if re.match(reg, content_found[0], flags=re.DOTALL) is None:
         raise UniFieldElementException("%s doesn't contain %s (values found: %s)" % (fieldname, content, ', '.join(content_found)))
 
 @step('I should see a text status with "([^"]*)"')
