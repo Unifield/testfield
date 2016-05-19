@@ -60,6 +60,17 @@ def connect_to_db():
     world.logged_in = False
     world.must_fail = None
 
+    def incr_func(param):
+        m = re.search('\d+$', param)
+        if m is None:
+            return param
+        number = m.group()
+        new_number = '%%0%sd' % len(number) % (int(number) + 1)
+        return param[:-len(number)] + new_number
+
+    world.FUNCTIONS = {'INCR': incr_func}
+
+
 # Dirty hack to display an error message when a step goes wrong in the background {%{
 @before.each_background
 def do_not_crash(background):
@@ -554,6 +565,39 @@ def fill_field(step, fieldname):
 
     step.given('I fill "%s" with "%s"' % (fieldname, TEMP_FILENAME))
 
+def validate_variable(variable_name):
+    '''
+    Check if the variable name is valid to be used in testfield.
+    '''
+    for forbidden_car in ['{', '}']:
+        if forbidden_car in variable_name:
+            raise UnifieldException("We don't accept %s in variable name" % forbidden_car)
+
+@step('I store column "([^"]*)" in "([^"]*)" for line:$')
+def remember_step_in_table(step, column_name, variable):
+
+    wait_until_not_loading(world.browser, wait=world.nbframes == 0)
+    wait_until_no_ajax(world)
+
+    if len(step.hashes) != 1:
+        raise UniFieldElementException("We cannot store more than one value. You have to define one row")
+
+    # we take the first hash
+    rows = list(get_table_row_from_hashes(world, step.hashes[0]))
+    if not rows:
+        raise UniFieldElementException("The line hasn't been found")
+
+    for table, row_node in rows:
+        position_in_table = get_column_position_in_table(table, column_name)
+
+        if position_in_table is not None:
+            td_node = get_element(row_node, class_attr="grid-cell", tag_name="td", position=position_in_table)
+            validate_variable(variable.strip())
+            world.FEATURE_VARIABLE[variable.strip()] = td_node.text.strip()
+            return
+
+    raise UnifieldException("No line with column %s has been found" % column_name)
+
 @step('I store "([^"]*)" in "([^"]*)"$')
 def remember_step(step, fieldname, variable):
 
@@ -564,6 +608,7 @@ def remember_step(step, fieldname, variable):
     elif len(values) > 1:
         raise UniFieldElementException("Several values found for %s (values: %s)" % (fieldname, ', '.join(values)))
 
+    validate_variable(variable.strip())
     world.FEATURE_VARIABLE[variable.strip()] = values[0].strip()
 
 #}%}
@@ -939,12 +984,12 @@ def click_on_line(step, action):
         hash_key_value = '_'.join(key_value)
 
         def try_to_click_on_line(step, action):
-            row_nodes = get_table_row_from_hashes(world, i_hash)
+            table_row_nodes = get_table_row_from_hashes(world, i_hash)
 
             matched_row_to_click_on = no_by_fingerprint[hash_key_value]
             no_matched_row = 0
 
-            for row_node in row_nodes:
+            for table, row_node in table_row_nodes:
                 # we have to look for this action the user wants to execute
                 if action == 'checkbox':
                     actions_to_click = get_elements(row_node, tag_name="input", attrs=dict(type='checkbox'))
@@ -972,7 +1017,7 @@ def click_on_line(step, action):
 
             # we have to provide an error mesage to explain the options
             columns = i_hash.keys()
-            options = map(lambda x : x[1], get_options_for_table(world, columns))
+            options = map(lambda x : x[2], get_options_for_table(world, columns))
             options_txt =', '.join(map(lambda x : '|'.join(x), options))
             raise UniFieldElementException("A line hasn't been found among the following values: %s" % options_txt)
 
@@ -1016,7 +1061,7 @@ def check_line(step):
         for hashes in values:
             if not list(get_table_row_from_hashes(world, hashes)):
                 columns = hashes.keys()
-                options = map(lambda x : x[1], get_options_for_table(world, columns))
+                options = map(lambda x : x[2], get_options_for_table(world, columns))
                 options_txt =', '.join(map(lambda x : '|'.join(x), options))
                 raise UniFieldElementException("I don't find: %s. My options where: %s" % (hashes, options_txt))
 

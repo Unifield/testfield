@@ -142,7 +142,6 @@ def get_input(browser, fieldname):
             time.sleep(TIME_TO_SLEEP)
             continue
 
-        # on peut maintenant trouver un input ou un select!
         for tagname in ["select", "input", "textarea"]:
             inputnode = element[0].find_elements_by_tag_name(tagname)
             if inputnode:
@@ -388,7 +387,7 @@ def get_options_for_table(world, columns):
 
             # we want to skip the empty lines
             if any(map(lambda x : bool(x), values)):
-                yield row_node, values
+                yield maintable, row_node, values
 
 def get_table_row_from_hashes(world, keydict):
     '''
@@ -399,18 +398,18 @@ def get_table_row_from_hashes(world, keydict):
     #TODO: Check that all the lines are in the same table...
     columns = list(keydict.keys())
 
-    for row_node, values in get_options_for_table(world, columns):
-        everything_match = True
+    for maintable, row_node, values in get_options_for_table(world, columns):
+        everything_matches = True
 
         for column_name, value in zip(columns, values):
             valreg = convert_input(world, keydict[column_name])
             reg = create_regex(valreg)
 
             if re.match(reg, value, flags=re.DOTALL) is None:
-                everything_match = False
+                everything_matches = False
 
-        if everything_match:
-            yield row_node
+        if everything_matches:
+            yield maintable, row_node
 
 #}%}
 
@@ -550,11 +549,38 @@ def wait_until_not_loading(browser, wait="Loading takes too much time"):
 #}%}
 
 def convert_input(world, content, localdict=dict()):
+    new_content = content
+    regex = '({{((?:\w+\()*)(\w+)((?:\)*))}})'
 
-    for key, value in list(localdict.iteritems()) + list(world.FEATURE_VARIABLE.iteritems()):
-        content = content.replace(u"{{%s}}" % key, value)
+    for full, functions, word, after in re.findall(regex, content):
 
-    return content
+        # does the word exist?
+        if word not in localdict and word not in world.FEATURE_VARIABLE:
+            #FIXME if it doesn't exist we cannot crash because the tables
+            #  are expanded even if we don't manage to expand ROW. As a result
+            #  a crash could stop all the tests because of the output component...
+            continue
+
+        if after.count(')') != functions.count('('):
+            raise UnifieldException("You don't close/open all the parentheses in")
+
+        real_value = localdict.get(word, world.FEATURE_VARIABLE.get(word))
+
+        functions = functions.split('(')
+        functions.reverse()
+
+        for function in functions:
+            if function:
+                if function not in world.FUNCTIONS:
+                    raise UnifieldException("Unknown function: %s" % function)
+                real_value = world.FUNCTIONS[function](real_value)
+
+        #FIXME could we replace something that is not valid? yes...
+        #FIXME worse than that... we could find a match in something that has already
+        #       been replaced...
+        new_content = new_content.replace(full, real_value, 1)
+
+    return new_content
 
 # Do something {%{
 def click_on(browser, elem_fetcher, msg):
