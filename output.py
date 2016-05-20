@@ -157,7 +157,7 @@ def write_end_of_section(scenario):
         content = mytemplate.render(printscreens=world.printscreen_to_display, scenario=scenario)
 
         output_index_file = open(path_html, 'w')
-        output_index_file.write(content)
+        output_index_file.write(content.encode('ascii', 'ignore'))
         output_index_file.close()
 
     world.printscreen_to_display = []
