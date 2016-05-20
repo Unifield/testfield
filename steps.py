@@ -184,11 +184,9 @@ def disconnect_to_db(total):
 def go_home_page(step):
     world.browser.get(HTTP_URL_SERVER)
 
-@step('I log into instance "([^"]*)"')
-@output.register_for_printscreen
-def connect_on_database(step, database_name):
+def log_into(database_name, username, password):
 
-    tick = monitor(world.browser, "I cannot login with %s/%s" % (UNIFIELD_ADMIN, UNIFIELD_PASSWORD))
+    tick = monitor(world.browser, "I cannot login with %s/%s" % (username, password))
 
     while True:
         # we would like to get back to the the login page
@@ -201,8 +199,8 @@ def connect_on_database(step, database_name):
         get_element(elem_select, tag_name="option", attrs={'value': database_name}).click()
 
         # fill in the credentials
-        get_element(world.browser, tag_name="input", id_attr="user").send_keys(UNIFIELD_ADMIN)
-        get_element(world.browser, tag_name="input", id_attr="password").send_keys(UNIFIELD_PASSWORD)
+        get_element(world.browser, tag_name="input", id_attr="user").send_keys(username)
+        get_element(world.browser, tag_name="input", id_attr="password").send_keys(password)
         # log in
         get_element(world.browser, tag_name="button", attrs={'type': 'submit'}).click()
 
@@ -234,6 +232,16 @@ def connect_on_database(step, database_name):
         #world.browser.find_element_by_tag_name('body').send_keys(Keys.COMMAND + Keys.ALT + 's')
 
     world.logged_in = True
+
+@step('I log into instance "([^"]*)" as "([^"]*)" with password "([^"]*)"')
+@output.register_for_printscreen
+def connect_on_database(step, database_name, username, password):
+    log_into(database_name, username, password)
+
+@step('I log into instance "([^"]*)"')
+@output.register_for_printscreen
+def connect_on_database(step, database_name):
+    log_into(database_name, UNIFIELD_ADMIN, UNIFIELD_PASSWORD)
 
 @step('I log out')
 @output.add_printscreen
