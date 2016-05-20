@@ -5,7 +5,7 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import NoSuchFrameException
+from selenium.common.exceptions import NoSuchFrameException, NoSuchElementException
 import datetime
 import time
 import re
@@ -425,7 +425,7 @@ def wait_until_no_ajax(world, message="A javascript operation is still ongoing")
             try:
                 world.browser.find_element_by_tag_name("html")
                 world.browser.find_element_by_tag_name("html").is_displayed()
-            except NoSuchFrameException as e:
+            except (NoSuchElementException, NoSuchFrameException) as e:
                 # we have to reload the new frame
                 world.browser.switch_to_default_content()
                 if world.nbframes != 0:
