@@ -46,7 +46,8 @@ def connect_to_db():
 
     world.durations = {}
 
-    with open("monkeypatch.js") as f:
+    mkp = get_absolute_path("monkeypatch.js")
+    with open(mkp) as f:
         world.monkeypatch = '\r\n'.join(f.readlines())
 
     world.nofailure = 0
@@ -147,6 +148,9 @@ def remove_iframes(scenario):
 @after.all
 def disconnect_to_db(total):
     #world.browser = webdriver.PhantomJS()
+
+    if not os.path.isdir(RESULTS_DIR):
+        os.mkdir(RESULTS_DIR)
 
     printscreen_path = os.path.join(RESULTS_DIR, "last_screen.png")
     content_path = os.path.join(RESULTS_DIR, "last_content.html")
@@ -1205,6 +1209,10 @@ def save_time(step):
 
 @step('I store the values for "([^"]*)" in "([^"]*)"')
 def save_time_results(step, counters, filename):
+
+    if not os.path.isdir(RESULTS_DIR):
+        os.mkdir(RESULTS_DIR)
+
     step.need_printscreen = False
     values = []
 

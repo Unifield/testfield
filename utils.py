@@ -16,6 +16,10 @@ TIME_TO_SLEEP = 0.3
 # The time that we wait when we now that a change is almost immediate
 TIME_TO_WAIT = 1.0
 
+def get_absolute_path(relative_file):
+    path, _ = os.path.split(__file__)
+    return os.path.join(path, relative_file)
+
 # the maximum amount of time that we expect to wait on one element
 def get_TIME_BEFORE_FAILURE():
     if 'TIME_BEFORE_FAILURE' in os.environ:

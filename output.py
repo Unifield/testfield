@@ -102,14 +102,17 @@ def create_website():
 @after.all
 def create_real_repport(total):
 
-    path_tpl = os.path.join(TEMPLATES_DIR, "index.tpl")
+    if not os.path.isdir(OUTPUT_DIR):
+        os.mkdir(OUTPUT_DIR)
+
+    path_tpl = get_absolute_path(os.path.join(TEMPLATES_DIR, "index.tpl"))
     with open(path_tpl, 'r') as f:
         content = ''.join(f.xreadlines())
 
         mytemplate = SimpleTemplate(content)
         content = mytemplate.render(scenarios=world.scenarios)
 
-        path_html = os.path.join(OUTPUT_DIR, "index.html")
+        path_html = get_absolute_path(os.path.join(OUTPUT_DIR, "index.html"))
         output_index_file = open(path_html, 'w')
         output_index_file.write(content)
         output_index_file.close()
@@ -147,9 +150,9 @@ def write_end_of_section(scenario):
     world.scenarios.append((all_ok, scenario.name, percentage_ok, time_total, index_page, tags))
 
 
-    path_html = os.path.join(OUTPUT_DIR, index_page)
+    path_html = get_absolute_path(os.path.join(OUTPUT_DIR, index_page))
 
-    path_tpl = os.path.join(TEMPLATES_DIR, "scenario.tpl")
+    path_tpl = get_absolute_path(os.path.join(TEMPLATES_DIR, "scenario.tpl"))
     with open(path_tpl, 'r') as f:
         content = ''.join(f.xreadlines())
 
