@@ -16,12 +16,12 @@ class SyntaxException(Exception):
 class DBException(Exception):
     pass
 
-def get_sql_query(sqlquery):
+def get_sql_query(database, sqlquery):
     import psycopg2
     import psycopg2.extras
 
     try:
-        conn = psycopg2.connect("host=%s dbname=%s user=%s port=%d, password=%s" % (DB_ADDRESS, DB_NAME, DB_USERNAME, DB_PORT, DB_PASSWORD))
+        conn = psycopg2.connect("host=%s dbname=%s user=%s port=%d, password=%s" % (DB_ADDRESS, database, DB_USERNAME, DB_PORT, DB_PASSWORD))
         cr = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         cr.execute(sqlquery)
@@ -29,8 +29,8 @@ def get_sql_query(sqlquery):
     except psycopg2.OperationalError as e:
         raise DBException("Cannot reach the database (reason: %s)" % e)
 
-def get_articles(count):
-    return get_sql_query('''
+def get_articles(database, count):
+    return get_sql_query(database, '''
     SELECT default_code AS CODE, name_template AS NAME
     FROM product_product INNER JOIN product_template ON product_tmpl_id = product_template.id
     WHERE batch_management = 'f' AND perishable = 'f' AND active = 't' AND (state IS NULL OR state <> 4)
@@ -52,13 +52,18 @@ def run_preprocessor(path):
             # is it a macro line?
             cleaned_line = line.strip()
 
-
-            iterate_over = re.match('^\s*#loop{\s*(?P<kindof>[^} ),]+)\s*,\s*(?P<varname>[^} ),]+)\s*}\s*$', cleaned_line)
+            iterate_over_without_database = re.match('^\s*#loop{\s*(?P<kindof>[^} ),]+)\s*,\s*(?P<varname>[^} ),]+)\s*}\s*$', cleaned_line)
+            iterate_over_with_database = re.match('^\s*#loop{\s*(?P<database>[^} ),]+)\s*,\s*(?P<kindof>[^} ),]+)\s*,\s*(?P<varname>[^} ),]+)\s*}\s*$', cleaned_line)
             begin_block_count = re.match('^\s*#begin{\s*(?P<macro>[^}]+)\s*}\s*$', cleaned_line)
             end_block = re.match('\s*#end\s*', cleaned_line)
 
-            if iterate_over is not None:
-                values = iterate_over.groupdict()
+            if iterate_over_without_database is not None or iterate_over_with_database is not None:
+                values = (iterate_over_without_database or iterate_over_with_database).groupdict()
+
+                if iterate_over_without_database is not None:
+                    database = DB_NAME
+                else:
+                    database = values['database']
                 varname = values['varname']
 
                 try:
@@ -68,7 +73,7 @@ def run_preprocessor(path):
                 kindof = values['kindof'].upper()
 
                 assert kindof in ["PRODUCTS"]
-                waiting_lines.append((1, None, [], get_articles(number)))
+                waiting_lines.append((1, None, [], get_articles(database, number)))
 
             elif begin_block_count is not None:
 
