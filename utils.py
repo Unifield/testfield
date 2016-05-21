@@ -580,6 +580,11 @@ def convert_input(world, content, localdict=dict()):
         #       been replaced...
         new_content = new_content.replace(full, real_value, 1)
 
+    regex = '({%(\w+)%})'
+    for name, varname in re.findall(regex, new_content):
+        if varname in os.environ:
+            new_content = new_content.replace(name, os.environ[varname], 1)
+
     return new_content
 
 # Do something {%{

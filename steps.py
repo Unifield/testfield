@@ -185,6 +185,9 @@ def go_home_page(step):
     world.browser.get(HTTP_URL_SERVER)
 
 def log_into(database_name, username, password):
+    database_name = convert_input(world, database_name)
+    username = convert_input(world, username)
+    password = convert_input(world, password)
 
     tick = monitor(world.browser, "I cannot login with %s/%s" % (username, password))
 
@@ -249,25 +252,6 @@ def log_out(step):
     world.browser.get("%(url)s/openerp/logout" % dict(url=HTTP_URL_SERVER))
 
     world.logged_in = False
-
-def run_script(dbname, script):
-
-    scriptfile = tempfile.mkstemp()
-    f = os.fdopen(scriptfile[0], 'w')
-    f.write(script)
-    f.close()
-
-    os.environ['PGPASSWORD'] = DB_PASSWORD
-
-    ret = os.popen('psql -h %s -U %s %s < %s' % (DB_ADDRESS, DB_USERNAME, dbname, scriptfile[1])).read()
-
-    try:
-        os.unlink(scriptfile[1])
-    except OSError as e:
-        pass
-
-    return ret
-
 
 #}%}
 

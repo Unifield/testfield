@@ -170,7 +170,9 @@ if __name__ == '__main__':
 
         # we can run lettuce now
         import subprocess
-        subprocess.call(["lettuce"] + sys.argv[1:])
+        ret = subprocess.call(["lettuce"] + sys.argv[1:])
+
+        sys.exit(ret)
 
     except shutil.Error as e:
         sys.stderr.write(e)
