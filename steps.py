@@ -1022,10 +1022,23 @@ def click_on_line(step, action):
 
         repeat_until_no_exception(try_to_click_on_line, (ElementNotVisibleException, StaleElementReferenceException), step, action)
 
-        # we have to execute that outside the function because it cannot raise an exception
-        #  (we would do the action twice)
-        wait_until_not_loading(world.browser, wait=False)
-        wait_until_no_ajax(world)
+        if world.nbframes > 0:
+            wait_until_not_loading(world.browser, wait=False)
+            wait_until_no_ajax(world)
+
+            world.browser.switch_to_default_content()
+            wait_until_not_loading(world.browser, wait=False)
+            # We cannot use wait_until_no_ajax because the elements
+            #wait_until_no_ajax(world)
+
+            world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes-1, wait="I don't find the new window"))
+            wait_until_not_loading(world.browser, wait=False)
+            wait_until_no_ajax(world)
+        else:
+            # we have to execute that outside the function because it cannot raise an exception
+            #  (we would do the action twice)
+            wait_until_not_loading(world.browser, wait=False)
+            wait_until_no_ajax(world)
 
 
 @step('I click on line:')
@@ -1183,7 +1196,7 @@ def choose_field(step):
 @step('I sleep')
 def selenium_sleeps(step):
     import time
-    time.sleep(30)
+    time.sleep(30000)
 
 @step('I wait')
 @output.register_for_printscreen
