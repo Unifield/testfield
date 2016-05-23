@@ -29,7 +29,7 @@ def get_TIME_BEFORE_FAILURE():
             return None
     else:
         return 50
-TIME_BEFORE_FAILURE_SYNCHRONIZATION = 200.0
+TIME_BEFORE_FAILURE_SYNCHRONIZATION = 1000.0
 
 def timedelta_total_seconds(timedelta):
     return (timedelta.microseconds + 0.0 + (timedelta.seconds + timedelta.days * 24 * 3600) * 10 ** 6) / 10 ** 6
