@@ -130,8 +130,8 @@ run_unifield()
         export TIME_BEFORE_FAILURE=${TIME_BEFORE_FAILURE:-40}
         export COUNT=2;
 
-        export TEST_DESCRIPTION=${TEST_DESCRIPTION:$NAME}
-        export TEST_NAME=${TEST_NAME:$NAME}
+        export TEST_DESCRIPTION=${TEST_DESCRIPTION:-$NAME}
+        export TEST_NAME=${TEST_NAME:-$NAME}
 
         rm output/* || true
 
