@@ -109,6 +109,11 @@ upgrade_server()
 
 run_unifield()
 {
+    # we print the commands to launch the components in a separate window in order to debug.
+    #  We'll launch them later in a tmux
+    echo "Run the web server:" python $WEBDIR/openerp-web.py -c $MYTMPDIR/openerp-web.cfg
+    echo "Run the server:" python $SERVERDIR/bin/openerp-server.py --db_user=$DBUSERNAME --db_password=$DBPASSWORD --db_host=$DBADDR -c $MYTMPDIR/openerp-server.conf
+
     tmux new -d -s $SESSION_NAME -n server "
 
         tmux new-window -n web \"
