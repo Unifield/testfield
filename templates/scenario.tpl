@@ -1,8 +1,10 @@
 <p>
+
     Tags:
     %for tag in scenario.tags:
         <span class="label label-primary">{{tag}}</span>
     %end
+    <span class="label label-info">{{filename}}</span>
 </p>
 
 <table class="table">
