@@ -539,9 +539,9 @@ def fill_field(step, fieldname):
 
             #FIXME: Boolean are not take into account (condition: ('1', 'T', 't', 'True', 'true'))
             celltype = 'String'
-            if re.match('\d{4}-\d{2}-\d{2}', cell) is not None:
+            if re.match('^\d{4}-\d{2}-\d{2}$', cell) is not None:
                 celltype = 'DateTime'
-            elif re.match('\d+', cell) is not None:
+            elif re.match('^\d+$', cell) is not None:
                 celltype = 'Number'
 
             localdict = dict(ROW=str(row_number))
