@@ -264,6 +264,7 @@ def log_out(step):
 @step('I synchronize "([^"]*)"')
 @output.register_for_printscreen
 def synchronize_instance(step, instance_name):
+    instance_name = convert_input(world, instance_name)
 
     from oerplib.oerp import OERP
     from oerplib.error import RPCError
