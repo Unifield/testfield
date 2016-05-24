@@ -29,7 +29,7 @@ def get_TIME_BEFORE_FAILURE():
             return None
     else:
         return 50
-TIME_BEFORE_FAILURE_SYNCHRONIZATION = 1000.0
+TIME_BEFORE_FAILURE_SYNCHRONIZATION = 1000.0 if get_TIME_BEFORE_FAILURE() is not None else (3600*24*7)
 
 def timedelta_total_seconds(timedelta):
     return (timedelta.microseconds + 0.0 + (timedelta.seconds + timedelta.days * 24 * 3600) * 10 ** 6) / 10 ** 6
@@ -107,14 +107,13 @@ def get_input(browser, fieldname):
     my_input = None
     idattr = None
 
-    tick = monitor(browser)
+    tick = monitor(browser, "Cannot find field %s" % fieldname)
 
     while not my_input:
 
         #FIXME: I don't understand how that works... we shouldn't wait since the field description
         #  could be something else than a label (see below)
-        message = "Cannot find field %s" % fieldname
-        labels = get_elements_from_text(browser, tag_name="label", text=fieldname, wait=message)
+        labels = get_elements_from_text(browser, tag_name="label", text=fieldname)
 
         # we have a label!
         if labels:
@@ -124,7 +123,7 @@ def get_input(browser, fieldname):
             break
 
         # do we have a strange table?
-        table_header = get_elements_from_text(browser, class_attr='separator horizontal', tag_name="div", text=fieldname, wait=message)
+        table_header = get_elements_from_text(browser, class_attr='separator horizontal', tag_name="div", text=fieldname)
 
         if not table_header:
             tick()
@@ -154,10 +153,12 @@ def get_input(browser, fieldname):
 
         inputnodes = get_elements(element[0], tag_name="p", class_attr="raw-text")
         if inputnodes:
+            tick()
             my_input = inputnodes[0]
             break
 
         if not my_input:
+            tick()
             break
 
         tick()
