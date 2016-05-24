@@ -324,29 +324,32 @@ def open_all_the_tables(world):
     #  for the external table, but that's not very efficient since we have to load
     #  them again afterwards...
 
-    pagers = get_elements(world.browser, class_attr="gridview", tag_name="table")
-    pagers = filter(lambda x : x.is_displayed(), pagers)
-    for pager in pagers:
-        elem = get_element(pager, class_attr="pager_info", tag_name="span")
+    def _open_all_the_tables():
+        pagers = get_elements(world.browser, class_attr="gridview", tag_name="table")
+        pagers = filter(lambda x : x.is_displayed(), pagers)
+        for pager in pagers:
+            elem = get_element(pager, class_attr="pager_info", tag_name="span")
 
-        import re
-        m = re.match('^\d+ - (?P<from>\d+) of (?P<to>\d+)$', elem.text.strip())
-        do_it = False
+            import re
+            m = re.match('^\d+ - (?P<from>\d+) of (?P<to>\d+)$', elem.text.strip())
+            do_it = False
 
-        if m is None:
-            do_it = True
-        else:
-            gp = m.groupdict()
-            do_it = gp['from'] != gp['to']
+            if m is None:
+                do_it = True
+            else:
+                gp = m.groupdict()
+                do_it = gp['from'] != gp['to']
 
-        if do_it:
-            elem.click()
+            if do_it:
+                elem.click()
 
-            element = get_element(pager, tag_name="select", attrs=dict(action="filter"))
-            select = Select(element)
-            select.select_by_visible_text("unlimited")
+                element = get_element(pager, tag_name="select", attrs=dict(action="filter"))
+                select = Select(element)
+                select.select_by_visible_text("unlimited")
 
-            wait_until_not_loading(world.browser, wait="I cannot load the whole table")
+                wait_until_not_loading(world.browser, wait="I cannot load the whole table")
+
+    repeat_until_no_exception(_open_all_the_tables, StaleElementReferenceException)
 
 def get_options_for_table(world, columns):
     '''
