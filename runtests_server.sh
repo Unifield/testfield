@@ -63,7 +63,7 @@ fetch_source_code()
     rm $SERVERDIR/bin/openerp-server.py
     mv $SERVERDIR/bin/openerp-server.py.bak $SERVERDIR/bin/openerp-server.py
 
-    sed -i.bak "s/FOR UPDATE NOWAIT//gi" $SERVERDIR/bin/addons/base/ir/ir_sequence.py
+    sed -i.bak "s/FOR UPDATE NOWAIT//g" $SERVERDIR/bin/addons/base/ir/ir_sequence.py
 }
 
 generate_configuration_file()
@@ -135,7 +135,7 @@ run_unifield()
 
         rm output/* || true
 
-        ./runtests_local.sh $LETTUCE_PARAMS
+        ./runtests_local.sh $LETTUCE_PARAMS || true
 
         DIREXPORT=website/tests/$NAME
         if [[ -e "$DIREXPORT" ]]
@@ -159,7 +159,7 @@ run_unifield()
             # run the benchmark
             for nb in `seq 1 2`;
             do
-                ./runtests_local.sh $LETTUCE_PARAMS
+                ./runtests_local.sh $LETTUCE_PARAMS || true
             done
         done
 
