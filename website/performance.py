@@ -376,7 +376,7 @@ def test(name, filename):
 
     return dict(error=None, fichier=fichier)
 
-@route(r'/test/<name>/<filename:re:.*\.png>')
+@route(r'/test/<name>/<filename:re:.*(\.png|\.log)>')
 def test(name, filename):
     return static_file(filename, root='tests/' + name)
 
