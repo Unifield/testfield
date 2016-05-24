@@ -152,12 +152,12 @@ run_unifield()
         rm -rf results/* 2> /dev/null || true
         export TIME_BEFORE_FAILURE=
 
-        for count in 5 10 15 20
+        for count in 5 15 25 35 45
         do
             export COUNT=$count
 
             # run the benchmark
-            for nb in `seq 1 2`;
+            for nb in `seq 1 4`;
             do
                 ./runtests_local.sh $LETTUCE_PARAMS || true
             done
