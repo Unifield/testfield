@@ -107,11 +107,23 @@ def create_website():
 def create_real_repport(total):
 
     path_tpl = get_absolute_path(os.path.join(TEMPLATES_DIR, "index.tpl"))
+
+    import collections
+    count_by_tag = collections.defaultdict(lambda : 0)
+
+    for scenario in world.scenarios:
+        for tag in scenario[5]:
+            count_by_tag[tag] += 1
+    values = count_by_tag.items()
+    values.sort(key=lambda x : x[1])
+    values.reverse()
+    alltags = map(lambda x : x[0], values)
+
     with open(path_tpl, 'r') as f:
         content = ''.join(f.xreadlines())
 
         mytemplate = SimpleTemplate(content)
-        content = mytemplate.render(scenarios=world.scenarios)
+        content = mytemplate.render(scenarios=world.scenarios, alltags=alltags)
 
         path_html = os.path.join(OUTPUT_DIR, "index.html")
         output_index_file = open(path_html, 'w')
