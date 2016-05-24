@@ -5,7 +5,7 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import NoSuchFrameException, NoSuchElementException
+from selenium.common.exceptions import NoSuchFrameException, NoSuchElementException, StaleElementReferenceException
 import datetime
 import time
 import re
