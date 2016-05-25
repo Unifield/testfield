@@ -290,7 +290,21 @@ def performance(test, metric):
             row.append(value)
         data.append(row)
 
-    return dict(headers=headers, table=data, test=test, metric=metric)
+    config_by_test_by_version = get_performance_tests(PERFORMANCE_TESTS, test)[2]
+
+    instances = set([])
+
+    for version in config_by_test_by_version.iteritems():
+        t, config = version
+        description = config[test][1]['instances']
+
+        for instance in description.split():
+            instances.add(instance)
+
+    instances = list(instances)
+    instances.sort()
+
+    return dict(headers=headers, table=data, test=test, metric=metric, instances=instances)
 
 @route('/performances')
 @view('performances')

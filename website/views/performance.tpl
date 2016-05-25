@@ -27,3 +27,10 @@
 </table>
 
 <img class="center-block" src="/performance/{{test}}/{{metric}}/img"/>
+
+%if instances:
+    These benchmarks come from the following instance(s):
+    %for instance in instances:
+        <span class="label label-info">{{instance}}</span>
+    %end
+%end

@@ -189,6 +189,8 @@ do
 done
 FIRST_DATABASE=`echo $DATABASES | cut -d " " -f1`
 
+export DATABASES=$DATABASES
+
 ./generate_credentials.sh $FIRST_DATABASE
 fetch_source_code;
 python restore.py --reset-versions $ENVNAME

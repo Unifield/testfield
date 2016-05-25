@@ -1275,6 +1275,10 @@ def save_time_results(step, counters, filename):
     meta_path = os.path.join(RESULTS_DIR, '%s.meta' % filename)
     f = open(meta_path, 'w')
     f.write("description=%s" % step.scenario.name)
+
+    if 'DATABASES' in os.environ:
+        f.write("\r\ndatabases=%s" % os.environ['DATABASES'])
+
     f.close()
 
 #}%}
