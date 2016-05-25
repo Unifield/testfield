@@ -5,7 +5,7 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import NoSuchFrameException, NoSuchElementException
+from selenium.common.exceptions import NoSuchFrameException, NoSuchElementException, StaleElementReferenceException
 import datetime
 import time
 import re
@@ -29,7 +29,7 @@ def get_TIME_BEFORE_FAILURE():
             return None
     else:
         return 50
-TIME_BEFORE_FAILURE_SYNCHRONIZATION = 1000.0
+TIME_BEFORE_FAILURE_SYNCHRONIZATION = 1000.0 if get_TIME_BEFORE_FAILURE() is not None else (3600*24*7)
 
 def timedelta_total_seconds(timedelta):
     return (timedelta.microseconds + 0.0 + (timedelta.seconds + timedelta.days * 24 * 3600) * 10 ** 6) / 10 ** 6
@@ -107,14 +107,13 @@ def get_input(browser, fieldname):
     my_input = None
     idattr = None
 
-    tick = monitor(browser)
+    tick = monitor(browser, "Cannot find field %s" % fieldname)
 
     while not my_input:
 
         #FIXME: I don't understand how that works... we shouldn't wait since the field description
         #  could be something else than a label (see below)
-        message = "Cannot find field %s" % fieldname
-        labels = get_elements_from_text(browser, tag_name="label", text=fieldname, wait=message)
+        labels = get_elements_from_text(browser, tag_name="label", text=fieldname)
 
         # we have a label!
         if labels:
@@ -124,7 +123,7 @@ def get_input(browser, fieldname):
             break
 
         # do we have a strange table?
-        table_header = get_elements_from_text(browser, class_attr='separator horizontal', tag_name="div", text=fieldname, wait=message)
+        table_header = get_elements_from_text(browser, class_attr='separator horizontal', tag_name="div", text=fieldname)
 
         if not table_header:
             tick()
@@ -154,10 +153,12 @@ def get_input(browser, fieldname):
 
         inputnodes = get_elements(element[0], tag_name="p", class_attr="raw-text")
         if inputnodes:
+            tick()
             my_input = inputnodes[0]
             break
 
         if not my_input:
+            tick()
             break
 
         tick()
@@ -324,29 +325,32 @@ def open_all_the_tables(world):
     #  for the external table, but that's not very efficient since we have to load
     #  them again afterwards...
 
-    pagers = get_elements(world.browser, class_attr="gridview", tag_name="table")
-    pagers = filter(lambda x : x.is_displayed(), pagers)
-    for pager in pagers:
-        elem = get_element(pager, class_attr="pager_info", tag_name="span")
+    def _open_all_the_tables():
+        pagers = get_elements(world.browser, class_attr="gridview", tag_name="table")
+        pagers = filter(lambda x : x.is_displayed(), pagers)
+        for pager in pagers:
+            elem = get_element(pager, class_attr="pager_info", tag_name="span")
 
-        import re
-        m = re.match('^\d+ - (?P<from>\d+) of (?P<to>\d+)$', elem.text.strip())
-        do_it = False
+            import re
+            m = re.match('^\d+ - (?P<from>\d+) of (?P<to>\d+)$', elem.text.strip())
+            do_it = False
 
-        if m is None:
-            do_it = True
-        else:
-            gp = m.groupdict()
-            do_it = gp['from'] != gp['to']
+            if m is None:
+                do_it = True
+            else:
+                gp = m.groupdict()
+                do_it = gp['from'] != gp['to']
 
-        if do_it:
-            elem.click()
+            if do_it:
+                elem.click()
 
-            element = get_element(pager, tag_name="select", attrs=dict(action="filter"))
-            select = Select(element)
-            select.select_by_visible_text("unlimited")
+                element = get_element(pager, tag_name="select", attrs=dict(action="filter"))
+                select = Select(element)
+                select.select_by_visible_text("unlimited")
 
-            wait_until_not_loading(world.browser, wait="I cannot load the whole table")
+                wait_until_not_loading(world.browser, wait="I cannot load the whole table")
+
+    repeat_until_no_exception(_open_all_the_tables, StaleElementReferenceException)
 
 def get_options_for_table(world, columns):
     '''

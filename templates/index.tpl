@@ -1,3 +1,46 @@
+%for tag in alltags:
+    <span data-classon="label label-primary" data-classoff="label label-default" class="label label-default">{{tag}}</span>
+%end
+
+<script>
+    $(document).ready(function(){
+
+        $("span.label").on('click', function(){
+            var classon = $(this).data('classon');
+            var classoff = $(this).data('classoff');
+
+            if($(this).attr('class') == classon){
+                $(this).attr('class', classoff);
+            }else{
+                $(this).attr('class', classon);
+            }
+
+            var elements = [];
+
+            $("span.label").each(function(i, elem){
+                if($(elem).data('classon') == $(elem).attr('class')){
+                    elements.push($(elem).text());
+                }
+            });
+
+            $("table tr.line").each(function(i, elem){
+                values = $(elem).data("tags");
+                subvalues = values.split(' ');
+
+                ret = subvalues.filter(function(n) {
+                    return elements.indexOf(n) != -1;
+                });
+
+                if(ret.length == elements.length){
+                    $(elem).show();
+                }else{
+                    $(elem).hide();
+                }
+            });
+        });
+    });
+</script>
+
 <table class="table">
     <thead>
         <tr>
@@ -11,7 +54,7 @@
 
     <tbody>
         %for valid, scenario, ratio, time, url, tags in scenarios:
-            <tr class="{{'danger' if not valid else ''}}">
+            <tr data-tags="{{' '.join(tags)}}" class="line {{'danger' if not valid else ''}}">
 
                 <td>
                     <div class="text-center">

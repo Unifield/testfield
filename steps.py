@@ -809,6 +809,7 @@ def click_if_toggle_button_is(btn_name, from_class_name):
 
     btn_toggle.click()
     wait_until_not_loading(world.browser)
+    wait_until_no_ajax(world)
 
 @step('I toggle on "([^"]*)"$')
 @output.register_for_printscreen
@@ -1063,22 +1064,33 @@ def click_on_line_and_open_the_window(step, action):
 
     wait_until_no_ajax(world)
 
-@step('I should see in the main table the following data:')
-@output.register_for_printscreen
-def check_line(step):
+def check_that_line(step, should_see_lines):
     values = step.hashes
 
     open_all_the_tables(world)
 
     def try_to_check_line(step):
         for hashes in values:
-            if not list(get_table_row_from_hashes(world, hashes)):
+            if bool(list(get_table_row_from_hashes(world, hashes))) != should_see_lines:
                 columns = hashes.keys()
                 options = map(lambda x : x[2], get_options_for_table(world, columns))
                 options_txt =', '.join(map(lambda x : '|'.join(x), options))
-                raise UniFieldElementException("I don't find: %s. My options where: %s" % (hashes, options_txt))
+                if should_see_lines:
+                    raise UniFieldElementException("I don't find: %s. My options where: %s" % (hashes, options_txt))
+                else:
+                    raise UniFieldElementException("I found : %s" % hashes)
 
     repeat_until_no_exception(try_to_check_line, StaleElementReferenceException, step)
+
+@step('I should see in the main table the following data:')
+@output.register_for_printscreen
+def check_line(step):
+    check_that_line(step, True)
+
+@step('I should not see in the main table the following data:')
+@output.register_for_printscreen
+def check_line(step):
+    check_that_line(step, False)
 
 def search_until_I(step, action_search, see):
     if not step.hashes:
