@@ -116,7 +116,7 @@ def get_functional_tests(path_dir):
 
     tests = []
 
-    for rep_test in os.listdir(PATH_TESTS):
+    for rep_test in sorted(os.listdir(PATH_TESTS), reverse=True):
         path_dir = os.path.join(PATH_TESTS, rep_test)
         if os.path.isdir(path_dir):
             path_meta = os.path.join(path_dir, "meta")
