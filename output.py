@@ -117,6 +117,7 @@ def create_real_repport(total):
     values = count_by_tag.items()
     values.sort(key=lambda x : x[1])
     values.reverse()
+    values = filter(lambda x : x[1] > 1, values)
     alltags = map(lambda x : x[0], values)
 
     with open(path_tpl, 'r') as f:
