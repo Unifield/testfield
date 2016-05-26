@@ -1221,13 +1221,19 @@ def choose_field(step):
 
 #}%}
 
+@step('I wait "([^"]*)" seconds$')
+def selenium_sleeps(step, seconds):
+    #This step is used to instrument UniField. Don't change it!
+    import time
+    time.sleep(int(seconds))
+
 # Debugging steps {%{
 @step('I sleep')
 def selenium_sleeps(step):
     import time
     time.sleep(30000)
 
-@step('I wait')
+@step('I wait$')
 @output.register_for_printscreen
 def selenium_sleeps(step):
     raw_input()
