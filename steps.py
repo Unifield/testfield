@@ -196,26 +196,42 @@ def log_into(database_name, username, password):
     tick = monitor(world.browser, "I cannot login with %s/%s" % (username, password))
 
     while True:
+        tick()
+
         # we would like to get back to the the login page
         world.browser.delete_all_cookies()
         world.browser.get(HTTP_URL_SERVER)
 
         # select the database chosen by the user
-        elem_select = get_element(world.browser, tag_name="select", id_attr="db")
+        elem_selects = get_elements(world.browser, tag_name="select", id_attr="db")
 
-        get_element(elem_select, tag_name="option", attrs={'value': database_name}).click()
+        # we cannot crash because it might be related to a bug when loading the page
+        #  we should connect to it again.
+        if not elem_selects:
+            time.sleep(TIME_TO_SLEEP)
+            continue
+        elem_select = elem_selects[0]
+
+        elem_options = get_elements(elem_select, tag_name="option", attrs={'value': database_name})
+        username_textinputs = get_elements(world.browser, tag_name="input", id_attr="user")
+        password_textinputs = get_elements(world.browser, tag_name="input", id_attr="password")
+        submit_inputs = get_elements(world.browser, tag_name="button", attrs={'type': 'submit'})
+
+        if not elem_options or not username_textinputs or not password_textinputs or not submit_inputs:
+            time.sleep(TIME_TO_SLEEP)
+            continue
+
+        elem_options[0].click()
 
         # fill in the credentials
-        get_element(world.browser, tag_name="input", id_attr="user").send_keys(username)
-        get_element(world.browser, tag_name="input", id_attr="password").send_keys(password)
-        # log in
-        get_element(world.browser, tag_name="button", attrs={'type': 'submit'}).click()
+        username_textinputs[0].send_keys(username)
+        password_textinputs[0].send_keys(password)
+        submit_inputs[0].click()
 
         redo = False
 
         # we have to check
         while True:
-            tick()
 
             elements_error = get_elements(world.browser, tag_name="div", class_attr="login_error_message")
             elements_error = map(lambda x : x.text, elements_error)
