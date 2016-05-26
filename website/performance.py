@@ -127,8 +127,6 @@ def get_functional_tests(path_dir):
 
             tests.append(tests_meta)
 
-    tests.sort(key=lambda x : ''.join(reversed(x.get('name', ''))))
-
     return tests
 
 def get_performance_tests(path_dir, tests=None):
