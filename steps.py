@@ -457,6 +457,7 @@ def open_tab(step, tabtoopen):
 #}%}
 
 # Fill fields {%{
+
 @step('I fill "([^"]*)" with "([^"]*)"$')
 @output.register_for_printscreen
 def fill_field(step, fieldname, content):
@@ -525,9 +526,20 @@ def fill_field(step, fieldname, content):
 
     wait_until_no_ajax(world)
 
+@step('I fill "([^"]*)" with "([^"]*)" and open the window$')
+@output.register_for_printscreen
+def fill_field_and_open(step, fieldname, content):
+    fill_field(step, fieldname, content)
+
+    world.browser.switch_to_default_content()
+    world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes, tag_name="iframe", wait="I don't find the new window"))
+    world.nbframes += 1
+
+    wait_until_no_ajax(world)
+
 @step('I fill "([^"]*)" with table:$')
 @output.register_for_printscreen
-def fill_field(step, fieldname):
+def fill_field_table(step, fieldname):
     if not step.hashes:
         raise UniFieldElementException("Why don't you define at least one row?")
 
@@ -981,7 +993,7 @@ def click_on_all_line(step):
     wait_until_not_loading(world.browser, wait=False)
     wait_until_no_ajax(world)
 
-def click_on_line(step, action):
+def click_on_line(step, action, window_will_exist=True):
     # This is important because we cannot click on lines belonging
     #  to the previous window
     wait_until_not_loading(world.browser, wait=False)
@@ -1011,7 +1023,7 @@ def click_on_line(step, action):
                 if action == 'checkbox':
                     actions_to_click = get_elements(row_node, tag_name="input", attrs=dict(type='checkbox'))
                 elif action == 'option':
-                    actions_to_click = get_elements(row_node, tag_name="option")
+                    actions_to_click = get_elements(row_node, tag_name="input", attrs=dict(type='radio'))
                 elif action == 'line':
                     actions_to_click = [row_node]
                 else:
@@ -1040,7 +1052,7 @@ def click_on_line(step, action):
 
         repeat_until_no_exception(try_to_click_on_line, (ElementNotVisibleException, StaleElementReferenceException), step, action)
 
-        if world.nbframes > 0:
+        if window_will_exist and world.nbframes > 0:
             wait_until_not_loading(world.browser, wait=False)
             wait_until_no_ajax(world)
 
@@ -1052,12 +1064,11 @@ def click_on_line(step, action):
             world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes-1, wait="I don't find the new window"))
             wait_until_not_loading(world.browser, wait=False)
             wait_until_no_ajax(world)
-        else:
+        elif window_will_exist:
             # we have to execute that outside the function because it cannot raise an exception
             #  (we would do the action twice)
             wait_until_not_loading(world.browser, wait=False)
             wait_until_no_ajax(world)
-
 
 @step('I click on line:')
 @output.add_printscreen
@@ -1068,6 +1079,20 @@ def click_on_line_line(step):
 @output.register_for_printscreen
 def click_on_line_tooltip(step, action):
     click_on_line(step, action)
+
+@step('I click "([^"]*)" on line and close the window:')
+@output.add_printscreen
+def click_on_line_and_open_the_window(step, action):
+
+    if len(step.hashes) != 1:
+        raise UnifieldException("You should click only on one line to close the window")
+
+    click_on_line(step, action, window_will_exist=False)
+
+    wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe", position=world.nbframes-1))
+
+    wait_until_no_ajax(world)
+    wait_until_not_loading(world.browser, wait=world.nbframes == 0)
 
 @step('I click "([^"]*)" on line and open the window:')
 @output.add_printscreen
