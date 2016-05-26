@@ -1,6 +1,7 @@
 #encoding=utf-8
 
 from bottle import route, run, template, view, redirect, static_file
+import datetime
 
 PATH_TESTS = './tests/'
 PERFORMANCE_TESTS = './performances/'
@@ -218,9 +219,23 @@ def get_table(test, metric):
 
     return ys, series_dict
 
+CACHE={}
+
 @route('/performance/<test>/<metric>/img')
 @view('performance')
 def performance(test, metric):
+    import io
+    global CACHE
+
+    def timedelta_total_seconds(timedelta):
+        return (timedelta.microseconds + 0.0 + (timedelta.seconds + timedelta.days * 24 * 3600) * 10 ** 6) / 10 ** 6
+
+    if (test, metric) in CACHE:
+
+        when, bts = CACHE[test, metric]
+
+        if timedelta_total_seconds(datetime.datetime.now() - when) < 3600 * 3:
+            return io.BytesIO(bts)
 
     ys, series_dict = get_table(test, metric)
 
@@ -247,14 +262,16 @@ def performance(test, metric):
     plt.xlabel("Number of rows")
     plt.legend(loc=2)
 
-    import io
     buf = io.BytesIO()
     plt.savefig(buf)
     buf.seek(0)
 
     plt.clf()
 
-    return buf
+    bts = buf.read()
+    CACHE[test, metric] = (datetime.datetime.now(), bts)
+
+    return io.BytesIO(bts)
 
 @route('/performance/<test>/<metric>')
 @view('performance')
