@@ -21,7 +21,12 @@ def get_sql_query(database, sqlquery):
     import psycopg2.extras
 
     try:
-        conn = psycopg2.connect("host=%s dbname=%s user=%s port=%d, password=%s" % (DB_ADDRESS, database, DB_USERNAME, DB_PORT, DB_PASSWORD))
+        conn = psycopg2.connect(
+            database=database,
+            user=DB_USERNAME,
+            password=DB_PASSWORD,
+            host=DB_ADDRESS,
+        )
         cr = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         cr.execute(sqlquery)
@@ -62,6 +67,11 @@ def run_preprocessor(path):
 
                 if iterate_over_without_database is not None:
                     database = DB_NAME
+                    if not database:
+                        if DB_PREFIX:
+                            database = '%s_HQ1' % DB_PREFIX
+                        else:
+                            database = 'HQ1'
                 else:
                     database = values['database']
                 varname = values['varname']

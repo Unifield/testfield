@@ -6,7 +6,7 @@ rm credentials.py 2> /dev/null
 
 echo """#encoding=utf-8
 
-SRV_ADDRESS = '127.0.0.1'
+SRV_ADDRESS = '$SERVER_HOST'
 
 # Configuration variables 
 NETRPC_PORT = $NETRPC_PORT
@@ -20,6 +20,7 @@ DB_PORT = $DBPORT
 DB_NAME = '$1'
 DB_USERNAME = '$DBUSERNAME'
 DB_PASSWORD = '$DBPASSWORD'
+DB_PREFIX = '$2'
 
 UNIFIELD_ADMIN = '$UNIFIELDADMIN'
 UNIFIELD_PASSWORD = '$UNIFIELDPASSWORD'

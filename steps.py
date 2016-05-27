@@ -21,6 +21,11 @@ FILE_DIR = 'files'
 
 RUN_NUMBER_FILE = 'run'
 
+def prefix_db_name(db_name):
+    if DB_PREFIX and not db_name.startswith(DB_PREFIX):
+        return '%s_%s' % (DB_PREFIX, db_name)
+    return db_name
+
 # Selenium management {%{
 @before.all
 def connect_to_db():
@@ -189,7 +194,7 @@ def go_home_page(step):
     world.browser.get(HTTP_URL_SERVER)
 
 def log_into(database_name, username, password):
-    database_name = convert_input(world, database_name)
+    database_name = prefix_db_name(convert_input(world, database_name))
     username = convert_input(world, username)
     password = convert_input(world, password)
 
@@ -280,7 +285,7 @@ def log_out(step):
 @step('I synchronize "([^"]*)"')
 @output.register_for_printscreen
 def synchronize_instance(step, instance_name):
-    instance_name = convert_input(world, instance_name)
+    instance_name = prefix_db_name(convert_input(world, instance_name))
 
     from oerplib.oerp import OERP
     from oerplib.error import RPCError
