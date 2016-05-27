@@ -912,6 +912,26 @@ def see_popup(step, message_to_see):
     if re.match(reg, elem.text, flags=re.DOTALL) is None:
         print "No '%s' found in '%s'" % (message_to_see, elem.text)
         raise UniFieldElementException("No '%s' found in '%s'" % (message_to_see, elem.text))
+
+@step('I should see "([^"]*)" in the section "([^"]*)"$')
+@output.register_for_printscreen
+def see_popup(step, content, section):
+    #WARNING: This step is used for UniField automation. We use it to ensure that
+    # we can import the files without any error (a text message in a section has to be checked)
+
+    section = get_element_from_text(world.browser, tag_name="h2", class_attr="separator horizontal", text=section, wait="Cannot find section %s" % section)
+
+    table_node = section.find_elements_by_xpath("ancestor::table[1]")[0]
+
+    reg = create_regex(content)
+    found = False
+    for elem in get_elements(table_node, wait=False):
+        if re.match(reg, elem.text, flags=re.DOTALL) is not None:
+            found = True
+
+    if not found:
+        raise UnifieldException("I haven't found content %s" % content)
+
 #}%}
 
 # Table management {%{
