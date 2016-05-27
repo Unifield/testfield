@@ -5,6 +5,8 @@ export LANG=C.UTF-8
 set -o errexit
 #set -o pipefail
 
+source ./config.sh
+
 # if you want to create a RAMFS with the database
 PARAMS=$@
 
@@ -17,7 +19,6 @@ PARAMS=`echo $PARAMS | sed 's/--quick//'`
 HAS_RELOAD=`echo $PARAMS | sed -n 's/.*--reload.*/YES/p'`
 PARAMS=`echo $PARAMS | sed 's/--reload//'`
 
-BRANCH_TOO_CLONE=master
 if [[ ! -z "`echo $PARAMS | sed -n 's/.*--branch*/YES/p'`" ]]
 then
     BRANCH_TOO_CLONE=`echo $PARAMS | sed 's/.*--branch=\([^ ]*\).*/\1/'`
@@ -28,38 +29,37 @@ ARRPARAMS=($PARAMS)
 
 function make_ramfs
 {
-    PATH_TMP=/tmp/build_ramfs
     RAMDIR=$1
     SIZE_MB=$2
 
     if [[ -e "/tmp/build_ramfs" ]]
     then
-        rm -rf /tmp/build_ramfs
+        rm -rf ${PATH_TMP}
     fi
     mkdir /tmp/build_ramfs
 
     if [[ -e "$RAMDIR" ]]
     then
-        cp -R $RAMDIR/* /tmp/build_ramfs/ || true
+        cp -R $RAMDIR/* ${PATH_TMP} || true
         rm -rf $RAMDIR
     fi
 
     mkdir $RAMDIR
     mount -t ramfs -o size=${SIZE_MB:-512}M ramfs $RAMDIR
-    cp -R /tmp/build_ramfs/* $RAMDIR/  || true
+    cp -R ${PATHTMP}/* $RAMDIR/  || true
 }
 
 function run_website
 {
-    cd /root/testfield/website
-    cp -R /output/benchmarks/* performances/ 2> /dev/null || true
-    cp -R /output/tests/* tests/ 2> /dev/null || true
+    cd ${ROOT_DIR}/website
+    cp -R ${OUTPUT_DIR}/benchmarks/* performances/ 2> /dev/null || true
+    cp -R ${OUTPUT_DIR}/tests/* tests/ 2> /dev/null || true
     python performance.py
 }
 
 function get_repo
 {
-    git clone -b $BRANCH_TOO_CLONE https://github.com/hectord/testfield.git && cd testfield
+    git clone -b $BRANCH_TOO_CLONE https://github.com/hectord/testfield.git ${ROOT_DIR} && cd ${ROOT_DIR}
 }
 
 if [[ "$1" == "web" && $# == 1 ]];
@@ -85,11 +85,11 @@ FROM_PATH=
 
 if [[ "$1" == "benchmark" ]];
 then
-    TO_PATH=/output/benchmarks/${ARRPARAMS[1]}
-    FROM_PATH=/root/testfield/website/performances/${ARRPARAMS[1]}
+    TO_PATH=${OUTPUT_DIR}/benchmarks/${ARRPARAMS[1]}
+    FROM_PATH=${ROOT_DIR}/website/performances/${ARRPARAMS[1]}
 else
-    TO_PATH=/output/tests/${ARRPARAMS[1]}
-    FROM_PATH=/root/testfield/website/tests/${ARRPARAMS[1]}
+    TO_PATH=${OUTPUT_DIR}/tests/${ARRPARAMS[1]}
+    FROM_PATH=${ROOT_DIR}/website/tests/${ARRPARAMS[1]}
 fi
 
 if [[ -e $TO_PATH ]];
@@ -101,7 +101,7 @@ fi
 get_repo;
 
 BACKUP_NAME=backup.tar.gz
-PATH_CACHE=/output/$BACKUP_NAME
+PATH_CACHE=${OUTPUT_DIR}/$BACKUP_NAME
 if [[ ! ( -z "$HAS_REFRESH" ) || ! ( -e "$PATH_CACHE" ) ]]
 then
     if [[ -e "$PATH_CACHE" ]]
@@ -126,15 +126,15 @@ then
     chmod 0700 $PG_DATA_DIR
 
     cd /tmp
-    make_ramfs /root/testfield
-    cd /root/testfield
+    make_ramfs ${ROOT_DIR}
+    cd ${ROOT_DIR}
 fi
 
 # we have to create the directories for the input/output files (features & dumps)
 mkdir output || true
 
 /etc/init.d/postgresql start
-cd /root/testfield
+cd ${ROOT_DIR}
 
 export RELOAD_BASE_MODULE=no
 if [[ ! ( -z "$HAS_RELOAD" ) ]]
