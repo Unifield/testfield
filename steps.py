@@ -21,6 +21,11 @@ FILE_DIR = 'files'
 
 RUN_NUMBER_FILE = 'run'
 
+def prefix_db_name(db_name):
+    if DB_PREFIX and not db_name.startswith(DB_PREFIX):
+        return '%s_%s' % (DB_PREFIX, db_name)
+    return db_name
+
 # Selenium management {%{
 @before.all
 def connect_to_db():
@@ -189,7 +194,7 @@ def go_home_page(step):
     world.browser.get(HTTP_URL_SERVER)
 
 def log_into(database_name, username, password):
-    database_name = convert_input(world, database_name)
+    database_name = convert_input(world, prefix_db_name(database_name))
     username = convert_input(world, username)
     password = convert_input(world, password)
 
@@ -212,7 +217,7 @@ def log_into(database_name, username, password):
             continue
         elem_select = elem_selects[0]
 
-        elem_options = get_elements(elem_select, tag_name="option", attrs={'value': database_name})
+        elem_options = get_elements(elem_select, tag_name="option", attrs={'value': prefix_db_name(database_name)})
         username_textinputs = get_elements(world.browser, tag_name="input", id_attr="user")
         password_textinputs = get_elements(world.browser, tag_name="input", id_attr="password")
         submit_inputs = get_elements(world.browser, tag_name="button", attrs={'type': 'submit'})
@@ -259,12 +264,12 @@ def log_into(database_name, username, password):
 @step('I log into instance "([^"]*)" as "([^"]*)" with password "([^"]*)"')
 @output.register_for_printscreen
 def connect_on_database(step, database_name, username, password):
-    log_into(database_name, username, password)
+    log_into(prefix_db_name(database_name), username, password)
 
 @step('I log into instance "([^"]*)"')
 @output.register_for_printscreen
 def connect_on_database(step, database_name):
-    log_into(database_name, UNIFIELD_ADMIN, UNIFIELD_PASSWORD)
+    log_into(prefix_db_name(database_name), UNIFIELD_ADMIN, UNIFIELD_PASSWORD)
 
 @step('I log out')
 @output.add_printscreen
@@ -280,7 +285,7 @@ def log_out(step):
 @step('I synchronize "([^"]*)"')
 @output.register_for_printscreen
 def synchronize_instance(step, instance_name):
-    instance_name = convert_input(world, instance_name)
+    instance_name = convert_input(world, prefix_db_name(instance_name))
 
     from oerplib.oerp import OERP
     from oerplib.error import RPCError
