@@ -1070,7 +1070,7 @@ def click_on_line(step, action, window_will_exist=True):
             options_txt =', '.join(map(lambda x : '|'.join(x), options))
             raise UniFieldElementException("A line hasn't been found among the following values: %s" % options_txt)
 
-        repeat_until_no_exception(try_to_click_on_line, (ElementNotVisibleException, StaleElementReferenceException), step, action)
+        repeat_until_no_exception(world, try_to_click_on_line, (ElementNotVisibleException, UniFieldElementException, StaleElementReferenceException), step, action)
 
         if window_will_exist and world.nbframes > 0:
             wait_until_not_loading(world.browser, wait=False)
@@ -1141,7 +1141,7 @@ def check_that_line(step, should_see_lines):
                 else:
                     raise UniFieldElementException("I found : %s" % hashes)
 
-    repeat_until_no_exception(try_to_check_line, StaleElementReferenceException, step)
+    repeat_until_no_exception(world, try_to_check_line, (StaleElementReferenceException, UniFieldElementException), step)
 
 @step('I should see in the main table the following data:')
 @output.register_for_printscreen
@@ -1170,7 +1170,7 @@ def search_until_I(step, action_search, see):
 
     tick = monitor(world.browser, ("I don't find the following row(s): %s" if see else "I still see %s") % myhashes)
 
-    while repeat_until_no_exception(try_to_check_line, StaleElementReferenceException, myhashes) != see:
+    while repeat_until_no_exception(world, try_to_check_line, StaleElementReferenceException, myhashes) != see:
         step.given('I click on "%s"' % action_search)
         time.sleep(TIME_TO_WAIT)
         tick()

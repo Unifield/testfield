@@ -69,7 +69,7 @@ def monitor(browser, explanation=''):
     LIMIT_COUNTER = 30
     found_message = set([])
 
-    def counter():
+    def counter(message_if_error=None):
         here['val'] += 1
 
         now = datetime.datetime.now()
@@ -104,7 +104,7 @@ def monitor(browser, explanation=''):
             f.close()
 
         if timeout_detected:
-            raise TimeoutException(explanation or "We have waited for too long on an element")
+            raise TimeoutException(message_if_error or explanation or "We have waited for too long on an element")
 
     return counter
 
@@ -351,13 +351,15 @@ def open_all_the_tables(world):
             if do_it:
                 elem.click()
 
+                # we cannot select an unlimited number of items. So we stick to 500
+                #  even if we know that the row we are looking for is in the next page... (comes from US-1207)
                 element = get_element(pager, tag_name="select", attrs=dict(action="filter"))
                 select = Select(element)
-                select.select_by_visible_text("unlimited")
+                select.select_by_visible_text("500")
 
                 wait_until_not_loading(world.browser, wait="I cannot load the whole table")
 
-    repeat_until_no_exception(_open_all_the_tables, StaleElementReferenceException)
+    repeat_until_no_exception(world, _open_all_the_tables, StaleElementReferenceException)
 
 def get_options_for_table(world, columns):
     '''
@@ -509,14 +511,15 @@ def wait_until_no_ajax(world, message="A javascript operation is still ongoing")
 
         return
 
-def repeat_until_no_exception(action, exceptions, *params):
-    #FIXME: We should add a monitor here. It's possible to loop for ages in this
-    # loop if we still getting StaleElementReferenceException...
+def repeat_until_no_exception(world, action, exceptions, *params):
+    # We use a monitor only after the first exception because we don't know
+    tick = monitor(world.browser, "We have waited for too long")
+
     while True:
         try:
             return action(*params)
-        except exceptions:
-            print "EXCEPTION"
+        except exceptions as e:
+            tick(str(e))
             time.sleep(TIME_TO_SLEEP)
 
 def wait_until_element_does_not_exist(browser, get_elem, message=''):
