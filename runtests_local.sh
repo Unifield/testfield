@@ -18,5 +18,15 @@ then
     rm -rf output
 fi
 
+if [[ -z "$DISPLAY" ]];
+then
+    tmux new -d -s X_$$ "Xvfb :session-$$"
+    export DISPLAY=:session-$$
+fi
+
 python $TESTFIELDDIR/runtests.py $@
 
+if [[ -z "$DISPLAY" ]];
+then
+    tmux kill-session -t X_$$
+fi
