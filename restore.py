@@ -23,6 +23,7 @@ if __name__ == '__main__':
     import hashlib
 
     from credentials import *
+    from utils import *
 
     import sys
 
@@ -78,11 +79,12 @@ if __name__ == '__main__':
             if dbname not in dumps_to_restore and dumps_to_restore:
                 continue
 
-            print "Restoring", dbname
-
             if not dbname:
                 raise Exception("No database name in %s" % dbname)
 
+            dbname = prefix_db_name(dbname)
+
+            print "Restoring", dbname
 
             for procname in ['pid', 'procpid']:
                 dbtokill = run_script("postgres", '''
@@ -115,7 +117,16 @@ if __name__ == '__main__':
                 if reset_versions:
                     run_script(dbname, "DELETE FROM sync_server_version WHERE sum NOT IN ('88888888888888888888888888888888', '66f490e4359128c556be7ea2d152e03b')")
             else:
-                run_script(dbname, "UPDATE sync_client_sync_server_connection SET host = 'localhost', protocol = 'netrpc_gzip', port = %d" % NETRPC_PORT)
+                ret = run_script(dbname, "select database from sync_client_sync_server_connection")
+                other = ret.split('\n')
+                lines = filter(lambda x : x, other)
+
+                if lines:
+                    line = lines[0]
+                    pointed_dbname = line.strip()
+                    new_name = prefix_db_name(pointed_dbname)
+
+                    run_script(dbname, "UPDATE sync_client_sync_server_connection SET database = '%s', host = 'localhost', protocol = 'netrpc_gzip', port = %d" % (new_name, NETRPC_PORT))
                 if reset_versions:
                     run_script(dbname, "DELETE FROM sync_client_version WHERE sum NOT IN ('88888888888888888888888888888888', '66f490e4359128c556be7ea2d152e03b')")
 

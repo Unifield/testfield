@@ -21,11 +21,6 @@ FILE_DIR = 'files'
 
 RUN_NUMBER_FILE = 'run'
 
-def prefix_db_name(db_name):
-    if DB_PREFIX and not db_name.startswith(DB_PREFIX):
-        return '%s_%s' % (DB_PREFIX, db_name)
-    return db_name
-
 # Selenium management {%{
 @before.all
 def connect_to_db():

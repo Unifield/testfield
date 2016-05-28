@@ -102,7 +102,14 @@ upgrade_server()
     # at first we have to upgrade all the databases
     for DBNAME in $DATABASES;
     do
-        python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER -u base --stop-after-init -d $DBNAME
+        REAL_NAME=$DBNAME
+
+        if [[ "$DBNAME" ]]
+        then
+            REAL_NAME=${DBPREFIX}_${REAL_NAME}
+        fi
+
+        python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER -u base --stop-after-init -d $REAL_NAME
     done
 }
 
@@ -191,7 +198,7 @@ FIRST_DATABASE=`echo $DATABASES | cut -d " " -f1`
 
 export DATABASES=$DATABASES
 
-./generate_credentials.sh $FIRST_DATABASE
+./generate_credentials.sh $FIRST_DATABASE $DBPREFIX
 fetch_source_code;
 python restore.py --reset-versions $ENVNAME
 generate_configuration_file;

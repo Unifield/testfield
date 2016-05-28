@@ -6,6 +6,7 @@ import re
 import sys
 import shutil
 import os, os.path
+import utils
 
 FEATURE_DIR = "features"
 META_FEATURE_DIR = "meta_features"
@@ -66,14 +67,9 @@ def run_preprocessor(path):
                 values = (iterate_over_without_database or iterate_over_with_database).groupdict()
 
                 if iterate_over_without_database is not None:
-                    database = DB_NAME
-                    if not database:
-                        if DB_PREFIX:
-                            database = '%s_HQ1' % DB_PREFIX
-                        else:
-                            database = 'HQ1'
+                    database = utils.prefix_db_name(DB_NAME)
                 else:
-                    database = values['database']
+                    database = utils.prefix_db_name(values['database'])
                 varname = values['varname']
 
                 try:

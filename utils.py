@@ -16,6 +16,13 @@ TIME_TO_SLEEP = 0.3
 # The time that we wait when we now that a change is almost immediate
 TIME_TO_WAIT = 1.0
 
+def prefix_db_name(db_name):
+    from credentials import DB_PREFIX
+    if DB_PREFIX and not db_name.startswith(DB_PREFIX):
+        return '%s_%s' % (DB_PREFIX, db_name)
+    return db_name
+
+
 def get_absolute_path(relative_file):
     path, _ = os.path.split(__file__)
     return os.path.join(path, relative_file)
