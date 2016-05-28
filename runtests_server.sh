@@ -210,12 +210,16 @@ then
     upgrade_server;
 fi
 
-
 if [[ -z "$DISPLAY" ]];
 then
-    tmux new -d -s X_$$ "Xvfb :99"
-    export DISPLAY=:99
+    tmux new -d -s X_$$ "Xvfb :session-$$"
+    export DISPLAY=:session-$$
 fi
 
 run_unifield;
+
+if [[ -z "$DISPLAY" ]];
+then
+    tmux kill-session -t X_$$
+fi
 
