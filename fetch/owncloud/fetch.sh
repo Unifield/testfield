@@ -6,7 +6,8 @@ echo "Clean up data"
 rm -rf files meta_features instances
 
 echo "Download the zip file"
-python fetch/owncloud/download_cloud.py tests.zip
+wget -O tests.zip https://cloud.msf.org/index.php/s/vRN2afzfa7bMOXQ/download
+
 echo "Unzip"
 unzip tests.zip
 

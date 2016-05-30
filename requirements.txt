@@ -42,4 +42,3 @@ unittest2==1.1.0
 wsgiref==0.1.2
 Pillow
 jira
-pyocclient
