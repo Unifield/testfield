@@ -29,6 +29,8 @@ if __name__ == '__main__':
 
     FLAG_RESET_VERSION ='--reset-versions'
 
+    db_address_with_flag = '' if not DB_ADDRESS else "-h %s" % DB_ADDRESS
+
     reset_versions = FLAG_RESET_VERSION in sys.argv
     arguments = filter(lambda x : x != FLAG_RESET_VERSION, sys.argv)
 
@@ -58,7 +60,7 @@ if __name__ == '__main__':
         os.environ['PGPASSWORD'] = DB_PASSWORD
 
         pipe_stderr = "2> /dev/null" if sys.platform != 'win32' else ""
-        ret = os.popen('psql -p %d -t -h %s -U %s %s %s < %s' % (DB_PORT, DB_ADDRESS, DB_USERNAME, dbname, pipe_stderr, scriptfile[1])).read()
+        ret = os.popen('psql -p %d -t %s -U %s %s %s < %s' % (DB_PORT, db_address_with_flag, DB_USERNAME, dbname, pipe_stderr, scriptfile[1])).read()
 
         try:
             os.unlink(scriptfile[1])
@@ -104,7 +106,7 @@ if __name__ == '__main__':
             #run_script(dbname, 'DROP EXTENSION IF EXISTS plpgsql;')
 
             path_dump = os.path.join(environment_dir, filename)
-            os.system('pg_restore -p %d -h %s -U %s --no-acl --no-owner -d %s %s' % (DB_PORT, DB_ADDRESS, DB_USERNAME, dbname, path_dump))
+            os.system('pg_restore -p %d %s -U %s --no-acl --no-owner -d %s %s' % (DB_PORT, db_address_with_flag, DB_USERNAME, dbname, path_dump))
 
             run_script(dbname, "UPDATE res_users SET password = '%s' WHERE login = '%s'" % (UNIFIELD_PASSWORD, UNIFIELD_ADMIN))
 

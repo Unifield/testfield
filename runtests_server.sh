@@ -32,7 +32,19 @@ LETTUCE_PARAMS="${*:5}"
 
 export PGPASSWORD=$DBPASSWORD
 
-PARAM_UNIFIELD_SERVER="--db_user=$DBUSERNAME --db_password=$DBPASSWORD --db_host=$DBADDR -c $MYTMPDIR/openerp-server.conf"
+if [[ ${DBADDR} ]]
+then
+    PARAM_UNIFIELD_SERVER="--db_user=$DBUSERNAME --db_password=$DBPASSWORD --db_host=$DBADDR -c $MYTMPDIR/openerp-server.conf"
+else
+
+    if [[ ${DBPASSWORD} ]]
+    then
+        echo "If you peer connect to PostgreSQL, you cannot set a password"
+        return 1
+    fi
+
+    PARAM_UNIFIELD_SERVER="--db_user=$DBUSERNAME -c $MYTMPDIR/openerp-server.conf"
+fi
 
 checkout_revision_in()
 {
@@ -76,20 +88,25 @@ generate_configuration_file()
     # add the specific rules
 
     BASE64_UNIFIELDPASSWORD=`echo -n "$UNIFIELDPASSWORD" | base64`
-    BASE64_DBPASSWORD=`echo -n "$DBPASSWORD" | base64`
 
     echo """
 admin_passwd = $BASE64_UNIFIELDPASSWORD
 admin_bkpdb_passwd = $BASE64_UNIFIELDPASSWORD
 admin_dropdb_passwd = $BASE64_UNIFIELDPASSWORD
 admin_restoredb_passwd = $BASE64_UNIFIELDPASSWORD
-db_password = $BASE64_DBPASSWORD
-db_port = $DBPORT
 xmlrpcs_port = $XMLRPCS_PORT
 xmlrpc_port = $XMLRPC_PORT
 root_path = $SERVERDIR/bin
 netrpc_port = $NETRPC_PORT
     """ >> $MYTMPDIR/openerp-server.conf
+
+    if [[ ${DBADDR} ]];
+    then
+        BASE64_DBPASSWORD=`echo -n "$DBPASSWORD" | base64`
+        echo db_password = $BASE64_DBPASSWORD >> $MYTMPDIR/openerp-server.conf
+        echo db_host = 127.0.0.1 >> $MYTMPDIR/openerp-server.conf
+        echo db_port = $DBPORT >> $MYTMPDIR/openerp-server.conf
+    fi
 
     echo """
 server.socket_port = $WEB_PORT
@@ -109,6 +126,7 @@ upgrade_server()
             REAL_NAME=${DBPREFIX}_${REAL_NAME}
         fi
 
+        echo python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER -u base --stop-after-init -d $REAL_NAME
         python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER -u base --stop-after-init -d $REAL_NAME
     done
 }
@@ -119,7 +137,7 @@ run_unifield()
     # we print the commands to launch the components in a separate window in order to debug.
     #  We'll launch them later in a tmux
     echo "Run the web server:" python $WEBDIR/openerp-web.py -c $MYTMPDIR/openerp-web.cfg
-    echo "Run the server:" python $SERVERDIR/bin/openerp-server.py --db_user=$DBUSERNAME --db_password=$DBPASSWORD --db_host=$DBADDR -c $MYTMPDIR/openerp-server.conf
+    echo "Run the server:" python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER
 
     tmux new -d -s $SESSION_NAME -n server "
 
@@ -127,7 +145,7 @@ run_unifield()
         python $WEBDIR/openerp-web.py -c $MYTMPDIR/openerp-web.cfg
         \";
 
-        python $SERVERDIR/bin/openerp-server.py --db_user=$DBUSERNAME --db_password=$DBPASSWORD --db_host=$DBADDR -c $MYTMPDIR/openerp-server.conf
+        python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER
         \""
 
 

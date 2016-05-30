@@ -26,7 +26,8 @@ def get_sql_query(database, sqlquery):
             database=database,
             user=DB_USERNAME,
             password=DB_PASSWORD,
-            host=DB_ADDRESS,
+            port=DB_PORT,
+            host=DB_ADDRESS
         )
         cr = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
