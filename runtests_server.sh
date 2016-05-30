@@ -104,7 +104,7 @@ upgrade_server()
     do
         REAL_NAME=$DBNAME
 
-        if [[ "$DBNAME" ]]
+        if [[ "$DBPREFIX" ]]
         then
             REAL_NAME=${DBPREFIX}_${REAL_NAME}
         fi
@@ -212,8 +212,8 @@ fi
 
 if [[ -z "$DISPLAY" ]];
 then
-    tmux new -d -s X_$$ "Xvfb :session-$$"
-    export DISPLAY=:session-$$
+    tmux new -d -s X_$$ "Xvfb :$$"
+    export DISPLAY=:$$
 fi
 
 run_unifield;
