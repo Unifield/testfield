@@ -8,7 +8,7 @@ if [[ $# -lt 2 || ( "$1" != benchmark && "$1" != "test" ) ]];
 then
     echo "Usage: "
     echo "  $0 benchmark name [server_branch[|rev_number]] [web_branch[|rev_number]] [tag]"
-    echo "  $0 test name [server_branch[|rev_number]] [web_branch[|rev_number]] [tag]"
+    echo "  $0 test name [--only-setup] [server_branch[|rev_number]] [web_branch[|rev_number]] [tag]"
     exit 1
 fi
 
@@ -25,10 +25,19 @@ SESSION_NAME=unifield-$$
 VERB=${1:-test}
 
 NAME=${2:-unkown}
-SERVERBRANCH=${3:-lp:unifield-server}
-WEBBRANCH=${4:-lp:unifield-web}
 
-LETTUCE_PARAMS="${*:5}"
+ONLY_SETUP=
+if [[ ${3} == --only-setup ]]
+then
+    ONLY_SETUP=yes
+    SERVERBRANCH=${4:-lp:unifield-server}
+    WEBBRANCH=${5:-lp:unifield-web}
+else
+    ONLY_SETUP=no
+    SERVERBRANCH=${3:-lp:unifield-server}
+    WEBBRANCH=${4:-lp:unifield-web}
+    LETTUCE_PARAMS="${*:5}"
+fi
 
 export PGPASSWORD=$DBPASSWORD
 
@@ -67,15 +76,18 @@ fetch_source_code()
     checkout_revision_in "$SERVERBRANCH" "$SERVERDIR"
     checkout_revision_in "$WEBBRANCH" "$WEBDIR"
 
-    # we have to get rid of the versions we don't want
-    echo "88888888888888888888888888888888
-66f490e4359128c556be7ea2d152e03b 2013-04-27 16:49:56" > $MYTMPDIR/server/bin/unifield-version.txt
+    if [[ $ONLY_SETUP == "no" ]]
+    then
+        # we have to get rid of the versions we don't want
+        echo "88888888888888888888888888888888
+    66f490e4359128c556be7ea2d152e03b 2013-04-27 16:49:56" > $MYTMPDIR/server/bin/unifield-version.txt
 
-    cat $SERVERDIR/bin/openerp-server.py | sed s/"root"/"ssssb"/ >  $SERVERDIR/bin/openerp-server.py.bak
-    rm $SERVERDIR/bin/openerp-server.py
-    mv $SERVERDIR/bin/openerp-server.py.bak $SERVERDIR/bin/openerp-server.py
+        cat $SERVERDIR/bin/openerp-server.py | sed s/"root"/"ssssb"/ >  $SERVERDIR/bin/openerp-server.py.bak
+        rm $SERVERDIR/bin/openerp-server.py
+        mv $SERVERDIR/bin/openerp-server.py.bak $SERVERDIR/bin/openerp-server.py
 
-    sed -i.bak "s/FOR UPDATE NOWAIT//g" $SERVERDIR/bin/addons/base/ir/ir_sequence.py
+        sed -i.bak "s/FOR UPDATE NOWAIT//g" $SERVERDIR/bin/addons/base/ir/ir_sequence.py
+    fi
 }
 
 generate_configuration_file()
@@ -218,14 +230,25 @@ export DATABASES=$DATABASES
 
 ./generate_credentials.sh $FIRST_DATABASE $DBPREFIX
 fetch_source_code;
-python restore.py --reset-versions $ENVNAME
+
+if [[ $ONLY_SETUP == "no" ]]
+then
+    python restore.py --reset-versions $ENVNAME
+else
+    python restore.py $ENVNAME
+fi
 generate_configuration_file;
 
 #FIXME: We should do it only if necessary. How can we check that?
-#if [[ $RELOAD_BASE_MODULE == 'yes' ]]
 if [[ "$RELOAD_BASE_MODULE" != 'no' ]]
 then
     upgrade_server;
+fi
+
+if [[ $ONLY_SETUP == "yes" ]]
+then
+    echo "Setup done!"
+    exit 0
 fi
 
 if [[ -z "$DISPLAY" ]];
