@@ -8,6 +8,10 @@ if(!window.MONKEY_PATCHING){
     window.TIMEOUT_COUNT = 0;
     window.TIMEOUT_CALLS = {};
 
+    setTimeout(function(){
+        window.openerp.ui.Tips.prototype.show = function(){}
+    }, 0)
+
     realSetTimeout = window.setTimeout;
     realClearTimeout = window.clearTimeout;
 
