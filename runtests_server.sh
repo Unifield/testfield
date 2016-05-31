@@ -251,6 +251,8 @@ then
     exit 0
 fi
 
+DISPLAY_BEFORE=$DISPLAY
+
 if [[ -z "$DISPLAY" ]];
 then
     tmux new -d -s X_$$ "Xvfb :$$"
@@ -259,7 +261,7 @@ fi
 
 run_unifield;
 
-if [[ -z "$DISPLAY" ]];
+if [[ -z "$DISPLAY_BEFORE" ]];
 then
     tmux kill-session -t X_$$
 fi
