@@ -507,7 +507,7 @@ def fill_field(step, fieldname, content):
         #  That's not the case of PhantomJS (chromium?). We have to take both cases into account.
     elif my_input.get_attribute("autocomplete") and my_input.get_attribute("autocomplete").lower() == "off" and '_text' in idattr:
         select_in_field_an_option(world,
-                                  lambda : (get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait="Cannot find the field for this input"), action_write_in_element, True),
+                                  lambda : (get_element(world.browser, id_attr=idattr.replace('/', '\\/'), wait="Cannot find the field for this input"), action_write_in_element),
                                   content)
     else:
         # we have to ensure that the input is selected without any change by a javascript
@@ -937,11 +937,7 @@ def see_popup(step, content, section):
 
 # Table management {%{
 
-@step('I fill "([^"]*)" within column "([^"]*)"$')
-@output.register_for_printscreen
-def fill_column(step, content, fieldname):
-
-    content = convert_input(world, content)
+def get_pos_for_fieldname(fieldname):
 
     tick = monitor(world.browser)
     while True:
@@ -964,6 +960,12 @@ def fill_column(step, content, fieldname):
 
     if right_pos is None:
         raise UniFieldElementException("Cannot find column '%s'" % fieldname)
+    
+    return right_pos
+
+def check_checkbox_action(content, fieldname, action=None):
+
+    content = convert_input(world, content)
 
     #FIXME: This method should use the same behaviour as "I fill ... with ..."
     def get_text_box():
@@ -975,18 +977,21 @@ def fill_column(step, content, fieldname):
         a_select = get_elements(td_node, tag_name="select")
 
         if a_select:
-            return a_select[0], action_select_option, False
+            return a_select[0], action or action_select_option
         else:
-            my_input = get_element(td_node, tag_name="input", attrs={'type': 'text'})
-            
-            if my_input.get_attribute("autocomplete") == "off":
-                return my_input, action_write_in_element, True
-            else:
-                return my_input, action_write_in_element, False
+            input_type = "text" if not get_elements(td_node, tag_name="input", attrs={'type': 'checkbox'}) else "checkbox"
+            my_input = get_element(td_node, tag_name="input", attrs={'type': input_type})
 
-        return get_element(td_node, tag_name="input", attrs={'type': 'text'})
+            return my_input, action or action_write_in_element
+
+    right_pos = get_pos_for_fieldname(fieldname)
 
     select_in_field_an_option(world, get_text_box, content)
+
+@step('I fill "([^"]*)" within column "([^"]*)"$')
+@output.register_for_printscreen
+def fill_column(step, content, fieldname):
+    check_checkbox_action(content, fieldname)
 
 @step('I fill "([^"]*)" within column "([^"]*)" and open the window')
 @output.register_for_printscreen
@@ -1014,6 +1019,18 @@ def click_on_all_line(step):
     wait_until_not_loading(world.browser, wait=False)
     wait_until_no_ajax(world)
 
+def get_action_element_in_line(row_node, action):
+    # we have to look for this action the user wants to execute
+    if action == 'checkbox':
+        actions_to_click = get_elements(row_node, tag_name="input", attrs=dict(type='checkbox'))
+    elif action == 'option':
+        actions_to_click = get_elements(row_node, tag_name="input", attrs=dict(type='radio'))
+    elif action == 'line':
+        actions_to_click = [row_node]
+    else:
+        actions_to_click = get_elements(row_node, attrs={'title': action})
+    return actions_to_click
+
 def click_on_line(step, action, window_will_exist=True):
     # This is important because we cannot click on lines belonging
     #  to the previous window
@@ -1040,15 +1057,7 @@ def click_on_line(step, action, window_will_exist=True):
             no_matched_row = 0
 
             for table, row_node in table_row_nodes:
-                # we have to look for this action the user wants to execute
-                if action == 'checkbox':
-                    actions_to_click = get_elements(row_node, tag_name="input", attrs=dict(type='checkbox'))
-                elif action == 'option':
-                    actions_to_click = get_elements(row_node, tag_name="input", attrs=dict(type='radio'))
-                elif action == 'line':
-                    actions_to_click = [row_node]
-                else:
-                    actions_to_click = get_elements(row_node, attrs={'title': action})
+                actions_to_click = get_action_element_in_line(row_node, action)
 
                 if not actions_to_click:
                     continue
@@ -1096,6 +1105,9 @@ def click_on_line(step, action, window_will_exist=True):
 def click_on_line_line(step):
     click_on_line(step, "line")
 
+
+
+
 @step('I click "([^"]*)" on line:')
 @output.register_for_printscreen
 def click_on_line_tooltip(step, action):
@@ -1126,14 +1138,20 @@ def click_on_line_and_open_the_window(step, action):
 
     wait_until_no_ajax(world)
 
-def check_that_line(step, should_see_lines):
+def check_that_line(step, should_see_lines, action=None):
     values = step.hashes
 
     open_all_the_tables(world)
 
     def try_to_check_line(step):
         for hashes in values:
-            if bool(list(get_table_row_from_hashes(world, hashes))) != should_see_lines:
+            lines = list(get_table_row_from_hashes(world, hashes))
+
+            # do we have to filter the rows with the right action?
+            if action is not None:
+                lines = filter(lambda (_, row) : get_action_element_in_line(row, action), lines)
+
+            if bool(lines) != should_see_lines:
                 columns = hashes.keys()
                 options = map(lambda x : x[2], get_options_for_table(world, columns))
                 options_txt =', '.join(map(lambda x : '|'.join(x), options))
@@ -1148,6 +1166,36 @@ def check_that_line(step, should_see_lines):
 @output.register_for_printscreen
 def check_line(step):
     check_that_line(step, True)
+
+@step("I shouldn't be able to click \"([^\"]*)\" on line:")
+@output.register_for_printscreen
+def check_not_click_on_line(step, action):
+    if len(step.hashes) != 1:
+        raise UniFieldElementException("You should define what is the line unique line you want to click on")
+
+    # (1) we check that the line exists
+    check_that_line(step, True)
+
+    # (2) but we shouldn't be able to click on it
+    check_that_line(step, False, action=action)
+
+@step("I shouldn't be able to edit \"([^\"]*)\"$")
+@output.register_for_printscreen
+def fill_field(step, fieldname):
+    _, my_input = get_input(world.browser, fieldname)
+
+    if not my_input.get_attribute("readonly") and not my_input.get_attribute("disabled"):
+        raise UniFieldElementException("The field %s is ediable" % fieldname)
+
+@step("I shouldn't be able to edit column \"([^\"]*)\"$")
+@output.register_for_printscreen
+def fill_field(step, fieldname):
+
+    def action_check(txt_input, content):
+        if not txt_input.get_attribute("readonly") and not txt_input.get_attribute("disabled"):
+            raise UniFieldElementException("The field %s is ediable" % fieldname)
+
+    check_checkbox_action("", fieldname, action_check)
 
 @step('I should not see in the main table the following data:')
 @output.register_for_printscreen

@@ -637,7 +637,7 @@ def select_in_field_an_option(world, fieldelement, content):
     Find a field according to its label
     '''
 
-    field, action, confirm = fieldelement()
+    field, action = fieldelement()
     idattr = field.get_attribute("id")
 
     value_before = None
@@ -648,7 +648,7 @@ def select_in_field_an_option(world, fieldelement, content):
         txtidinput = get_element(world.browser, id_attr=idvalue_before.replace('/', '\\/'), wait=True)
         value_before = txtidinput.get_attribute("value")
 
-    txtinput, _, _ = fieldelement()
+    txtinput, _ = fieldelement()
 
     action(txtinput, content)
 
