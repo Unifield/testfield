@@ -34,6 +34,7 @@ RUN apt-get install -y net-tools
 VOLUME ["/output"]
 
 ADD docker/docker-entrypoint.sh .
+ADD docker/config.sh .
 RUN chmod +x docker-entrypoint.sh
 
 # Option (1): use a separate volume
