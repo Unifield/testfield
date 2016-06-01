@@ -979,7 +979,7 @@ def check_checkbox_action(content, fieldname, action=None):
         if a_select:
             return a_select[0], action or action_select_option
         else:
-            input_type = "text" if not get_elements(td_node, tag_name="input", attrs={'type': 'checkbox'}) else "checkbox"
+            input_type = "text" if get_elements(td_node, tag_name="input", attrs={'type': 'text'}) else "checkbox"
             my_input = get_element(td_node, tag_name="input", attrs={'type': input_type})
 
             return my_input, action or action_write_in_element
@@ -1029,6 +1029,9 @@ def get_action_element_in_line(row_node, action):
         actions_to_click = [row_node]
     else:
         actions_to_click = get_elements(row_node, attrs={'title': action})
+
+    actions_to_click = filter(lambda x : x.is_displayed(), actions_to_click)
+
     return actions_to_click
 
 def click_on_line(step, action, window_will_exist=True):

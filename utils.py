@@ -623,8 +623,21 @@ def click_on(browser, elem_fetcher, msg):
         time.sleep(TIME_TO_SLEEP)
 
 def action_write_in_element(txtinput, content):
-    txtinput.clear()
-    txtinput.send_keys((100*Keys.BACKSPACE) + content + Keys.TAB)
+
+    #TODO: Merge that with fill_field
+    if txtinput.tag_name == "input" and txtinput.get_attribute("type") and txtinput.get_attribute("type") == "checkbox":
+        if content.lower() not in ["yes", "no"]:
+            raise UniFieldElementException("You cannot defined any value except no and yes for a checkbox")
+
+        if content.lower() == "yes":
+            if not txtinput.is_selected():
+                txtinput.click()
+        else:
+            if txtinput.is_selected():
+                txtinput.click()
+    else:
+        txtinput.clear()
+        txtinput.send_keys((100*Keys.BACKSPACE) + content + Keys.TAB)
 
 def action_select_option(txtinput, content):
     txtinput.click()
