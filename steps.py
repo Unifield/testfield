@@ -1125,7 +1125,9 @@ def click_on_line_and_open_the_window(step, action):
 
     click_on_line(step, action, window_will_exist=False)
 
-    wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe", position=world.nbframes-1))
+    world.nbframes -= 1
+
+    wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe", position=world.nbframes))
 
     wait_until_no_ajax(world)
     wait_until_not_loading(world.browser, wait=world.nbframes == 0)
