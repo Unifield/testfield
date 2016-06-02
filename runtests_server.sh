@@ -151,13 +151,19 @@ run_unifield()
     echo "Run the web server:" python $WEBDIR/openerp-web.py -c $MYTMPDIR/openerp-web.cfg
     echo "Run the server:" python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER
 
+    BEFORE_COMMAND=
+    if [[ ${FORCED_DATE} ]]
+    then
+        BEFORE_COMMAND="faketime \"${FORCED_DATE}\""
+    fi
+
     tmux new -d -s $SESSION_NAME -n server "
 
         tmux new-window -n web \"
-        python $WEBDIR/openerp-web.py -c $MYTMPDIR/openerp-web.cfg
+        $BEFORE_COMMAND python $WEBDIR/openerp-web.py -c $MYTMPDIR/openerp-web.cfg
         \";
 
-        python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER
+        $BEFORE_COMMAND python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER
         \""
 
 
@@ -216,6 +222,35 @@ run_unifield()
     tmux kill-session -t $SESSION_NAME
 }
 
+launch_database()
+{
+    # we have to setup a database if required
+    LAUNCH_DB=
+    if [[ ${DBPATH} && ${FORCED_DATE} ]];
+    then
+        DATADIR=$SERVER_TMPDIR/data-$$
+        RUNDIR=$SERVER_TMPDIR/run-$$
+        DBADDR=localhost
+
+        mkdir $DATADIR $RUNDIR
+
+        $DBPATH/initdb --username=$USER $DATADIR
+
+        echo "port = $DBPORT" >> $DATADIR/postgresql.conf
+        echo "unix_socket_directory = '$RUNDIR'" >> $DATADIR/postgresql.conf
+
+        LAUNCH_DB="faketime ${FORCED_DATE} $DBPATH/postgres -D $DATADIR"
+        tmux new -d -s PostgreSQL_$$ "$LAUNCH_DB; read"
+
+        #TODO: Fix that... we should wait until psql can connect
+        sleep 2
+        psql -h $DBADDR -p $DBPORT postgres -c "CREATE USER $DBUSERNAME WITH CREATEDB PASSWORD '$DBPASSWORD'" || echo $?
+
+    else
+        FORCED_DATE=
+    fi
+}
+
 DATABASES=
 for FILENAME in `find instances/$ENVNAME -name *.dump | sort`;
 do
@@ -230,6 +265,7 @@ export DATABASES=$DATABASES
 
 ./generate_credentials.sh $FIRST_DATABASE $DBPREFIX
 fetch_source_code;
+launch_database;
 
 if [[ $ONLY_SETUP == "no" ]]
 then
@@ -264,5 +300,20 @@ run_unifield;
 if [[ -z "$DISPLAY_BEFORE" ]];
 then
     tmux kill-session -t X_$$
+fi
+
+if [[ ${DBPATH} && ${FORCED_DATE} ]];
+then
+    tmux kill-session -t PostgreSQL_$$
+fi
+
+if [[ ${DATADIR} ]];
+then
+    rm -rf ${DATADIR}
+fi
+
+if [[ ${RUNDIR} ]];
+then
+    rm -rf ${RUNDIR}
 fi
 
