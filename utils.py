@@ -519,6 +519,7 @@ def repeat_until_no_exception(world, action, exceptions, *params):
         try:
             return action(*params)
         except exceptions as e:
+            print str(e)
             tick(str(e))
             time.sleep(TIME_TO_SLEEP)
 
@@ -605,22 +606,30 @@ def convert_input(world, content, localdict=dict()):
 
     return new_content
 
+def refresh_window(world):
+
+    world.browser.switch_to_default_content()
+
+    if world.nbframes != 0:
+        world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe"))
+
 # Do something {%{
-def click_on(browser, elem_fetcher, msg):
+def click_on(world, elem_fetcher, msg):
     '''
     This method tries to click on the elem(ent) until the click doesn't raise en exception.
     '''
-    tick = monitor(browser, msg or "An element cannot be clicked")
+    tick = monitor(world.browser, msg or "An element cannot be clicked")
     while True:
         try:
+            refresh_window(world)
+
             elem = elem_fetcher()
             if elem and elem.is_displayed():
                 elem.click()
             return
         except Exception as e:
-            print(e)
-        tick()
-        time.sleep(TIME_TO_SLEEP)
+            tick(str(e))
+            time.sleep(TIME_TO_SLEEP)
 
 def action_write_in_element(txtinput, content):
 

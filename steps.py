@@ -452,7 +452,7 @@ def open_tab(step, menu_to_click_on):
 @output.add_printscreen
 def open_tab(step, tabtoopen):
     msg = "Cannot find tab %s" % tabtoopen
-    click_on(world.browser, lambda : get_element_from_text(world.browser, class_attr="tab-title", tag_name="span", text=tabtoopen, wait=msg), msg)
+    click_on(world, lambda : get_element_from_text(world.browser, class_attr="tab-title", tag_name="span", text=tabtoopen, wait=msg), msg)
     wait_until_not_loading(world.browser, wait="Cannot open the tab. Loading takes too much time")
 
 #}%}
@@ -714,7 +714,7 @@ def close_window_if_necessary(step, button):
     world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes-1, wait="Cannot find the window in which the button is located"))
 
     msg = "Cannot find button %s" % button
-    click_on(world.browser, lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg), msg)
+    click_on(world, lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg), msg)
 
     world.browser.switch_to_default_content()
     tick = monitor(world.browser)
@@ -763,7 +763,7 @@ def click_on_button(step, button):
     #  fetch them in another order
     position_element = 0 if world.logged_in else -1
     msg = "Cannot find button %s" % button
-    click_on(world.browser, lambda : get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg)[position_element], msg)
+    click_on(world, lambda : get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg)[position_element], msg)
 
     if world.nbframes != 0:
         wait_until_not_loading(world.browser, wait=False)
@@ -785,7 +785,7 @@ def click_on_button_and_open(step, button):
     wait_until_not_loading(world.browser, wait=False)
     wait_until_no_ajax(world)
     msg = "Cannot find button %s" % button
-    click_on(world.browser, lambda : get_element_from_text(world.browser, tag_name="button", text=button, wait=msg), msg)
+    click_on(world, lambda : get_element_from_text(world.browser, tag_name="button", text=button, wait=msg), msg)
 
     wait_until_not_loading(world.browser, wait=False)
 
@@ -817,7 +817,7 @@ def close_the_window(step):
 def click_on_button_and_close(step, button):
 
     msg = "Cannot find the button to close the window"
-    click_on(world.browser,  lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg), msg)
+    click_on(world,  lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg), msg)
     world.nbframes -= 1
 
     world.browser.switch_to_default_content()
@@ -1149,6 +1149,9 @@ def check_that_line(step, should_see_lines, action=None):
     open_all_the_tables(world)
 
     def try_to_check_line(step):
+
+        refresh_window(world)
+
         for hashes in values:
             lines = list(get_table_row_from_hashes(world, hashes))
 
