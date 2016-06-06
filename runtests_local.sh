@@ -25,8 +25,11 @@ then
 fi
 
 python $TESTFIELDDIR/runtests.py $@
+RETVAR=$?
 
 if [[ -z "$DISPLAY" ]];
 then
     tmux kill-session -t X_$$
 fi
+
+exit $RETVAR
