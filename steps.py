@@ -393,7 +393,7 @@ def open_menu(menu_to_click_on):
         menu = menus[i]
         tick()
 
-        elements = get_elements(menu_node, tag_name="a")
+        elements = get_elements(menu_node, tag_name="tr", class_attr="row")
         # We don't know why... but some elements appear to be empty when we start using the menu
         #  then, they disapear when we open a menu
 
@@ -406,7 +406,13 @@ def open_menu(menu_to_click_on):
         if menu in text_in_menus:
             pos = text_in_menus.index(menu)
 
-            valid_visible_elements[pos].click()
+            if i == len(menus)-1:
+                valid_visible_elements[pos].click()
+            else:
+                # We have to click on the small caret to open the submenu
+                #  and not the menu itself. Otherwise, we could open a
+                #  window that is linked to an parent menu.
+                get_element(valid_visible_elements[pos], tag_name="span", class_attr="expand", wait="Cannot expand a menu").click()
 
             if i == len(menus) - 1:
                 wait_until_not_loading(world.browser, wait="Cannot open menu %s. Loading takes too much time." % menu)
