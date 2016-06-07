@@ -152,9 +152,10 @@ run_unifield()
     echo "Run the server:" python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER
 
     BEFORE_COMMAND=
-    if [[ ${FORCED_DATE} ]]
+    if [[ ${FORCED_DATE} == yes ]]
     then
-        BEFORE_COMMAND="faketime \"${FORCED_DATE}\""
+        REAL_FORCED_DATE=$(date +%Y-%m%-%d)
+        BEFORE_COMMAND="faketime \"${REAL_FORCED_DATE}\""
     fi
 
     tmux new -d -s $SESSION_NAME -n server "
@@ -222,11 +223,13 @@ run_unifield()
     tmux kill-session -t $SESSION_NAME
 }
 
+
+
 launch_database()
 {
     # we have to setup a database if required
     LAUNCH_DB=
-    if [[ ${DBPATH} && ${FORCED_DATE} ]];
+    if [[ ${DBPATH} && ${FORCED_DATE} == yes ]];
     then
         DATADIR=$SERVER_TMPDIR/data-$$
         RUNDIR=$SERVER_TMPDIR/run-$$
@@ -239,7 +242,8 @@ launch_database()
         echo "port = $DBPORT" >> $DATADIR/postgresql.conf
         echo "unix_socket_directory = '$RUNDIR'" >> $DATADIR/postgresql.conf
 
-        LAUNCH_DB="faketime ${FORCED_DATE} $DBPATH/postgres -D $DATADIR"
+        REAL_FORCED_DATE=$(date +%Y-%m%-%d)
+        LAUNCH_DB="faketime ${REAL_FORCED_DATE} $DBPATH/postgres -D $DATADIR"
         tmux new -d -s PostgreSQL_$$ "$LAUNCH_DB; read"
 
         #TODO: Fix that... we should wait until psql can connect
@@ -247,7 +251,7 @@ launch_database()
         psql -h $DBADDR -p $DBPORT postgres -c "CREATE USER $DBUSERNAME WITH CREATEDB PASSWORD '$DBPASSWORD'" || echo $?
 
     else
-        FORCED_DATE=
+        FORCED_DATE=no
     fi
 }
 
