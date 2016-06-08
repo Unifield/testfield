@@ -56,7 +56,7 @@ def connect_to_db():
     #  useful anymore
     base_dir = os.path.dirname(__file__)
     file_path = os.path.join(base_dir, FILE_DIR)
-    world.files_before = os.listdir(file_path)
+    world.files_before = os.listdir(file_path) if os.path.isdir(file_path) else set([])
 
     world.logged_in = False
     world.must_fail = None
@@ -166,7 +166,7 @@ def disconnect_to_db(total):
 
     base_dir = os.path.dirname(__file__)
     file_path = os.path.join(base_dir, FILE_DIR)
-    files_after = os.listdir(file_path)
+    files_after = os.listdir(file_path) if os.path.isdir(file_path) else set([])
 
     files_to_delete = set(files_after) - set(world.files_before)
 
