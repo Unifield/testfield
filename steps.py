@@ -409,10 +409,18 @@ def open_menu(menu_to_click_on):
             if i == len(menus)-1:
                 valid_visible_elements[pos].click()
             else:
-                # We have to click on the small caret to open the submenu
+                # Do we have to click on the small caret to open the submenu
                 #  and not the menu itself. Otherwise, we could open a
                 #  window that is linked to an parent menu.
-                get_element(valid_visible_elements[pos], tag_name="span", class_attr="expand", wait="Cannot expand a menu").click()
+                # We also have to click on the caret to close the menu otherwise the number
+                #  of submenu entries won't change and we will be stuck while waiting for a change
+                carets_element_expand = get_elements(valid_visible_elements[pos], tag_name="span", class_attr="expand")
+                carets_element_collapse = get_elements(valid_visible_elements[pos], tag_name="span", class_attr="collapse")
+                if carets_element_expand or carets_element_collapse:
+                    (carets_element_expand + carets_element_collapse)[0].click()
+                else:
+                    # there is no caret, so we can click on the menu (there is no submenu)
+                    valid_visible_elements[pos].click()
 
             if i == len(menus) - 1:
                 wait_until_not_loading(world.browser, wait="Cannot open menu %s. Loading takes too much time." % menu)
