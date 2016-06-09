@@ -7,6 +7,8 @@ import sys
 import shutil
 import os, os.path
 import utils
+from oerplib import OERP
+import credentials
 
 FEATURE_DIR = "features"
 META_FEATURE_DIR = "meta_features"
@@ -37,11 +39,13 @@ def get_sql_query(database, sqlquery):
         raise DBException("Cannot reach the database (reason: %s)" % e)
 
 def get_articles(database, count):
-    return get_sql_query(database, '''
-    SELECT default_code AS CODE, name_template AS NAME
-    FROM product_product INNER JOIN product_template ON product_tmpl_id = product_template.id
-    WHERE batch_management = 'f' AND perishable = 'f' AND active = 't' AND (state IS NULL OR state <> 4)
-    LIMIT %d''' % count)
+    oerp = OERP(server=credentials.SRV_ADDRESS, database=database, protocol='netrpc', port=credentials.NETRPC_PORT)
+    u = oerp.login(credentials.UNIFIELD_ADMIN, credentials.UNIFIELD_PASSWORD)
+    prod_obj = oerp.get('product.product')
+    ids = prod_obj.search([('batch_management', '=', False), ('perishable', '=', False),
+        ('active', '=', True), '|', ('state', '!=', 'archived'), ('state', '=', False)], 0, count)
+
+    return [{'code': x['default_code'], 'name': x['name']} for x in prod_obj.read(ids, ['default_code', 'name'])]
 
 def inject_variable(line, **variables):
 
