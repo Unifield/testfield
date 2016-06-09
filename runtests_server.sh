@@ -14,6 +14,19 @@ fi
 
 source config.sh
 
+################################################################
+# Fetch the time difference between the date we want to use to run the tests
+BEFORE=$(date -d "2016-05-25" '+%s')
+NOW=$(date '+%s')
+if [[ ${FORCED_DATE} == yes ]];
+then
+    MINUS_IN_SECOND=$[ $NOW - $BEFORE ]
+else
+    MINUS_IN_SECOND=0
+fi
+BEFORE_FAKETIME_MINUS=-${MINUS_IN_SECOND}s
+#################################################################
+
 MYTMPDIR=$SERVER_TMPDIR
 ENVNAME=$SERVER_ENVNAME
 
@@ -38,6 +51,13 @@ else
     WEBBRANCH=${4:-lp:unifield-web}
     LETTUCE_PARAMS="${*:5}"
 fi
+
+function cleanup()
+{
+    ./scripts/kill_db.sh -D $SERVER_TMPDIR run_$$
+}
+trap "cleanup;" EXIT
+
 
 export PGPASSWORD=$DBPASSWORD
 
@@ -148,23 +168,17 @@ run_unifield()
 {
     # we print the commands to launch the components in a separate window in order to debug.
     #  We'll launch them later in a tmux
-    echo "Run the web server:" python $WEBDIR/openerp-web.py -c $MYTMPDIR/openerp-web.cfg
-    echo "Run the server:" python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER
 
-    BEFORE_COMMAND=
-    if [[ ${FORCED_DATE} == yes ]]
-    then
-        REAL_FORCED_DATE=$(date +%Y-%m%-%d)
-        BEFORE_COMMAND="faketime \"${REAL_FORCED_DATE}\""
-    fi
+    echo "Run the web server: faketime -f $BEFORE_FAKETIME_MINUS python $WEBDIR/openerp-web.py -c $MYTMPDIR/openerp-web.cfg"
+    echo "Run the server: faketime -f $BEFORE_FAKETIME_MINUS python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER"
 
     tmux new -d -s $SESSION_NAME -n server "
 
         tmux new-window -n web \"
-        $BEFORE_COMMAND python $WEBDIR/openerp-web.py -c $MYTMPDIR/openerp-web.cfg
+        faketime -f $BEFORE_FAKETIME_MINUS python $WEBDIR/openerp-web.py -c $MYTMPDIR/openerp-web.cfg
         \";
 
-        $BEFORE_COMMAND python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER
+        faketime -f $BEFORE_FAKETIME_MINUS python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER
         \""
 
 
@@ -223,32 +237,19 @@ run_unifield()
     tmux kill-session -t $SESSION_NAME
 }
 
-
-
 launch_database()
 {
     # we have to setup a database if required
-    LAUNCH_DB=
     if [[ ${DBPATH} && ${FORCED_DATE} == yes ]];
     then
-        DATADIR=$SERVER_TMPDIR/data-$$
-        RUNDIR=$SERVER_TMPDIR/run-$$
-        DBADDR=localhost
 
-        mkdir $DATADIR $RUNDIR
+        if [[ $DBUSERNAME != $DBPASSWORD ]]
+        then
+            echo Username and password must be the same if you want to set a fixed date
+            exit 1
+        fi
 
-        $DBPATH/initdb --username=$USER $DATADIR
-
-        echo "port = $DBPORT" >> $DATADIR/postgresql.conf
-        echo "unix_socket_directory = '$RUNDIR'" >> $DATADIR/postgresql.conf
-
-        REAL_FORCED_DATE=$(date +%Y-%m%-%d)
-        LAUNCH_DB="faketime ${REAL_FORCED_DATE} $DBPATH/postgres -D $DATADIR"
-        tmux new -d -s PostgreSQL_$$ "$LAUNCH_DB; read"
-
-        #TODO: Fix that... we should wait until psql can connect
-        sleep 2
-        psql -h $DBADDR -p $DBPORT postgres -c "CREATE USER $DBUSERNAME WITH CREATEDB PASSWORD '$DBPASSWORD'" || echo $?
+        ./scripts/create_db.sh -P ${DBPATH} -D $SERVER_TMPDIR -d $MINUS_IN_SECOND -p $DBPORT -c $DBUSERNAME run_$$
 
     else
         FORCED_DATE=no
@@ -304,20 +305,5 @@ run_unifield;
 if [[ -z "$DISPLAY_BEFORE" ]];
 then
     tmux kill-session -t X_$$
-fi
-
-if [[ ${DBPATH} && ${FORCED_DATE} ]];
-then
-    tmux kill-session -t PostgreSQL_$$
-fi
-
-if [[ ${DATADIR} ]];
-then
-    rm -rf ${DATADIR}
-fi
-
-if [[ ${RUNDIR} ]];
-then
-    rm -rf ${RUNDIR}
 fi
 

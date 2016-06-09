@@ -11,7 +11,7 @@ CREDENTIALS=testing
 
 function usage()
 {
-    echo $0 [-h] -P execpath [-D dbpath] [-d] [-p port] [-c credentials] name
+    echo $0 [-h] -P execpath [-D dbpath] [-d seconds] [-p port] [-c credentials] name
     echo "  -h: help"
     echo "  -P: path to PostgreSQL"
     echo "  -D: set the DB path var/run in a specific directory (default: /tmp)"
@@ -20,7 +20,7 @@ function usage()
     echo "  -c: credentials used by the database (default: testing)"
 }
 
-while getopts "P:hD:dp:c:" OPTION
+while getopts "P:hD:d:p:c:" OPTION
 do
     case $OPTION in
     h)
@@ -35,6 +35,7 @@ do
         ;;
     d)
         FORCED_DATE=yes
+        TIME_BEFORE=$OPTARG
         ;;
     p)
         DBPORT=$OPTARG
@@ -102,10 +103,15 @@ mkdir $DATADIR $RUNDIR
 $DBDIR/initdb --username=$USER $DATADIR
 
 echo "port = $DBPORT" >> $DATADIR/postgresql.conf
-#echo "unix_socket_directory = '$RUNDIR'" >> $DATADIR/postgresql.conf
+echo "unix_socket_directory = '$RUNDIR'" >> $DATADIR/postgresql.conf
 
-REAL_FORCED_DATE=$(date +'%Y-%m-%d %H:%M:%S')
-tmux new -d -s PostGre_$NAME_KILL "faketime \"${REAL_FORCED_DATE}\" $DBDIR/postgres -D $DATADIR"
+START_FAKETIME=
+if [[ $FORCED_DATE == yes ]]
+then
+    START_FAKETIME="faketime -f -${TIME_BEFORE}s"
+fi
+
+tmux new -d -s PostGre_$NAME_KILL "${START_FAKETIME} $DBDIR/postgres -D $DATADIR"
 
 #TODO: Fix that... we should wait until psql can connect
 for i in $(seq 1 10);
