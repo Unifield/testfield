@@ -569,23 +569,27 @@ def wait_until_not_loading(browser, wait="Loading takes too much time"):
 
 def convert_input(world, content, localdict=dict()):
     new_content = content
-    regex = '({{((?:\w+\()*)(\w+)((?:\)*))}})'
+    regex = '({{((?:\w+\()*)([^)]*)((?:\)*))}})'
 
-    for full, functions, word, after in re.findall(regex, content):
+    for full, functions_text, word, after in re.findall(regex, content):
+        functions = functions_text.split('(')
+
+        all_functions_ok = all(map(lambda x : x in world.FUNCTIONS, filter(lambda x : x, functions)))
 
         # does the word exist?
-        if word not in localdict and word not in world.FEATURE_VARIABLE:
+        if word not in localdict and word not in world.FEATURE_VARIABLE and not all_functions_ok:
             #FIXME if it doesn't exist we cannot crash because the tables
             #  are expanded even if we don't manage to expand ROW. As a result
             #  a crash could stop all the tests because of the output component...
             continue
 
-        if after.count(')') != functions.count('('):
+        if after.count(')') != functions_text.count('('):
             raise UnifieldException("You don't close/open all the parentheses in")
 
-        real_value = localdict.get(word, world.FEATURE_VARIABLE.get(word))
+        #FIXME: Here we try to translate the variable names into their values otherwise we
+        # use the value itself. This is not really easy to understand and could lead to bugs...
+        real_value = localdict.get(word, world.FEATURE_VARIABLE.get(word, word))
 
-        functions = functions.split('(')
         functions.reverse()
 
         for function in functions:

@@ -69,8 +69,14 @@ def connect_to_db():
         new_number = '%%0%sd' % len(number) % (int(number) + 1)
         return param[:-len(number)] + new_number
 
-    world.FUNCTIONS = {'INCR': incr_func}
+    def now_date(param):
+        #TODO: Set the right date when running the scenarios
+        #  (not only the DB and UniField)
+        now_scenario = datetime.datetime.now()
+        the_date = now_scenario.strftime(param)
+        return the_date + "????"
 
+    world.FUNCTIONS = {'INCR': incr_func, 'NOW': now_date}
 
 # Dirty hack to display an error message when a step goes wrong in the background {%{
 @before.each_background
