@@ -125,6 +125,13 @@ do
     if [[ $ROLE_CREATED == 1 ]]
     then
         echo "Done!"
+        echo "Setting up the DB"
+        psql -h $DBADDR -p $DBPORT postgres -c "UPDATE pg_database set datallowconn = TRUE where datname = 'template0'";
+        psql -h $DBADDR -p $DBPORT postgres -c "UPDATE pg_database set datistemplate = FALSE where datname = 'template1'";
+        psql -h $DBADDR -p $DBPORT postgres -c "DROP DATABASE template1"
+        psql -h $DBADDR -p $DBPORT postgres -c "CREATE DATABASE template1 with template = template0 encoding = 'UTF8'"
+        psql -h $DBADDR -p $DBPORT template0 -c "UPDATE pg_database set datistemplate = TRUE where datname = 'template1';" 
+        psql -h $DBADDR -p $DBPORT template1 -c "UPDATE pg_database set datallowconn = FALSE where datname = 'template0';" 
         exit 0
     fi
 
