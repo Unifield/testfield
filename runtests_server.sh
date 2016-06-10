@@ -181,7 +181,41 @@ run_unifield()
         faketime -f $BEFORE_FAKETIME_MINUS python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER
         \""
 
-    sleep 10;
+    # we have to ensure that the services work
+    FAILURE=no
+    for i in $(seq 1 10);
+    do
+        FAILURE=no
+
+        for ports in $WEB_PORT $NETRPC_PORT
+        do
+            {
+                set +e
+                nc -z -v -w5 127.0.0.1 $ports >&2 2> /dev/null;
+            }
+            VAL=$?
+
+            if [[ $VAL != 0 ]]
+            then
+                echo "Cannot connect to $ports"
+                FAILURE=yes
+            fi
+        done
+
+        if [[ $FAILURE == no ]]
+        then
+            echo "Can connect!"
+            break
+        fi
+
+        sleep 1;
+    done
+
+    if [[ $FAILURE == yes ]]
+    then
+        echo "Cannot launch UniField"
+        exit 1
+    fi
 
     case $VERB in
 
