@@ -473,6 +473,10 @@ def wait_until_no_ajax(world, message="A javascript operation is still ongoing")
                 totcount += (typeof $ == 'undefined') ? 0 : $.active;
 
                 for(var i = 0; i < elements.length; i++){
+                    if (elements[i] === undefined || elements[i] === null) {
+                        return "UNDEFINED iframe"
+                    }
+
                     if(!check(elements[i].contentWindow.TOT)){
                         return "BLOCKED IN INFRAME " + i;
                     }

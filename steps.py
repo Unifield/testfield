@@ -74,7 +74,7 @@ def connect_to_db():
         #  (not only the DB and UniField)
         now_scenario = datetime.datetime.now()
         the_date = now_scenario.strftime(param)
-        return the_date + "????"
+        return the_date
 
     world.FUNCTIONS = {'INCR': incr_func, 'NOW': now_date}
 
