@@ -181,6 +181,7 @@ run_unifield()
         faketime -f $BEFORE_FAKETIME_MINUS python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER
         \""
 
+    sleep 10;
 
     case $VERB in
 
