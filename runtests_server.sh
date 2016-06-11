@@ -16,8 +16,15 @@ source config.sh
 
 ################################################################
 # Fetch the time difference between the date we want to use to run the tests
-BEFORE=$(date -d "2016-05-25" '+%s')
-NOW=$(date '+%s')
+DATEUTILS=date
+if [[ $(uname) == Darwin ]]
+then
+    DATEUTILS=gdate
+fi
+
+BEFORE=$($DATEUTILS -d "2016-05-25" '+%s')
+NOW=$($DATEUTILS '+%s')
+
 if [[ ${FORCED_DATE} == yes ]];
 then
     MINUS_IN_SECOND=$[ $NOW - $BEFORE ]
