@@ -9,7 +9,6 @@ then
     echo "Usage: "
     echo "  $0 benchmark name [server_branch[|rev_number]] [web_branch[|rev_number]] [tag]"
     echo "  $0 test name [server_branch[|rev_number]] [web_branch[|rev_number]] [tag]"
-    echo "  $0 setup name"
     exit 1
 fi
 
@@ -62,7 +61,7 @@ run_tests()
 {
     case $VERB in
 
-    test)
+    test|setup)
         export TIME_BEFORE_FAILURE=${TIME_BEFORE_FAILURE:-40}
         export COUNT=2;
 
@@ -156,12 +155,6 @@ do
 done
 
 ./scripts/start_unifield.sh -s $MINUS_IN_SECOND -d $SERVER_TMPDIR run $UNIFIELD_NAME
-
-if [[ $VERB == setup ]]
-then
-    echo "Done!"
-    exit 0
-fi
 
 DISPLAY_BEFORE=$DISPLAY
 if [[ -z "$DISPLAY" ]];
