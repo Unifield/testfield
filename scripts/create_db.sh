@@ -15,12 +15,12 @@ function usage()
     echo "  -h: help"
     echo "  -P: path to PostgreSQL"
     echo "  -D: set the DB path var/run in a specific directory (default: /tmp)"
-    echo "  -d: set the current date when launching postgres (default: no)"
+    echo "  -s: set the current date when launching postgres (default: no)"
     echo "  -p: the port used by PostgreSQL (default: 5432)"
     echo "  -c: credentials used by the database (default: testing)"
 }
 
-while getopts "P:hD:d:p:c:" OPTION
+while getopts "P:hD:s:p:c:" OPTION
 do
     case $OPTION in
     h)
@@ -33,7 +33,7 @@ do
     P)
         DBDIR=$OPTARG
         ;;
-    d)
+    s)
         FORCED_DATE=yes
         TIME_BEFORE=$OPTARG
         ;;
@@ -47,6 +47,13 @@ do
         exit 1
     esac
 done;
+
+echo "[INFO] create DB:"
+echo " PostgreSQL path: $DBPATH"
+echo " dir: $DBDIR"
+echo " port: $DBPORT"
+echo " username: $CREDENTIALS"
+echo " password: $CREDENTIALS"
 
 POS_PARAM=(${@:$OPTIND})
 NAME_KILL=${POS_PARAM[0]}
@@ -103,7 +110,7 @@ mkdir $DATADIR $RUNDIR
 $DBDIR/initdb --username=$USER $DATADIR
 
 echo "port = $DBPORT" >> $DATADIR/postgresql.conf
-echo "unix_socket_directory = '$RUNDIR'" >> $DATADIR/postgresql.conf
+#echo "unix_socket_directory = '$RUNDIR'" >> $DATADIR/postgresql.conf
 
 START_FAKETIME=
 if [[ $FORCED_DATE == yes ]]
@@ -124,14 +131,13 @@ do
     }
     if [[ $ROLE_CREATED == 1 ]]
     then
-        echo "Done!"
-        echo "Setting up the DB"
         psql -h $DBADDR -p $DBPORT postgres -c "UPDATE pg_database set datallowconn = TRUE where datname = 'template0'";
         psql -h $DBADDR -p $DBPORT postgres -c "UPDATE pg_database set datistemplate = FALSE where datname = 'template1'";
         psql -h $DBADDR -p $DBPORT postgres -c "DROP DATABASE template1"
         psql -h $DBADDR -p $DBPORT postgres -c "CREATE DATABASE template1 with template = template0 encoding = 'UTF8'"
         psql -h $DBADDR -p $DBPORT template0 -c "UPDATE pg_database set datistemplate = TRUE where datname = 'template1';" 
         psql -h $DBADDR -p $DBPORT template1 -c "UPDATE pg_database set datallowconn = FALSE where datname = 'template0';" 
+        echo "[DB setup] Done!"
         exit 0
     fi
 
