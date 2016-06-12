@@ -7,6 +7,7 @@ function usage()
 {
     echo $0 [-h] [-d dir] [-c config_file] upgrade name db
     echo $0 [-h] [-d dir] [-c config_file] run name
+    echo $0 [-h] [-d dir] version name
     echo "  -h: help"
     echo "  -s: number of seconds to shift"
     echo "  -c: configuration file (default \$(pwd)/config.sh). Values looked up in this file are:"
@@ -54,21 +55,16 @@ ACTION=${POS_PARAM[0]}
 NAME=${POS_PARAM[1]}
 
 
-echo "[INFO] $ACTION unifield:"
-echo " config: $CONFIG_FILE"
-echo " dir: $BDIR"
-echo " timeshift: -$TIME_BEFORE"
-if [[ $ACTION == upgrade ]]
-then
-    DBNAME=${POS_PARAM[2]}
-    echo " database: $DBNAME"
-fi
-
 START_FAKETIME=
 if [[ $TIME_BEFORE ]]
 then
     START_FAKETIME="faketime -f -${TIME_BEFORE}s"
 fi
+
+SERVERDIR=$BDIR/server_$NAME
+WEBDIR=$BDIR/web_$NAME
+CFG_WEB=$BDIR/openerp-web-$NAME.cfg
+CFG_SERVER=$BDIR/openerp-server.conf
 
 case $ACTION in
 
@@ -91,21 +87,41 @@ case $ACTION in
         DBNAME=${POS_PARAM[2]}
         ;;
 
+    version)
+        if [[ ${#POS_PARAM[*]} != 2 ]]
+        then
+            echo "You should define the install name (only one argument)" >&2
+            usage;
+            exit 1
+        fi
+
+        VERSION_WEB=$(bzr log -r-1  --short $WEBDIR | head -1 | sed -nE 's/[[:space:]]*([[:digit:]]*)[[:space:]]+.*/\1/pg')
+        VERSION_SERVER=$(bzr log -r-1  --short $SERVERDIR | head -1 | sed -nE 's/[[:space:]]*([[:digit:]]*)[[:space:]]+.*/\1/pg')
+
+        echo "S${VERSION_SERVER} W${VERSION_WEB}"
+
+        exit 0
+        ;;
+
     *)
         echo "Bad action" >&2
         exit 1
 esac
 
+echo "[INFO] $ACTION unifield:"
+echo " config: $CONFIG_FILE"
+echo " dir: $BDIR"
+echo " timeshift: -$TIME_BEFORE"
+if [[ $ACTION == upgrade ]]
+then
+    DBNAME=${POS_PARAM[2]}
+    echo " database: $DBNAME"
+fi
 
 if [[ ! -e ${CONFIG_FILE} ]]
 then
     echo "The configuration file doesn't exist" >&2
 fi
-
-SERVERDIR=$BDIR/server_$NAME
-WEBDIR=$BDIR/web_$NAME
-CFG_WEB=$BDIR/openerp-web-$NAME.cfg
-CFG_SERVER=$BDIR/openerp-server.conf
 
 PID_WEB_FILE=$WEBDIR/pid
 PID_SERVER_FILE=$SERVERDIR/pid

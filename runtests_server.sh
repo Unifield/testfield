@@ -42,14 +42,12 @@ SERVERBRANCH=${3:-lp:unifield-server}
 WEBBRANCH=${4:-lp:unifield-web}
 LETTUCE_PARAMS="${*:5}"
 
-UNIFIELD_NAME=$NAME
-
 function cleanup()
 {
     if [[ $VERB != setup ]];
     then
-        ./scripts/kill_db.sh -D $SERVER_TMPDIR $UNIFIELD_NAME || true
-        ./scripts/stop_unifield.sh -d $SERVER_TMPDIR $UNIFIELD_NAME || true
+        ./scripts/kill_db.sh -D $SERVER_TMPDIR $NAME || true
+        ./scripts/stop_unifield.sh -d $SERVER_TMPDIR $NAME || true
     fi
 }
 trap "cleanup;" EXIT
@@ -72,12 +70,14 @@ run_tests()
 
         ./runtests_local.sh $LETTUCE_PARAMS || true
 
-        DIREXPORT=website/tests/$NAME
+        DIREXPORT=website/tests/$($DATEUTILS '+%d%m%Y')_$NAME
         if [[ -e "$DIREXPORT" ]]
         then
             rm -rf "$DIREXPORT" || true
         fi
         mkdir "$DIREXPORT"
+
+        ./scripts/start_unifield.sh -d $SERVER_TMPDIR version $NAME > output/version
 
         cp -R output/* $DIREXPORT/ || true
 
@@ -120,7 +120,7 @@ launch_database()
         exit 1
     fi
 
-    ./scripts/create_db.sh -P ${DBPATH} -D $SERVER_TMPDIR -s $MINUS_IN_SECOND -p $DBPORT -c $DBUSERNAME $UNIFIELD_NAME
+    ./scripts/create_db.sh -P ${DBPATH} -D $SERVER_TMPDIR -s $MINUS_IN_SECOND -p $DBPORT -c $DBUSERNAME $NAME
 }
 
 DATABASES=
@@ -137,7 +137,7 @@ export DATABASES=$DATABASES
 
 ./generate_credentials.sh $FIRST_DATABASE $DBPREFIX
 
-./scripts/fetch_unifield.sh -W "$WEBBRANCH" -S "$SERVERBRANCH" -d $SERVER_TMPDIR -r $UNIFIELD_NAME
+./scripts/fetch_unifield.sh -W "$WEBBRANCH" -S "$SERVERBRANCH" -d $SERVER_TMPDIR -r $NAME
 
 # we have to setup a database if required
 if [[ ${DBPATH} && ${FORCED_DATE} == yes ]];
@@ -149,9 +149,9 @@ fi
 
 python restore.py --reset-versions $ENVNAME
 
-./scripts/upgrade_unifield.sh -d $SERVER_TMPDIR $UNIFIELD_NAME $ENVNAME
+./scripts/upgrade_unifield.sh -d $SERVER_TMPDIR $NAME $ENVNAME
 
-./scripts/start_unifield.sh -s $MINUS_IN_SECOND -d $SERVER_TMPDIR run $UNIFIELD_NAME
+./scripts/start_unifield.sh -s $MINUS_IN_SECOND -d $SERVER_TMPDIR run $NAME
 
 DISPLAY_BEFORE=$DISPLAY
 if [[ -z "$DISPLAY" ]];
