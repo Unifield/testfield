@@ -573,7 +573,7 @@ def wait_until_not_loading(browser, wait="Loading takes too much time"):
 
 def convert_input(world, content, localdict=dict()):
     new_content = content
-    regex = '({{((?:\w+\()*)([^)]*)((?:\)*))}})'
+    regex = '({{((?:\w+\()*)([^)]*?)((?:\)*))}})'
 
     for full, functions_text, word, after in re.findall(regex, content):
         functions = functions_text.split('(')
