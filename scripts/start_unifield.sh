@@ -24,7 +24,7 @@ function usage()
 
 BDIR=/tmp
 CONFIG_FILE="$(pwd)/config.sh"
-TIME_BEFORE=0
+TIME_BEFORE=
 
 while getopts "s:d:h:" OPTION
 do
@@ -34,7 +34,7 @@ do
         exit 1
         ;;
     s)
-        SEC_SHIFT=$OPTARG
+        TIME_BEFORE=$OPTARG
         ;;
     d)
         BDIR=$OPTARG
@@ -58,8 +58,17 @@ echo "[INFO] $ACTION unifield:"
 echo " config: $CONFIG_FILE"
 echo " dir: $BDIR"
 echo " timeshift: -$TIME_BEFORE"
+if [[ $ACTION == upgrade ]]
+then
+    DBNAME=${POS_PARAM[2]}
+    echo " database: $DBNAME"
+fi
 
-START_FAKETIME="faketime -f -${TIME_BEFORE}s"
+START_FAKETIME=
+if [[ $TIME_BEFORE ]]
+then
+    START_FAKETIME="faketime -f -${TIME_BEFORE}s"
+fi
 
 case $ACTION in
 
@@ -205,12 +214,13 @@ else
     PARAM_UNIFIELD_SERVER="--db_user=$DBUSERNAME -c $CFG_SERVER"
 fi
 
-echo "Run WEB: $START_FAKETIME python $WEBDIR/openerp-web.py -c $CFG_WEB"
-echo "RUN SERVER: $START_FAKETIME python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER"
-
 case $ACTION in
 
     run)
+
+        echo "Run WEB: $START_FAKETIME python $WEBDIR/openerp-web.py -c $CFG_WEB"
+        echo "RUN SERVER: $START_FAKETIME python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER"
+
         # we print the commands to launch the components in a separate window in order to debug.
         #  We'll launch them later in a tmux
         SESSION_NAME=unifield_$NAME
@@ -231,6 +241,8 @@ case $ACTION in
 
         ;;
     upgrade)
+
+        echo "Run upgrade: python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER -u base --stop-after-init -d $REAL_NAME"
 
         REAL_NAME=$DBNAME
 

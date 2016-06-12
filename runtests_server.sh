@@ -149,10 +149,7 @@ fi
 
 python restore.py --reset-versions $ENVNAME
 
-for db in $DATABASES
-do
-    ./scripts/start_unifield.sh -d $SERVER_TMPDIR upgrade $UNIFIELD_NAME $db
-done
+./scripts/upgrade_unifield.sh -d $SERVER_TMPDIR $UNIFIELD_NAME $ENVNAME
 
 ./scripts/start_unifield.sh -s $MINUS_IN_SECOND -d $SERVER_TMPDIR run $UNIFIELD_NAME
 
