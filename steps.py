@@ -1423,6 +1423,8 @@ def save_time_results(step, counters, filename):
     if 'DATABASES' in os.environ:
         f.write("\r\ndatabases=%s" % os.environ['DATABASES'])
 
+    f.write("\r\ndate=%s" % datetime.datetime.now().strftime("%Y/%m/%d"))
+
     f.close()
 
 #}%}

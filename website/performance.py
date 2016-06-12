@@ -125,7 +125,14 @@ def get_functional_tests(path_dir):
             tests_meta = load_meta_file(path_meta)
             tests_meta["id"] = rep_test
 
+            path_version = os.path.join(path_dir, "version")
+            if os.path.isfile(path_version):
+                tests_meta["version"] = ''.join(map(lambda x : x.strip(), open(path_version, 'r')))
+
             tests.append(tests_meta)
+
+    tests.sort(key=lambda x : x["date"])
+    tests.reverse()
 
     return tests
 

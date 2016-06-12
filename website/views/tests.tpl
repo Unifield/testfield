@@ -6,6 +6,8 @@
             <th>Name</th>
             <th>Description</th>
             <th>Results</th>
+            <th>Version</th>
+            <th>Date</th>
         </tr>
     </thead>
 
@@ -35,6 +37,14 @@
                     %else:
                         <span class="glyphicon glyphicon-remove"></span>
                     %end
+                </td>
+
+                <td>
+                    {{test['version']}}
+                </td>
+
+                <td>
+                    {{test['date']}}
                 </td>
             </tr>
 
