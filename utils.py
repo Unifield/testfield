@@ -390,6 +390,7 @@ def get_options_for_table(world, columns):
             continue
 
         lines = get_elements(maintable, tag_name="tr", class_attr="grid-row")
+        lines += get_elements(maintable, tag_name="tr", class_attr="grid-row-group")
 
         # we look for the first line with the right value
         for row_node in lines:
