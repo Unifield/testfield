@@ -157,7 +157,7 @@ def write_end_of_section(scenario):
         first_failure = filter(lambda x : x.why, (scenario.background.steps if scenario.background else []) + scenario.steps)[0]
         exception_failure = first_failure.why.exception
 
-        msg_error = str(exception_failure)
+        msg_error =  str(exception_failure) + ' (' + str(type(exception_failure)) + ')'
 
         write_errorscreen(world, msg_error)
 
