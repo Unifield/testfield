@@ -1297,6 +1297,53 @@ def open_side_panel_and_open(step, menuname):
 
     wait_until_no_ajax(world)
 
+def do_action_and_open_popup(world, action, *params, **vparams):
+
+    handles_before = set(world.browser.window_handles)
+
+    action(*params, **vparams)
+
+    world.nbframes = 0
+
+    # we have to wait to select the new popup
+    tick = monitor(world.browser, "I don't see the new popup")
+
+    while True:
+        handles_after = set(world.browser.window_handles)
+        new_handles = handles_after - handles_before
+
+        # have we found a new popup?
+        if new_handles:
+            new_handles = list(new_handles)
+            new_handle = new_handles[0]
+            world.browser.switch_to.window(new_handle)
+            world.nbframes = 0
+            break
+
+        time.sleep(TIME_TO_SLEEP)
+
+@step('I click on "([^"]*)" and open the popup$')
+@output.add_printscreen
+def open_side_panel_and_open_popup(step, button):
+
+    def click_on_button(step, button):
+        position_element = 0 if world.logged_in else -1
+        msg = "Cannot find button %s" % button
+        click_on(world, lambda : get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg)[position_element], msg)
+
+    do_action_and_open_popup(world, click_on_button, step, button)
+
+
+@step('I click "([^"]*)" in the side panel and open the popup$')
+@output.add_printscreen
+def open_side_panel_and_open_popup(step, menuname):
+
+    def open_side_panel_popup(step, menuname):
+        open_side_panel(step, menuname)
+        wait_until_no_ajax(world)
+
+    do_action_and_open_popup(world, open_side_panel_popup, step, menuname)
+
 @step('I validate the line')
 @output.register_for_printscreen
 def choose_field(step):
