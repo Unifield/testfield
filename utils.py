@@ -506,7 +506,8 @@ def wait_until_no_ajax(world, message="A javascript operation is still ongoing")
                 return totcount;
             ''')
         except WebDriverException as e:
-            raise
+            print e
+            ret = "FAIL"
 
         tick()
         time.sleep(TIME_TO_SLEEP)
