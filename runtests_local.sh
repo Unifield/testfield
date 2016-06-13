@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+
+getopts ":s:" VALUE
+TIME_BEFORE=0
+if [[ $VALUE == "s" ]]
+then
+    TIME_BEFORE=$OPTARG
+fi
+shift $(((OPTIND-1)));
+
 # from: http://stackoverflow.com/questions/3572030/bash-script-absolute-path-with-osx
 realpath() {
     [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
@@ -24,7 +33,8 @@ then
     export DISPLAY=:session-$$
 fi
 
-python $TESTFIELDDIR/runtests.py $@
+faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@
+
 RETVAR=$?
 
 if [[ -z "$DISPLAY" ]];

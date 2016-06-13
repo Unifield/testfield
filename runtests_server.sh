@@ -68,7 +68,7 @@ run_tests()
 
         rm output/* || true
 
-        ./runtests_local.sh $LETTUCE_PARAMS || true
+        ./runtests_local.sh -s $MINUS_IN_SECOND $LETTUCE_PARAMS || true
 
         DIREXPORT=website/tests/$($DATEUTILS '+%d%m%Y')_$NAME
         if [[ -e "$DIREXPORT" ]]
@@ -94,7 +94,7 @@ run_tests()
             # run the benchmark
             for nb in `seq 1 4`;
             do
-                ./runtests_local.sh $LETTUCE_PARAMS || true
+                ./runtests_local.sh -s $MINUS_IN_SECOND $LETTUCE_PARAMS || true
             done
         done
 
