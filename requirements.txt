@@ -4,7 +4,7 @@ FormEncode==1.3.0
 Mako==1.0.3
 MarkupSafe==0.23
 OERPLib==0.8.4
-Platypus==1.0
+Platypus
 PyYAML==3.11
 argparse==1.2.1
 bottle==0.12.9
