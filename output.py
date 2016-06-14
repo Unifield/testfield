@@ -13,8 +13,9 @@ from bottle import SimpleTemplate
 
 class Printscreen(object):
 
-    def __init__(self, filename):
+    def __init__(self, filename, instance_name):
         self.__filename = filename
+        self.__instance_name = instance_name
 
     def getFilename(self):
         return self.__filename
@@ -22,13 +23,19 @@ class Printscreen(object):
     def is_error(self):
         raise NotImplementedError
 
+    def getInstanceName(self):
+        return self.__instance_name
+
     filename = property(getFilename)
+    instance_name = property(getInstanceName)
 
 class RegularPrintscreen(Printscreen):
 
-    def __init__(self, filename, steps):
-        super(RegularPrintscreen, self).__init__(filename)
+    def __init__(self, filename, instance_name, steps):
+        super(RegularPrintscreen, self).__init__(filename, instance_name)
+        self.__instance_name = instance_name
         self.__steps = steps
+
 
     def is_error(self):
         return False
@@ -40,8 +47,8 @@ class RegularPrintscreen(Printscreen):
 
 class ErrorPrintscreen(Printscreen):
 
-    def __init__(self, filename, description):
-        super(ErrorPrintscreen, self).__init__(filename)
+    def __init__(self, filename, instance_name, description):
+        super(ErrorPrintscreen, self).__init__(filename, instance_name)
         self.__description = description
 
     def is_error(self):
@@ -240,7 +247,7 @@ def write_errorscreen(world, error_message):
 
     filename = get_printscreen(world, True)
 
-    world.printscreen_to_display.append(ErrorPrintscreen(filename, error_message))
+    world.printscreen_to_display.append(ErrorPrintscreen(filename, world.current_instance, error_message))
 
 def write_printscreen(world, full_printscreen):
 
@@ -252,7 +259,7 @@ def write_printscreen(world, full_printscreen):
 
     filename = get_printscreen(world, full_printscreen)
 
-    world.printscreen_to_display.append(RegularPrintscreen(filename, steps_to_print))
+    world.printscreen_to_display.append(RegularPrintscreen(filename, world.current_instance, steps_to_print))
 
 @after.all
 def save_meta(total):

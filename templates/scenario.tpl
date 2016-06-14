@@ -10,6 +10,7 @@
 <table class="table">
     <thead>
         <tr>
+            <th>Instance</th>
             <th>Steps</th>
             <th>Printscreen</th>
         </tr>
@@ -18,6 +19,9 @@
     <tbody>
         %for printscreen in printscreens:
             <tr class="{{'danger' if printscreen.is_error() else ''}}">
+                <td>
+                    {{printscreen.instance_name or 'No'}}
+                </td>
                 <td>
                     %if printscreen.is_error():
 

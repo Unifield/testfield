@@ -35,7 +35,12 @@ def connect_to_db():
     world.browser = webdriver.Firefox()
     #world.browser = webdriver.PhantomJS()
     #world.browser = webdriver.Chrome()
+
+    # say if a step involves buttons in the side bar or the menu
+    #  (we should show the whole printscreen in that case)
     world.full_printscreen = False
+    # the name of the current instance (None if not logged in)
+    world.current_instance = None
 
     TIME_BEFORE_FAILURE = get_TIME_BEFORE_FAILURE()
     if TIME_BEFORE_FAILURE is not None:
@@ -59,7 +64,6 @@ def connect_to_db():
     file_path = os.path.join(base_dir, FILE_DIR)
     world.files_before = os.listdir(file_path) if os.path.isdir(file_path) else set([])
 
-    world.logged_in = False
     world.must_fail = None
 
     def incr_func(param):
@@ -261,24 +265,25 @@ def log_into(database_name, username, password):
         ## if you want to open the debugger before starting any action in UniField
         #world.browser.find_element_by_tag_name('body').send_keys(Keys.COMMAND + Keys.ALT + 's')
 
-    world.logged_in = True
+    world.current_instance = database_name
 
 @step('I log into instance "([^"]*)" as "([^"]*)" with password "([^"]*)"')
 @output.register_for_printscreen
 def connect_on_database(step, database_name, username, password):
     log_into(database_name, username, password)
+    world.current_instance = database_name
 
 @step('I log into instance "([^"]*)"')
 @output.register_for_printscreen
 def connect_on_database(step, database_name):
     log_into(database_name, UNIFIELD_ADMIN, UNIFIELD_PASSWORD)
+    world.current_instance = database_name
 
 @step('I log out')
 @output.add_printscreen
 def log_out(step):
     world.browser.get("%(url)s/openerp/logout" % dict(url=HTTP_URL_SERVER))
-
-    world.logged_in = False
+    world.current_instance = None
 
 #}%}
 
@@ -779,7 +784,7 @@ def click_on_button(step, button):
     # But we cannot do that for frames because the "loading" menu item doesn't exist
     #  at that time.
 
-    if world.logged_in:
+    if world.current_instance is not None:
         wait_until_not_loading(world.browser, wait=world.nbframes == 0)
     else:
         # But we have to take into account that such element doesn't exist when a user is not logged in...
@@ -787,7 +792,7 @@ def click_on_button(step, button):
 
     # we have an issue when the user is not logged in... the important buttons are "at the end of the page". We have to
     #  fetch them in another order
-    position_element = 0 if world.logged_in else -1
+    position_element = 0 if world.current_instance is not None else -1
     msg = "Cannot find button %s" % button
     click_on(world, lambda : get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg)[position_element], msg)
 
@@ -1333,7 +1338,7 @@ def do_action_and_open_popup(world, action, *params, **vparams):
 def open_side_panel_and_open_popup(step, button):
 
     def click_on_button(step, button):
-        position_element = 0 if world.logged_in else -1
+        position_element = 0 if world.current_instance is not None else -1
         msg = "Cannot find button %s" % button
         click_on(world, lambda : get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg)[position_element], msg)
 
