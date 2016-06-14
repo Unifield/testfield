@@ -89,7 +89,8 @@ def add_printscreen(function):
         real_sentence = convert_input(world, step.original_sentence)
         real_table = convert_hashes_to_table(step.hashes)
         world.steps_to_display.append((real_sentence, real_table, step))
-        write_printscreen(world)
+        write_printscreen(world, world.full_printscreen)
+        world.full_printscreen = False
         return function(step, *arg1, **arg2)
     return newfonc
 
@@ -148,7 +149,7 @@ def write_end_of_section(scenario):
     tags = scenario.tags
 
     # we have to add the steps that haven't been included
-    write_printscreen(world)
+    write_printscreen(world, world.full_printscreen)
 
     # we have to add en explanation "why" the scenario has failed
     if not all_ok:
@@ -182,13 +183,13 @@ def write_end_of_section(scenario):
 
     world.idscenario += 1
 
-def get_printscreen(world):
+def get_printscreen(world, full_printscreen):
 
     filename = "printscreen%d.png" % world.idprintscreen
     path_printscreen = os.path.join(OUTPUT_DIR, filename)
 
     elements = []
-    for classattr in ['#body_form', '.db-form', '.loginbox']:
+    for classattr in ['#body_form', '.db-form', '.loginbox'] if not full_printscreen else []:
         if classattr[0] == '.':
             elements = get_elements(world.browser, class_attr=classattr[1:])
         elif classattr[0] == '#':
@@ -203,13 +204,24 @@ def get_printscreen(world):
         import tempfile
         filename_tmp = tempfile.mktemp()
 
+        shift = {}
+
+        # if we are in an iframe we have to take into account the shift
+        #  otherwise it won't work
+        if world.nbframes != 0:
+            world.browser.switch_to_default_content()
+            current_frame = get_element(world.browser, tag_name="iframe", position=world.nbframes-1, wait="Cannot find back the previous window")
+            shift = current_frame.location
+            world.browser.switch_to_frame(current_frame)
+
         world.browser.save_screenshot(filename_tmp)
 
         from PIL import Image
         im=Image.open(filename_tmp)
         location = elements[0].location
         size = elements[0].size
-        rect = (location['x'], location['y'], location['x'] + size['width'], location['y'] + size['height'])
+        rect = (location['x'] + shift.get('x', 0), location['y'] + shift.get('y', 0),
+                location['x'] + shift.get('x', 0) + size['width'], location['y'] + shift.get('y', 0) + size['height'])
         new = im.crop(rect)
         new.save(path_printscreen)
 
@@ -226,11 +238,11 @@ def get_printscreen(world):
 
 def write_errorscreen(world, error_message):
 
-    filename = get_printscreen(world)
+    filename = get_printscreen(world, True)
 
     world.printscreen_to_display.append(ErrorPrintscreen(filename, error_message))
 
-def write_printscreen(world):
+def write_printscreen(world, full_printscreen):
 
     if not world.steps_to_display:
         return
@@ -238,7 +250,7 @@ def write_printscreen(world):
     steps_to_print = world.steps_to_display
     world.steps_to_display = []
 
-    filename = get_printscreen(world)
+    filename = get_printscreen(world, full_printscreen)
 
     world.printscreen_to_display.append(RegularPrintscreen(filename, steps_to_print))
 

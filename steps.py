@@ -35,6 +35,7 @@ def connect_to_db():
     world.browser = webdriver.Firefox()
     #world.browser = webdriver.PhantomJS()
     #world.browser = webdriver.Chrome()
+    world.full_printscreen = False
 
     TIME_BEFORE_FAILURE = get_TIME_BEFORE_FAILURE()
     if TIME_BEFORE_FAILURE is not None:
@@ -342,6 +343,8 @@ def synchronize_instance(step, instance_name):
 @step('I open tab menu "([^"]*)"')
 @output.register_for_printscreen
 def open_tab(step, tab_to_open):
+    world.full_printscreen = True
+
     tab_to_open_normalized = to_camel_case(tab_to_open)
 
     elem_menu = get_element(world.browser, tag_name="div", id_attr="applications_menu")
@@ -355,6 +358,7 @@ def open_tab(step, tab_to_open):
 @step('I open accordion menu "([^"]*)"')
 @output.register_for_printscreen
 def open_tab(step, menu_to_click_on):
+    world.full_printscreen = True
     menu_node = get_element(world.browser, tag_name="td", id_attr="secondary")
 
     tick = monitor(world.browser)
@@ -454,6 +458,7 @@ def open_menu(menu_to_click_on):
 @step('I click on menu "([^"]*)" and open the window$')
 @output.register_for_printscreen
 def open_tab(step, menu_to_click_on):
+    world.full_printscreen = True
     open_menu(menu_to_click_on)
 
     # we have to open the window!
@@ -465,6 +470,7 @@ def open_tab(step, menu_to_click_on):
 @step('I click on menu "([^"]*)"$')
 @output.register_for_printscreen
 def open_tab(step, menu_to_click_on):
+    world.full_printscreen = True
 
     open_menu(menu_to_click_on)
 
