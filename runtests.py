@@ -39,7 +39,7 @@ def get_sql_query(database, sqlquery):
         raise DBException("Cannot reach the database (reason: %s)" % e)
 
 def get_articles(database, count):
-    oerp = OERP(server=credentials.SRV_ADDRESS, database=database, protocol='netrpc', port=credentials.NETRPC_PORT)
+    oerp = OERP(server=credentials.SRV_ADDRESS, database=database, protocol='xmlrpc', port=credentials.XMLRPC_PORT)
     u = oerp.login(credentials.UNIFIELD_ADMIN, credentials.UNIFIELD_PASSWORD)
     prod_obj = oerp.get('product.product')
     ids = prod_obj.search([('batch_management', '=', False), ('perishable', '=', False),
