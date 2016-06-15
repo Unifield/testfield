@@ -176,8 +176,10 @@ def write_end_of_section(scenario):
     if not all_ok:
         # we cannot rely on "passed" because it seems that the exception is sometimes attached to
         #  another step
-        first_failure = filter(lambda x : x.why, (scenario.background.steps if scenario.background else []) + scenario.steps)[0]
-        exception_failure = first_failure.why.exception
+        failures = filter(lambda x : x.why, (scenario.background.steps if scenario.background else []) + scenario.steps)
+        # Don't ask me why, Lettuce sometimes doesn't give any step when the failure heppens when executing the last step...
+        #  We don't want to crash a second time because the "real" error message would be hidden
+        exception_failure = failures[0].why.exception if failures else None
 
         msg_error =  str(exception_failure) + ' (' + str(type(exception_failure)) + ')'
 
