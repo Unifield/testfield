@@ -5,6 +5,7 @@ from selenium import webdriver
 import os.path
 import datetime
 import tempfile
+from selenium.common.exceptions import StaleElementReferenceException
 
 OUTPUT_DIR = 'output/'
 TEMPLATES_DIR = 'templates/'
@@ -224,34 +225,42 @@ def get_printscreen(world, full_printscreen):
             break
 
     if elements:
-        import tempfile
-        filename_tmp = tempfile.mktemp()
-
-        shift = {}
-
-        # if we are in an iframe we have to take into account the shift
-        #  otherwise it won't work
-        if world.nbframes != 0:
-            world.browser.switch_to_default_content()
-            current_frame = get_element(world.browser, tag_name="iframe", position=world.nbframes-1, wait="Cannot find back the previous window")
-            shift = current_frame.location
-            world.browser.switch_to_frame(current_frame)
-
-        world.browser.save_screenshot(filename_tmp)
-
-        from PIL import Image
-        im=Image.open(filename_tmp)
-        location = elements[0].location
-        size = elements[0].size
-        rect = (location['x'] + shift.get('x', 0), location['y'] + shift.get('y', 0),
-                location['x'] + shift.get('x', 0) + size['width'], location['y'] + shift.get('y', 0) + size['height'])
-        new = im.crop(rect)
-        new.save(path_printscreen)
-
         try:
-            os.unlink(filename_tmp)
-        except (IOError, OSError):
-            pass
+            import tempfile
+            filename_tmp = tempfile.mktemp()
+
+            shift = {}
+
+            # if we are in an iframe we have to take into account the shift
+            #  otherwise it won't work
+            if world.nbframes != 0:
+                world.browser.switch_to_default_content()
+                current_frame = get_element(world.browser, tag_name="iframe", position=world.nbframes-1, wait="Cannot find back the previous window")
+                shift = current_frame.location
+                world.browser.switch_to_frame(current_frame)
+
+            world.browser.save_screenshot(filename_tmp)
+
+            from PIL import Image
+            im=Image.open(filename_tmp)
+            location = elements[0].location
+            size = elements[0].size
+            rect = (location['x'] + shift.get('x', 0), location['y'] + shift.get('y', 0),
+                    location['x'] + shift.get('x', 0) + size['width'], location['y'] + shift.get('y', 0) + size['height'])
+            new = im.crop(rect)
+            new.save(path_printscreen)
+
+            try:
+                os.unlink(filename_tmp)
+            except (IOError, OSError):
+                pass
+
+        except StaleElementReferenceException as e:
+            # We sometimes cannot extract the current frame location because the previous one has just closed
+            #  and we are closing another one... It makes difficult to choose the right one...
+            # As a result, we use this fallback to extract only the printscreen of the whole window
+            print e
+            world.browser.save_screenshot(path_printscreen)
     else:
         world.browser.save_screenshot(path_printscreen)
 
