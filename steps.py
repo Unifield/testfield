@@ -1,5 +1,3 @@
-#FIXME: The resolution sometimes hides the controls (if it's at the far right). This is also the case on my laptop
-# The version I use at the job is 2.48.0. It doesn't have this issue.
 from credentials import *
 
 import output
