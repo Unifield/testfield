@@ -7,8 +7,8 @@ set -o pipefail
 if [[ $# -lt 2 || ( "$1" != benchmark && "$1" != "test" && "$1" != "setup" ) ]];
 then
     echo "Usage: "
-    echo "  $0 benchmark name [server_branch[|rev_number]] [web_branch[|rev_number]] [tag]"
-    echo "  $0 test name [server_branch[|rev_number]] [web_branch[|rev_number]] [tag]"
+    echo "  $0 benchmark name [server_branch[|rev_number]] [web_branch[|rev_number]] [-t tag]"
+    echo "  $0 test name [server_branch[|rev_number]] [web_branch[|rev_number]] [-t tag]"
     exit 1
 fi
 
