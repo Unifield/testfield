@@ -153,17 +153,5 @@ python restore.py --reset-versions $ENVNAME
 
 ./scripts/start_unifield.sh -s $MINUS_IN_SECOND -d $SERVER_TMPDIR run $NAME
 
-DISPLAY_BEFORE=$DISPLAY
-if [[ -z "$DISPLAY" ]];
-then
-    tmux new -d -s X_$$ "Xvfb :$$"
-    export DISPLAY=:$$
-fi
-
 run_tests;
-
-if [[ -z "$DISPLAY_BEFORE" ]];
-then
-    tmux kill-session -t X_$$
-fi
 

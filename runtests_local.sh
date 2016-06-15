@@ -27,19 +27,27 @@ then
     rm -rf output
 fi
 
+KILL_ID_DISPLAY=
 if [[ -z "$DISPLAY" ]];
 then
-    tmux new -d -s X_$$ "Xvfb :session-$$"
-    export DISPLAY=:session-$$
+    Xvfb :$$ &
+    KILL_ID_DISPLAY=$!
+    export DISPLAY=:$$
 fi
+
+function clean(){
+    if [[ ${KILL_ID_DISPLAY} ]];
+    then
+        echo Kill the screen
+        kill -9 $KILL_ID_DISPLAY
+    fi
+}
+
+trap "clean;" EXIT;
 
 faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@
 
 RETVAR=$?
 
-if [[ -z "$DISPLAY" ]];
-then
-    tmux kill-session -t X_$$
-fi
 
 exit $RETVAR
