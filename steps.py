@@ -1006,8 +1006,15 @@ def check_checkbox_action(content, fieldname, action=None):
 
         # do we a select at our disposal?
         a_select = get_elements(td_node, tag_name="select")
+        use_select = False
 
-        if a_select:
+        if bool(a_select):
+            # we have to check that the action is contained
+            for elem in a_select[0].find_elements_by_tag_name("option"):
+                if elem.text.strip().lower() == content.lower():
+                    use_select = True
+
+        if use_select:
             return a_select[0], action or action_select_option
         else:
             input_type = "text" if get_elements(td_node, tag_name="input", attrs={'type': 'text'}) else "checkbox"
