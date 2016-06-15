@@ -49,5 +49,4 @@ faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@
 
 RETVAR=$?
 
-
 exit $RETVAR

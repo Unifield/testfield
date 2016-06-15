@@ -153,5 +153,22 @@ python restore.py --reset-versions $ENVNAME
 
 ./scripts/start_unifield.sh -s $MINUS_IN_SECOND -d $SERVER_TMPDIR run $NAME
 
+KILL_ID_DISPLAY=
+if [[ -z "$DISPLAY" ]];
+then
+    Xvfb :$$ &
+    KILL_ID_DISPLAY=$!
+    export DISPLAY=:$$
+fi
+trap "clean;" EXIT;
+
 run_tests;
+
+function clean(){
+    if [[ ${KILL_ID_DISPLAY} ]];
+    then
+        echo Kill the screen
+        kill -9 $KILL_ID_DISPLAY
+    fi
+}
 
