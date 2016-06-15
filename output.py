@@ -87,7 +87,14 @@ def register_for_printscreen(function):
         real_sentence = convert_input(world, step.original_sentence)
         real_table = convert_hashes_to_table(step.hashes)
         world.steps_to_display.append((real_sentence, real_table, step))
-        return function(step, *arg1, **arg2)
+        try:
+            return function(step, *arg1, **arg2)
+        except Exception as e:
+            import traceback
+            for i in xrange(10):
+                print e
+                traceback.print_exc()
+            raise
     return newfonc
 
 def add_printscreen(function):
@@ -98,7 +105,14 @@ def add_printscreen(function):
         world.steps_to_display.append((real_sentence, real_table, step))
         write_printscreen(world, world.full_printscreen)
         world.full_printscreen = False
-        return function(step, *arg1, **arg2)
+        try:
+            return function(step, *arg1, **arg2)
+        except Exception as e:
+            import traceback
+            for i in xrange(10):
+                print e
+                traceback.print_exc()
+            raise
     return newfonc
 
 @before.all
