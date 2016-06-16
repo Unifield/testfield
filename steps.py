@@ -171,7 +171,9 @@ def disconnect_to_db(total):
     f.write(content.encode('utf-8'))
     f.close()
 
+    # we close the current window, but other windows might be open
     world.browser.close()
+    world.browser.quit()
 
     base_dir = os.path.dirname(__file__)
     file_path = os.path.join(base_dir, FILE_DIR)
