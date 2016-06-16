@@ -1,10 +1,11 @@
 #encoding=utf-8
 
-from bottle import route, run, template, view, redirect, static_file
+from bottle import route, run, template, view, redirect, static_file, request
 import datetime
 
 PATH_TESTS = './tests/'
 PERFORMANCE_TESTS = './performances/'
+PAGE_SIZE=10
 
 @route('/')
 def index():
@@ -13,7 +14,34 @@ def index():
 @route('/tests')
 @view('tests')
 def tests():
-    return dict(tests=get_functional_tests(PATH_TESTS))
+    import math
+
+    nbtests = get_number_of_functional_tests(PATH_TESTS)
+
+    try:
+        pagenum = int(request.query.page)
+    except (ValueError, TypeError) as e:
+        pagenum = 1
+    pagenum = max(pagenum, 1)
+
+
+    nbpages = int(math.ceil(float(nbtests) / PAGE_SIZE))
+    pages = []
+
+    if pagenum <= 0 or pagenum > nbpages:
+        pagenum = 1
+
+    first_page = 0
+    last_page = nbpages
+    for nopage in xrange(1, nbpages+1):
+        pages.append((pagenum == nopage, nopage))
+
+    return dict(tests=get_functional_tests(offset=(pagenum-1)*PAGE_SIZE,
+                                            length=PAGE_SIZE,
+                                            path_dir=PATH_TESTS),
+                first_page=first_page,
+                last_page=last_page,
+                pages=pages)
 
 class SyntaxError(Exception):
     pass
@@ -111,13 +139,19 @@ def load_meta_file(path):
 
     return tests_meta
 
-def get_functional_tests(path_dir):
+def get_number_of_functional_tests(path_dir):
+    import os
+    return len(os.listdir(path_dir))
+
+def get_functional_tests(path_dir, offset, length):
     import os
     import os.path
 
     tests = []
 
-    for rep_test in sorted(os.listdir(PATH_TESTS), reverse=True):
+    elements = sorted(os.listdir(PATH_TESTS), reverse=True)
+
+    for rep_test in elements[offset:offset+length]:
         path_dir = os.path.join(PATH_TESTS, rep_test)
         if os.path.isdir(path_dir):
             path_meta = os.path.join(path_dir, "meta")

@@ -36,6 +36,7 @@
             <th>Results</th>
 
             <th>Health</th>
+            <th>Version</th>
             <th>Date</th>
         </tr>
     </thead>
@@ -88,4 +89,33 @@
         %end
     </tbody>
 </table>
+
+%if len(pages) > 1:
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="text-center">
+                <nav>
+                    <ul class="pagination">
+                        %for is_current, nopage in pages:
+                            %if not is_current:
+                                <li>
+                                    <a href="?page={{nopage}}">
+                                        {{nopage}}
+                                    </a>
+                                </li>
+                            %else:
+                                <li class="disabled">
+                                    <a href="#">
+                                        {{nopage}}
+                                    </a>
+                                </li>
+
+                            %end
+                        %end
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+%end
 
