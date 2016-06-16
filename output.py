@@ -293,6 +293,6 @@ def save_meta(total):
     f.write('name=%s\r\n' % (os.environ['TEST_NAME'] if 'TEST_NAME' in os.environ else 'Unknown'))
     f.write('description=%s\r\n' % (os.environ['TEST_DESCRIPTION'] if 'TEST_DESCRIPTION' in os.environ else 'Unknown'))
     f.write('result=%s\r\n' % ('ok' if total.scenarios_ran == total.scenarios_passed else 'ko'))
-    f.write("date=%s\r\n" % datetime.datetime.now().strftime("%Y/%m/%d"))
+    f.write('date=%s\r\n' % (os.environ['TEST_DATE'] if 'TEST_DATE' in os.environ else '-'))
     f.close()
 
