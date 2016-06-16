@@ -5,7 +5,7 @@ import datetime
 
 PATH_TESTS = './tests/'
 PERFORMANCE_TESTS = './performances/'
-PAGE_SIZE=10
+PAGE_SIZE=15
 
 @route('/')
 def index():
