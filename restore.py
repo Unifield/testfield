@@ -21,11 +21,10 @@ if __name__ == '__main__':
     import os, os.path
     import tempfile
     import hashlib
+    import subprocess
 
     from credentials import *
     from utils import *
-
-    import sys
 
     FLAG_RESET_VERSION ='--reset-versions'
 
@@ -50,6 +49,11 @@ if __name__ == '__main__':
         print "Invalid environment"
         sys.exit(1)
 
+    class DatabaseException(Exception):
+        pass
+    class ScriptException(Exception):
+        pass
+
     def run_script(dbname, script):
 
         scriptfile = tempfile.mkstemp()
@@ -59,13 +63,23 @@ if __name__ == '__main__':
 
         os.environ['PGPASSWORD'] = DB_PASSWORD
 
-        pipe_stderr = "2> /dev/null" if sys.platform != 'win32' else ""
-        ret = os.popen('psql -p %d -t %s -U %s %s %s < %s' % (DB_PORT, db_address_with_flag, DB_USERNAME, dbname, pipe_stderr, scriptfile[1])).read()
+        p1 = subprocess.Popen('psql -v ON_ERROR_STOP=1 -p %d -t %s -U %s %s < %s' % (DB_PORT, db_address_with_flag, DB_USERNAME, dbname, scriptfile[1]),
+                              shell=True,
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE)
+        ret, stderr = p1.communicate()
 
         try:
             os.unlink(scriptfile[1])
         except OSError as e:
             pass
+
+        code = p1.returncode
+
+        if code == 3:
+            raise ScriptException("Unable to run '%s'\nSTDERR: %s" % (script, stderr or ''))
+        if code != 0:
+            raise DatabaseException("Unable to run '%s' because of the database\nSTDERR: %s" % (script, stderr or ''))
 
         return ret
 
@@ -88,25 +102,48 @@ if __name__ == '__main__':
 
             print "Restoring", dbname
 
+            kill_successful = False
+            kill_exception = None
+
             for procname in ['pid', 'procpid']:
-                dbtokill = run_script("postgres", '''
-                    SELECT 'select pg_terminate_backend(' || %s || ');'
-                    FROM pg_stat_activity
-                    WHERE datname = '%s'
-                ''' % (procname, dbname))
+                try:
+                    dbtokill = run_script("postgres", '''
+                        SELECT 'select pg_terminate_backend(' || %s || ');'
+                        FROM pg_stat_activity
+                        WHERE datname = '%s'
+                    ''' % (procname, dbname))
 
-                names = dbtokill.split('\n')
-                killall = '\n'.join(filter(lambda x : x, names)).strip()
+                    names = dbtokill.split('\n')
+                    killall = '\n'.join(filter(lambda x : x, names)).strip()
 
-                if killall:
-                    run_script("postgres", killall)
+                    if killall:
+                        run_script("postgres", killall)
+                    kill_successful = True
+                except ScriptException as e:
+                    kill_exception = e
+
+            if not kill_successful:
+                raise kill_exception or Exception("Cannot drop the previous databases")
 
             run_script("postgres", 'DROP DATABASE IF EXISTS "%s"' % dbname)
             run_script('postgres', 'CREATE DATABASE "%s";' % dbname)
-            #run_script(dbname, 'DROP EXTENSION IF EXISTS plpgsql;')
+            try:
+                run_script(dbname, 'DROP EXTENSION IF EXISTS plpgsql;')
+            except ScriptException:
+                # sometimes this extension already exist in the DB and in the dump.
+                #  We have to remove it before importing the DB otherwise we will get errors
+                pass
 
             path_dump = os.path.join(environment_dir, filename)
-            os.system('pg_restore -p %d %s -U %s --no-acl --no-owner -d %s %s' % (DB_PORT, db_address_with_flag, DB_USERNAME, dbname, path_dump))
+
+            p1 = subprocess.Popen('pg_restore -p %d %s -U %s --no-acl --no-owner -d %s %s' % (DB_PORT, db_address_with_flag, DB_USERNAME, dbname, path_dump),
+                                  shell=True,
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE)
+            ret, stderr = p1.communicate()
+
+            if p1.returncode != 0:
+                raise DatabaseException("Unable to restore %s (reason: %s)" % (dbname, stderr))
 
             run_script(dbname, "UPDATE res_users SET password = '%s' WHERE login = '%s'" % (UNIFIELD_PASSWORD, UNIFIELD_ADMIN))
 
@@ -133,5 +170,9 @@ if __name__ == '__main__':
                     run_script(dbname, "DELETE FROM sync_client_version WHERE sum NOT IN ('88888888888888888888888888888888', '66f490e4359128c556be7ea2d152e03b')")
 
     except (OSError, IOError) as e:
-        raise Exception("Unable to access an environment (cause: %s)" % e)
+        sys.stderr.write("Unable to access an environment (cause: %s)" % e)
+        sys.exit(-1)
+    except (DatabaseException, ScriptException) as e:
+        sys.stderr.write("Unable to restore the environment (cause: %s)" % e)
+        sys.exit(-1)
 
