@@ -1,12 +1,41 @@
 % rebase('index.tpl', active='tests')
 
+<style>
+    progress::-moz-progress-bar {
+        background-color: #006400 !important;
+    }
+    progress::-webkit-progress-value {
+        background-color: #006400 !important;
+    }
+
+    progress.undef{
+        background-color: #E0E0E0 !important;
+    }
+
+    progress {
+        background-color: #F00;
+        border: 0;
+        color: #CCFFCC;
+        height: 18px;
+
+        background: #F00;
+
+        appearance: none;
+        -moz-appearance: none;
+        -webkit-appearance: none;
+    }
+</style>
+
+
 <table class="table">
     <thead>
         <tr>
             <th>Name</th>
             <th>Description</th>
+
             <th>Results</th>
-            <th>Version</th>
+
+            <th>Health</th>
             <th>Date</th>
         </tr>
     </thead>
@@ -36,6 +65,14 @@
                         <span class="glyphicon glyphicon-ok"></span>
                     %else:
                         <span class="glyphicon glyphicon-remove"></span>
+                    %end
+                </td>
+
+                <td>
+                    %if test['scenario_passed'] and test['scenario_ran']:
+                        <progress value="{{test['scenario_passed']}}" max="{{test['scenario_ran']}}"></progress>
+                    %else:
+                        <progress class="undef" value="0" max="100"></progress>
                     %end
                 </td>
 
