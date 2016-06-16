@@ -292,6 +292,8 @@ def save_meta(total):
     f = open(path_meta, 'w')
     f.write('name=%s\r\n' % (os.environ['TEST_NAME'] if 'TEST_NAME' in os.environ else 'Unknown'))
     f.write('description=%s\r\n' % (os.environ['TEST_DESCRIPTION'] if 'TEST_DESCRIPTION' in os.environ else 'Unknown'))
+    f.write('scenario_ran=%s\r\n' % str(total.scenarios_ran))
+    f.write('scenario_passed=%s\r\n' % str(total.scenarios_passed))
     f.write('result=%s\r\n' % ('ok' if total.scenarios_ran == total.scenarios_passed else 'ko'))
     f.write('date=%s\r\n' % (os.environ['TEST_DATE'] if 'TEST_DATE' in os.environ else '-'))
     f.close()
