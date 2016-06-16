@@ -35,7 +35,8 @@ ADD docker/config.sh .
 ENTRYPOINT ["/home/testing/root-entrypoint.sh"]
 
 EXPOSE 8080
-EXPOSE 8003
+EXPOSE 8006
+EXPOSE 8061
 
 VOLUME ["/output"]
 
