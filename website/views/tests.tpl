@@ -70,11 +70,14 @@
                 </td>
 
                 <td>
-                    %if test['scenario_passed'] and test['scenario_ran']:
-                        <progress value="{{test['scenario_passed']}}" max="{{test['scenario_ran']}}"></progress>
-                    %else:
-                        <progress class="undef" value="0" max="100"></progress>
-                    %end
+                    <div style="margin-bottom: 0px; width: 100px" class="progress" data-total="{{test['scenario_ran']}}" data-passed="{{test['scenario_passed']}}">
+                        <div class="progress-bar progress-bar-success" style="width: 100%">
+                            <span class="progress-text-success"></span>
+                        </div>
+                        <div class="progress-bar progress-bar-danger" style="width: 0%">
+                            <span class="progress-text-failure"></span>
+                        </div>
+                    </div>
                 </td>
 
                 <td>
@@ -118,4 +121,40 @@
         </div>
     </div>
 %end
+
+<script language="javascript">
+    $(document).ready(function(){
+        $(".progress").each(function(i, pgNode){
+            var node = $(pgNode);
+
+            var total = parseFloat($(node).data("total"));
+            var passed = parseFloat($(node).data("passed"));
+
+            if(!isNaN(total) && !isNaN(passed)){
+
+                var percentage_0_1 = passed / total;
+                percentage_passed = parseInt(percentage_0_1 * 100, 10);
+                percentage_failed = 100 - percentage_passed;
+
+                node.find(".progress-bar-success").css({
+                    width: percentage_passed + "%",
+                })
+                node.find(".progress-bar-danger").css({
+                    width: percentage_failed + "%",
+                })
+
+                if(percentage_passed >= 50){
+                    percentage = (Math.round(percentage_0_1 * 10000) / 100).toFixed(2);
+                    class_attr = ".progress-text-success"
+                }else{
+                    percentage = (Math.round((1.0 - percentage_0_1) * 10000) / 100).toFixed(2);
+                    class_attr = ".progress-text-failure"
+                }
+                node.find(class_attr).text(percentage + "%");
+            }else{
+                node.remove();
+            }
+        });
+    });
+</script>
 
