@@ -27,7 +27,7 @@ BDIR=/tmp
 CONFIG_FILE="$(pwd)/config.sh"
 TIME_BEFORE=
 
-while getopts "s:d:h:" OPTION
+while getopts "s:d:h" OPTION
 do
     case $OPTION in
     h)
@@ -98,7 +98,15 @@ case $ACTION in
         VERSION_WEB=$(bzr log -r-1  --short $WEBDIR | head -1 | sed -nE 's/[[:space:]]*([[:digit:]]*)[[:space:]]+.*/\1/pg')
         VERSION_SERVER=$(bzr log -r-1  --short $SERVERDIR | head -1 | sed -nE 's/[[:space:]]*([[:digit:]]*)[[:space:]]+.*/\1/pg')
 
-        echo "S${VERSION_SERVER} W${VERSION_WEB}"
+        NAME_WEB=$(bzr tags -d "$WEBDIR" | tail -1 | cut -f 1 -d " ")
+        NAME_SERVER=$(bzr tags -d "$SERVERDIR" | tail -1 | cut -f 1 -d " ")
+
+        if [[ "${NAME_WEB}" == "${NAME_SERVER}" ]]
+        then
+            echo "${NAME_SERVER} (S${VERSION_SERVER} W${VERSION_WEB})"
+        else
+            echo "${NAME_SERVER} (S${VERSION_SERVER}) ${NAME_WEB} (W${VERSION_WEB})"
+        fi
 
         exit 0
         ;;
