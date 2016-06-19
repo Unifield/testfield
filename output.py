@@ -125,6 +125,7 @@ def create_website():
     world.scenarios = []
     world.idscenario = 0
     world.idprintscreen = 1
+    world.failure_found = False
 
 @after.all
 def create_real_repport(total):
@@ -185,6 +186,15 @@ def write_end_of_section(scenario):
         msg_error =  str(exception_failure) + ' (' + str(type(exception_failure)) + ')'
 
         write_errorscreen(world, msg_error)
+
+    shoud_work = 'fails' not in scenario.tags
+    if shoud_work != all_ok:
+        world.failure_found = True
+
+    # is this success/failure normal according to us?
+    #   (if tag @fails => a failure is normal, otherwise it's not normal)
+    # We then have to update the "ok/ko" flag in the meta file
+    #  and color in red or not the line
 
     world.scenarios.append((all_ok, scenario.name, percentage_ok, time_total, index_page, tags))
 
@@ -294,7 +304,8 @@ def save_meta(total):
     f.write('description=%s\r\n' % (os.environ['TEST_DESCRIPTION'] if 'TEST_DESCRIPTION' in os.environ else 'Unknown'))
     f.write('scenario_ran=%s\r\n' % str(total.scenarios_ran))
     f.write('scenario_passed=%s\r\n' % str(total.scenarios_passed))
-    f.write('result=%s\r\n' % ('ok' if total.scenarios_ran == total.scenarios_passed else 'ko'))
+
+    f.write('result=%s\r\n' % ('ok' if not world.failure_found else 'ko'))
     f.write('date=%s\r\n' % (os.environ['TEST_DATE'] if 'TEST_DATE' in os.environ else '-'))
     f.close()
 

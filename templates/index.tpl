@@ -59,6 +59,10 @@
                 <td>
                     <div class="text-center">
 
+                        %if 'fails' in tags:
+                            <span class="label label-danger">FAILURE</span>
+                        %end
+
                         %if 'it' in tags:
                             <span class="label label-primary">IT</span>
                         %end
