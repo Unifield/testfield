@@ -19,6 +19,77 @@ FILE_DIR = 'files'
 
 RUN_NUMBER_FILE = 'run'
 
+# We have to handle special steps to be able to loop until a condition is not met {%{
+
+def handle_delayed_step(func):
+    def fonc_to_call(*args, **argv):
+        if world.steps_to_run is None:
+            return func(*args, **argv)
+        else:
+            world.steps_to_run[-1].append((func, args, argv))
+            def dummy(*args, **argv):
+                pass
+            return dummy
+    return fonc_to_call
+
+@before.all
+def init_loop():
+    world.steps_to_run = None
+    world.record_printscreen = True
+
+@step('^I repeat:$')
+@handle_delayed_step
+def repeat_process(step):
+    if world.steps_to_run is None:
+        world.steps_to_run = []
+    world.steps_to_run.append([])
+
+@step('^Until "([^"]*)" equals "([^"]*)"$')
+def until_a_equals_b(step, value1, value2):
+    assert world.steps_to_run
+
+    # we are going to run the tests
+    steps = world.steps_to_run[-1]
+
+    tick = monitor(world.browser, "I've waited too long on %s to become %s" % (value1, value2))
+
+    import collections
+
+    deque = collections.deque(maxlen=4)
+
+    nb_loop = 1
+
+    while True:
+        for func, args, argv in steps:
+            world.record_printscreen = False
+            func(*args, **argv)
+
+        # check that the value exists
+        conv_value1 = convert_input(world, value1)
+        conv_value2 = convert_input(world, value2)
+
+        if conv_value1 == conv_value2:
+            break
+
+        deque.appendleft("%s != %s" % (conv_value1, conv_value2))
+        possibilities = ', '.join(deque)
+        content_error = "I've waited too long on %s to become %s (last possibilities: %s)" % (value1, value2, possibilities)
+
+        nb_loop += 1
+        tick(content_error)
+
+    world.steps_to_run.pop()
+    if not world.steps_to_run:
+        world.steps_to_run = None
+
+    world.record_printscreen = True
+
+@after.each_scenario
+def check_that_no_loop_is_open(scenario):
+    if scenario.passed and world.steps_to_run is not None:
+        raise UnifieldException("A loop is not closed in your scenario")
+#}%}
+
 # Selenium management {%{
 @before.all
 def connect_to_db():
@@ -204,6 +275,7 @@ def debug_scenarios(total):
 
 #WARNING: Undocumented!
 @step('I go on the homepage')
+@handle_delayed_step
 @output.register_for_printscreen
 def go_home_page(step):
     world.browser.get(HTTP_URL_SERVER)
@@ -277,18 +349,21 @@ def log_into(database_name, username, password):
     world.current_instance = database_name
 
 @step('I log into instance "([^"]*)" as "([^"]*)" with password "([^"]*)"')
+@handle_delayed_step
 @output.register_for_printscreen
 def connect_on_database(step, database_name, username, password):
     log_into(database_name, username, password)
     world.current_instance = database_name
 
 @step('I log into instance "([^"]*)"')
+@handle_delayed_step
 @output.register_for_printscreen
 def connect_on_database(step, database_name):
     log_into(database_name, UNIFIELD_ADMIN, UNIFIELD_PASSWORD)
     world.current_instance = database_name
 
 @step('I log out')
+@handle_delayed_step
 @output.add_printscreen
 def log_out(step):
     world.browser.get("%(url)s/openerp/logout" % dict(url=HTTP_URL_SERVER))
@@ -299,6 +374,7 @@ def log_out(step):
 # Synchronisation {%{
 
 @step('I synchronize "([^"]*)"')
+@handle_delayed_step
 @output.register_for_printscreen
 def synchronize_instance(step, instance_name):
     instance_name = prefix_db_name(convert_input(world, instance_name))
@@ -355,6 +431,7 @@ def synchronize_instance(step, instance_name):
 
 # Open a menu/tab {%{
 @step('I open tab menu "([^"]*)"')
+@handle_delayed_step
 @output.register_for_printscreen
 def open_tab(step, tab_to_open):
     world.full_printscreen = True
@@ -370,6 +447,7 @@ def open_tab(step, tab_to_open):
     #world.browser.save_screenshot("after_tab.png")
 
 @step('I open accordion menu "([^"]*)"')
+@handle_delayed_step
 @output.register_for_printscreen
 def open_tab(step, menu_to_click_on):
     world.full_printscreen = True
@@ -470,6 +548,7 @@ def open_menu(menu_to_click_on):
 
 #FIXME: We have to open the window for PhantomJS.
 @step('I click on menu "([^"]*)" and open the window$')
+@handle_delayed_step
 @output.register_for_printscreen
 def open_tab(step, menu_to_click_on):
     world.full_printscreen = True
@@ -482,6 +561,7 @@ def open_tab(step, menu_to_click_on):
     wait_until_no_ajax(world)
 
 @step('I click on menu "([^"]*)"$')
+@handle_delayed_step
 @output.register_for_printscreen
 def open_tab(step, menu_to_click_on):
     world.full_printscreen = True
@@ -489,6 +569,7 @@ def open_tab(step, menu_to_click_on):
     open_menu(menu_to_click_on)
 
 @step('I open tab "([^"]*)"')
+@handle_delayed_step
 @output.add_printscreen
 def open_tab(step, tabtoopen):
     msg = "Cannot find tab %s" % tabtoopen
@@ -500,6 +581,7 @@ def open_tab(step, tabtoopen):
 # Fill fields {%{
 
 @step('I fill "([^"]*)" with "([^"]*)"$')
+@handle_delayed_step
 @output.register_for_printscreen
 def fill_field(step, fieldname, content):
 
@@ -568,6 +650,7 @@ def fill_field(step, fieldname, content):
     wait_until_no_ajax(world)
 
 @step('I fill "([^"]*)" with "([^"]*)" and open the window$')
+@handle_delayed_step
 @output.register_for_printscreen
 def fill_field_and_open(step, fieldname, content):
     fill_field(step, fieldname, content)
@@ -579,6 +662,7 @@ def fill_field_and_open(step, fieldname, content):
     wait_until_no_ajax(world)
 
 @step('I fill "([^"]*)" with table:$')
+@handle_delayed_step
 @output.register_for_printscreen
 def fill_field_table(step, fieldname):
     if not step.hashes:
@@ -640,6 +724,7 @@ def validate_variable(variable_name):
             raise UnifieldException("We don't accept %s in variable name" % forbidden_car)
 
 @step('I store column "([^"]*)" in "([^"]*)" for line:$')
+@handle_delayed_step
 def remember_step_in_table(step, column_name, variable):
 
     wait_until_not_loading(world.browser, wait=world.nbframes == 0)
@@ -665,6 +750,7 @@ def remember_step_in_table(step, column_name, variable):
     raise UnifieldException("No line with column %s has been found" % column_name)
 
 @step('I store "([^"]*)" in "([^"]*)"$')
+@handle_delayed_step
 def remember_step(step, fieldname, variable):
 
     values = get_values(fieldname)
@@ -682,6 +768,7 @@ def remember_step(step, fieldname, variable):
 # Active waiting {%{
 
 @step('I click on "([^"]*)" until not available$')
+@handle_delayed_step
 def click_until_not_available2(step, button):
     wait_until_not_loading(world.browser, wait=world.nbframes == 0)
 
@@ -699,6 +786,7 @@ def click_until_not_available2(step, button):
             pass
 
 @step('I click on "([^"]*)" until "([^"]*)" in "([^"]*)"$')
+@handle_delayed_step
 def click_until_not_available1(step, button, value, fieldname):
 
     wait_until_not_loading(world.browser, wait = "Loading before clicking takes too much time" if world.nbframes == 0 else '')
@@ -733,11 +821,13 @@ def click_until_not_available1(step, button, value, fieldname):
 # I click on "Search/New/Clear"
 
 @step('(.*) if a window is open$')
+@handle_delayed_step
 def if_a_window_is_open(step, nextstep):
     if world.nbframes > 0:
         step.given(nextstep)
 
 @step('I click on "([^"]*)" and close the window if necessary$')
+@handle_delayed_step
 @output.add_printscreen
 def close_window_if_necessary(step, button):
 
@@ -786,6 +876,7 @@ def close_window_if_necessary(step, button):
             pass
 
 @step('I click on "([^"]*)"$')
+@handle_delayed_step
 @output.add_printscreen
 def click_on_button(step, button):
     # It seems that some action could still be launched when clicking on a button,
@@ -819,6 +910,7 @@ def click_on_button(step, button):
         #world.browser.save_screenshot('mourge.png')
 
 @step('I click on "([^"]*)" and open the window$')
+@handle_delayed_step
 @output.add_printscreen
 def click_on_button_and_open(step, button):
 
@@ -836,6 +928,7 @@ def click_on_button_and_open(step, button):
     wait_until_no_ajax(world)
 
 @step('I close the window$')
+@handle_delayed_step
 @output.add_printscreen
 def close_the_window(step):
 
@@ -853,6 +946,7 @@ def close_the_window(step):
 # I click on "Save & Close"
 
 @step('I click on "([^"]*)" and close the window$')
+@handle_delayed_step
 @output.add_printscreen
 def click_on_button_and_close(step, button):
 
@@ -881,11 +975,13 @@ def click_if_toggle_button_is(btn_name, from_class_name):
     wait_until_no_ajax(world)
 
 @step('I toggle on "([^"]*)"$')
+@handle_delayed_step
 @output.register_for_printscreen
 def toggle_on(step, button):
     click_if_toggle_button_is(button, "filter_with_icon inactive")
 
 @step('I toggle off "([^"]*)"$')
+@handle_delayed_step
 @output.register_for_printscreen
 def toggle_off(step, button):
     click_if_toggle_button_is(button, "filter_with_icon active")
@@ -912,6 +1008,7 @@ def get_values(fieldname):
         return []
 
 @step('I should see "([^"]*)" in "([^"]*)"')
+@handle_delayed_step
 @output.register_for_printscreen
 def should_see(step, content, fieldname):
 
@@ -931,6 +1028,7 @@ def should_see(step, content, fieldname):
         raise UniFieldElementException("%s doesn't contain %s (values found: %s)" % (fieldname, content, ', '.join(content_found)))
 
 @step('I should see a text status with "([^"]*)"')
+@handle_delayed_step
 @output.register_for_printscreen
 def see_status(step, message_to_see):
     wait_until_not_loading(world.browser)
@@ -943,6 +1041,7 @@ def see_status(step, message_to_see):
         raise UniFieldElementException("No '%s' found in '%s'" % (message_to_see, elem.text))
 
 @step('I should see a popup with "([^"]*)"$')
+@handle_delayed_step
 @output.register_for_printscreen
 def see_popup(step, message_to_see):
     wait_until_not_loading(world.browser)
@@ -955,6 +1054,7 @@ def see_popup(step, message_to_see):
         raise UniFieldElementException("No '%s' found in '%s'" % (message_to_see, elem.text))
 
 @step('I should see "([^"]*)" in the section "([^"]*)"$')
+@handle_delayed_step
 @output.register_for_printscreen
 def see_popup(step, content, section):
     #WARNING: This step is used for UniField automation. We use it to ensure that
@@ -1036,11 +1136,13 @@ def check_checkbox_action(content, fieldname, action=None):
     select_in_field_an_option(world, get_text_box, content)
 
 @step('I fill "([^"]*)" within column "([^"]*)"$')
+@handle_delayed_step
 @output.register_for_printscreen
 def fill_column(step, content, fieldname):
     check_checkbox_action(content, fieldname)
 
 @step('I fill "([^"]*)" within column "([^"]*)" and open the window')
+@handle_delayed_step
 @output.register_for_printscreen
 def fill_column_with_window(step, content, fieldname):
     fill_column(step, content, fieldname)
@@ -1052,6 +1154,7 @@ def fill_column_with_window(step, content, fieldname):
     wait_until_no_ajax(world)
 
 @step('I tick all the lines')
+@handle_delayed_step
 @output.register_for_printscreen
 def click_on_all_line(step):
 
@@ -1151,6 +1254,7 @@ def click_on_line(step, action, window_will_exist=True):
             wait_until_no_ajax(world)
 
 @step('I click on line:')
+@handle_delayed_step
 @output.add_printscreen
 def click_on_line_line(step):
     click_on_line(step, "line")
@@ -1159,11 +1263,13 @@ def click_on_line_line(step):
 
 
 @step('I click "([^"]*)" on line:')
+@handle_delayed_step
 @output.register_for_printscreen
 def click_on_line_tooltip(step, action):
     click_on_line(step, action)
 
 @step('I click "([^"]*)" on line and close the window:')
+@handle_delayed_step
 @output.add_printscreen
 def click_on_line_and_open_the_window(step, action):
 
@@ -1180,6 +1286,7 @@ def click_on_line_and_open_the_window(step, action):
     wait_until_not_loading(world.browser, wait=world.nbframes == 0)
 
 @step('I click "([^"]*)" on line and open the window:')
+@handle_delayed_step
 @output.add_printscreen
 def click_on_line_and_open_the_window(step, action):
     click_on_line(step, action)
@@ -1218,11 +1325,13 @@ def check_that_line(step, should_see_lines, action=None):
     repeat_until_no_exception(world, try_to_check_line, (StaleElementReferenceException, UniFieldElementException), step)
 
 @step('I should see in the main table the following data:')
+@handle_delayed_step
 @output.register_for_printscreen
 def check_line(step):
     check_that_line(step, True)
 
 @step("I shouldn't be able to click \"([^\"]*)\" on line:")
+@handle_delayed_step
 @output.register_for_printscreen
 def check_not_click_on_line(step, action):
     if len(step.hashes) != 1:
@@ -1235,6 +1344,7 @@ def check_not_click_on_line(step, action):
     check_that_line(step, False, action=action)
 
 @step("I shouldn't be able to edit \"([^\"]*)\"$")
+@handle_delayed_step
 @output.register_for_printscreen
 def should_be_able_to_edit(step, fieldname):
     _, my_input = get_input(world.browser, fieldname)
@@ -1243,6 +1353,7 @@ def should_be_able_to_edit(step, fieldname):
         raise UniFieldElementException("The field %s is ediable" % fieldname)
 
 @step("I shouldn't be able to edit column \"([^\"]*)\"$")
+@handle_delayed_step
 @output.register_for_printscreen
 def should_not_be_able_to_edit(step, fieldname):
 
@@ -1253,6 +1364,7 @@ def should_not_be_able_to_edit(step, fieldname):
     check_checkbox_action("", fieldname, action_check)
 
 @step('I should not see in the main table the following data:')
+@handle_delayed_step
 @output.register_for_printscreen
 def check_line(step):
     check_that_line(step, False)
@@ -1280,14 +1392,17 @@ def search_until_I(step, action_search, see):
         tick()
 
 @step('I click "([^"]*)" until I don\'t see:')
+@handle_delayed_step
 def click_on_search_until_not(step, action_search):
     search_until_I(step, action_search, False)
 
 @step('I click "([^"]*)" until I see:')
+@handle_delayed_step
 def click_on_search_until(step, action_search):
     search_until_I(step, action_search, True)
 
 @step('I click "([^"]*)" in the side panel$')
+@handle_delayed_step
 @output.add_printscreen
 def open_side_panel(step, menuname):
     wait_until_no_ajax(world)
@@ -1313,6 +1428,7 @@ def open_side_panel(step, menuname):
     wait_until_not_loading(world.browser)
 
 @step('I click "([^"]*)" in the side panel and open the window$')
+@handle_delayed_step
 @output.add_printscreen
 def open_side_panel_and_open(step, menuname):
 
@@ -1350,6 +1466,7 @@ def do_action_and_open_popup(world, action, *params, **vparams):
         time.sleep(TIME_TO_SLEEP)
 
 @step('I click on "([^"]*)" and open the popup$')
+@handle_delayed_step
 @output.add_printscreen
 def open_side_panel_and_open_popup(step, button):
 
@@ -1362,6 +1479,7 @@ def open_side_panel_and_open_popup(step, button):
 
 
 @step('I click "([^"]*)" in the side panel and open the popup$')
+@handle_delayed_step
 @output.add_printscreen
 def open_side_panel_and_open_popup(step, menuname):
 
@@ -1372,6 +1490,7 @@ def open_side_panel_and_open_popup(step, menuname):
     do_action_and_open_popup(world, open_side_panel_popup, step, menuname)
 
 @step('I validate the line')
+@handle_delayed_step
 @output.register_for_printscreen
 def choose_field(step):
     wait_until_no_ajax(world)
@@ -1418,6 +1537,7 @@ def choose_field(step):
 #}%}
 
 @step('I wait "([^"]*)" seconds$')
+@handle_delayed_step
 def selenium_sleeps(step, seconds):
     #This step is used to instrument UniField. Don't change it!
     import time
@@ -1425,11 +1545,13 @@ def selenium_sleeps(step, seconds):
 
 # Debugging steps {%{
 @step('I sleep')
+@handle_delayed_step
 def selenium_sleeps(step):
     import time
     time.sleep(30000)
 
 @step('I wait$')
+@handle_delayed_step
 @output.register_for_printscreen
 def selenium_sleeps(step):
     raw_input()
@@ -1439,6 +1561,7 @@ def selenium_sleeps(step):
 # Time evaluators {%{
 
 @step('I store the time difference in "([^"]*)"')
+@handle_delayed_step
 def save_time_difference(step, counter):
     step.need_printscreen = False
     now = datetime.datetime.now()
@@ -1447,11 +1570,13 @@ def save_time_difference(step, counter):
     world.durations[counter] = total_secs
 
 @step('I save the time')
+@handle_delayed_step
 def save_time(step):
     step.need_printscreen = False
     world.last_measure = datetime.datetime.now()
 
 @step('I store the values for "([^"]*)" in "([^"]*)"')
+@handle_delayed_step
 def save_time_results(step, counters, filename):
 
     if not os.path.isdir(RESULTS_DIR):

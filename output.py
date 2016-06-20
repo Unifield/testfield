@@ -85,9 +85,10 @@ def register_for_printscreen(function):
         #FIXME: We will keep the wildcar here. We should try to
         #  figue out a way to "turn it" into something real
         #  when we match it against a web element.
-        real_sentence = convert_input(world, step.original_sentence)
-        real_table = convert_hashes_to_table(step.hashes)
-        world.steps_to_display.append((real_sentence, real_table, step))
+        if world.record_printscreen:
+            real_sentence = convert_input(world, step.original_sentence)
+            real_table = convert_hashes_to_table(step.hashes)
+            world.steps_to_display.append((real_sentence, real_table, step))
         try:
             return function(step, *arg1, **arg2)
         except Exception as e:
@@ -101,11 +102,13 @@ def register_for_printscreen(function):
 def add_printscreen(function):
     def newfonc(step, *arg1, **arg2):
         #FIXME: same as above
-        real_sentence = convert_input(world, step.original_sentence)
-        real_table = convert_hashes_to_table(step.hashes)
-        world.steps_to_display.append((real_sentence, real_table, step))
-        write_printscreen(world, world.full_printscreen)
-        world.full_printscreen = False
+
+        if world.record_printscreen:
+            real_sentence = convert_input(world, step.original_sentence)
+            real_table = convert_hashes_to_table(step.hashes)
+            world.steps_to_display.append((real_sentence, real_table, step))
+            write_printscreen(world, world.full_printscreen)
+            world.full_printscreen = False
         try:
             return function(step, *arg1, **arg2)
         except Exception as e:
