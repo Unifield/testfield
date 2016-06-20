@@ -98,14 +98,35 @@ case $ACTION in
         VERSION_WEB=$(bzr log -r-1  --short $WEBDIR | head -1 | sed -nE 's/[[:space:]]*([[:digit:]]*)[[:space:]]+.*/\1/pg')
         VERSION_SERVER=$(bzr log -r-1  --short $SERVERDIR | head -1 | sed -nE 's/[[:space:]]*([[:digit:]]*)[[:space:]]+.*/\1/pg')
 
-        NAME_WEB=$(bzr tags -d "$WEBDIR" | tail -1 | cut -f 1 -d " ")
-        NAME_SERVER=$(bzr tags -d "$SERVERDIR" | tail -1 | cut -f 1 -d " ")
+        TAG_LINE_WEB=$(bzr tags -d "$WEBDIR" --sort=time | grep -v "\?" | tail -1)
+        TAG_LINE_SERVER=$(bzr tags -d "$SERVERDIR" --sort=time | grep -v "\?" | tail -1)
 
-        if [[ "${NAME_WEB}" == "${NAME_SERVER}" ]]
+        TAG_NAME_WEB=$(echo $TAG_LINE_WEB | cut -f 1 -d " ")
+        TAG_NAME_SERVER=$(echo $TAG_LINE_SERVER | cut -f 1 -d " ")
+
+        TAG_VERSION_WEB=$(echo $TAG_LINE_WEB | cut -f 2 -d " ")
+        TAG_VERSION_SERVER=$(echo $TAG_LINE_SERVER | cut -f 2 -d " ")
+
+        if [[ "${TAG_NAME_WEB}" == "${TAG_NAME_SERVER}" ]]
         then
-            echo "${NAME_SERVER} (S${VERSION_SERVER} W${VERSION_WEB})"
+            if [[ "${TAG_VERSION_WEB}" != ${VERSION_WEB} || "${TAG_VERSION_SERVER}" != "${VERSION_SERVER}" ]]
+            then
+                PLUS_VERSION=+
+            fi
+            echo "${TAG_NAME_SERVER} $PLUS_VERSION (S${VERSION_SERVER} W${VERSION_WEB})"
         else
-            echo "${NAME_SERVER} (S${VERSION_SERVER}) ${NAME_WEB} (W${VERSION_WEB})"
+
+            if [[ "${TAG_VERSION_WEB}" != ${VERSION_WEB} ]]
+            then
+                PLUS_VERSION_WEB=+
+            fi
+
+            if [[ "${TAG_VERSION_SERVER}" != "${VERSION_SERVER}" ]]
+            then
+                PLUS_VERSION_SERVER=+
+            fi
+
+            echo "${TAG_NAME_SERVER} ${PLUS_VERSION_SERVER} (S${VERSION_SERVER}) ${TAG_NAME_WEB} ${PLUS_VERSION_WEB} (W${VERSION_WEB})"
         fi
 
         exit 0
