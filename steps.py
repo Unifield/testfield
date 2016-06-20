@@ -17,7 +17,8 @@ RESULTS_DIR = 'results/'
 ENV_DIR = 'instances/'
 FILE_DIR = 'files'
 
-RUN_NUMBER_FILE = 'run'
+RUN_NUMBER_FILE = 'run_scenario'
+RUN_FEATURE_NUMBER_FILE = 'run_feature'
 
 # We have to handle special steps to be able to loop until a condition is not met {%{
 
@@ -159,6 +160,10 @@ def connect_to_db():
 def do_not_crash(background):
     world.must_fail = None
 
+@before.each_feature
+def init_id_feature(feature):
+    world.idfeature = get_new_id(RUN_FEATURE_NUMBER_FILE)
+
 @after.each_background
 def cancel_background(background, results):
     if len(background.steps) != len(results):
@@ -188,40 +193,21 @@ def after_scenario(scenario):
     if not all_ok:
         try:
             world.nofailure += 1
-            world.browser.save_screenshot('failure_%d_%d.png' % (world.FEATURE_VARIABLE['ID'], world.nofailure))
+            world.browser.save_screenshot('failure_%d_%d.png' % (world.SCENARIO_VARIABLE['ID'], world.nofailure))
         except:
             pass
 
 @before.each_scenario
 def update_idrun(scenario):
-    world.FEATURE_VARIABLE = {}
+    world.SCENARIO_VARIABLE = {}
 
-    world.FEATURE_VARIABLE['ID'] = 1
-
-    if os.path.isdir(RUN_NUMBER_FILE):
-        raise Error("A configuration file is a directory")
-    if os.path.isfile(RUN_NUMBER_FILE):
-        #FIXME: A file could be huge, it could lead to a memory burst...
-        f = open(RUN_NUMBER_FILE)
-        try:
-            s_idrun = f.read(512)
-            last_idrun = int(s_idrun)
-            world.FEATURE_VARIABLE['ID'] = last_idrun + 1
-        except ValueError:
-            raise Error("Invalid value in %s" % RUN_NUMBER_FILE)
-
-        f.close()
-
-    new_f = open(RUN_NUMBER_FILE, 'w')
-    new_f.write(str(world.FEATURE_VARIABLE['ID']))
-    new_f.close()
-
-    world.FEATURE_VARIABLE['ID'] = str(world.FEATURE_VARIABLE['ID'])
+    world.SCENARIO_VARIABLE['ID'] = get_new_id(RUN_NUMBER_FILE)
+    world.SCENARIO_VARIABLE['IDFILE'] = world.idfeature
 
     base_dir = os.path.dirname(__file__)
     file_path = os.path.join(base_dir, FILE_DIR)
     # we have to set the path for the files
-    world.FEATURE_VARIABLE['FILES'] = file_path
+    world.SCENARIO_VARIABLE['FILES'] = file_path
 
 @after.each_scenario
 def remove_iframes(scenario):
@@ -746,7 +732,7 @@ def remember_step_in_table(step, column_name, variable):
         if position_in_table is not None:
             td_node = get_element(row_node, class_attr="grid-cell", tag_name="td", position=position_in_table)
             validate_variable(variable.strip())
-            world.FEATURE_VARIABLE[variable.strip()] = td_node.text.strip()
+            world.SCENARIO_VARIABLE[variable.strip()] = td_node.text.strip()
             return
 
     raise UnifieldException("No line with column %s has been found" % column_name)
@@ -763,7 +749,7 @@ def remember_step(step, fieldname, variable):
         raise UniFieldElementException("Several values found for %s (values: %s)" % (fieldname, ', '.join(values)))
 
     validate_variable(variable.strip())
-    world.FEATURE_VARIABLE[variable.strip()] = values[0].strip()
+    world.SCENARIO_VARIABLE[variable.strip()] = values[0].strip()
 
 #}%}
 

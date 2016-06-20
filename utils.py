@@ -22,6 +22,28 @@ def prefix_db_name(db_name):
         return '%s_%s' % (DB_PREFIX, db_name)
     return db_name
 
+def get_new_id(filename):
+    idvar = 1
+
+    if os.path.isdir(filename):
+        raise Error("A configuration file is a directory")
+    if os.path.isfile(filename):
+        #FIXME: A file could be huge, it could lead to a memory burst...
+        f = open(filename)
+        try:
+            s_idrun = f.read(512)
+            last_idrun = int(s_idrun)
+            idvar = last_idrun + 1
+        except ValueError:
+            raise Error("Invalid value in %s" % filename)
+
+        f.close()
+
+    new_f = open(filename, 'w')
+    new_f.write(str(idvar))
+    new_f.close()
+
+    return str(idvar)
 
 def get_absolute_path(relative_file):
     path, _ = os.path.split(__file__)
@@ -583,7 +605,7 @@ def convert_input(world, content, localdict=dict()):
         all_functions_ok = all(map(lambda x : x in world.FUNCTIONS, filter(lambda x : x, functions)))
 
         # does the word exist?
-        if word not in localdict and word not in world.FEATURE_VARIABLE and not all_functions_ok:
+        if word not in localdict and word not in world.SCENARIO_VARIABLE and not all_functions_ok:
             #FIXME if it doesn't exist we cannot crash because the tables
             #  are expanded even if we don't manage to expand ROW. As a result
             #  a crash could stop all the tests because of the output component...
@@ -594,7 +616,7 @@ def convert_input(world, content, localdict=dict()):
 
         #FIXME: Here we try to translate the variable names into their values otherwise we
         # use the value itself. This is not really easy to understand and could lead to bugs...
-        real_value = localdict.get(word, world.FEATURE_VARIABLE.get(word, word))
+        real_value = localdict.get(word, world.SCENARIO_VARIABLE.get(word, word))
 
         functions.reverse()
 
