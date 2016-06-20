@@ -28,9 +28,9 @@ def connect_to_db():
     from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 
     # /Applications/Firefox.app/Contents/MacOS/firefox
-    #world.browser = webdriver.Firefox(firefox_binary=FirefoxBinary('/Users/sblanc/Desktop/msf/testfield/bin/firefox2/main'))
+    world.browser = webdriver.Firefox(firefox_binary=FirefoxBinary('./firefox/firefox'))
 
-    world.browser = webdriver.Firefox()
+    #world.browser = webdriver.Firefox()
     #world.browser = webdriver.PhantomJS()
     #world.browser = webdriver.Chrome()
 
