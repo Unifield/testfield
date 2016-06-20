@@ -14,7 +14,7 @@ import os
 # The time (in seconds) that we wait when we know that an action has still to be performed
 TIME_TO_SLEEP = 0.3
 # The time that we wait when we now that a change is almost immediate
-TIME_TO_WAIT = 1.0
+TIME_TO_WAIT = 1.5
 
 def prefix_db_name(db_name):
     from credentials import DB_PREFIX
@@ -69,7 +69,7 @@ def monitor(browser, explanation=''):
     LIMIT_COUNTER = 30
     found_message = set([])
 
-    def counter(message_if_error=None):
+    def counter(message_if_error=None, factor=1.0):
         here['val'] += 1
 
         now = datetime.datetime.now()
@@ -77,7 +77,7 @@ def monitor(browser, explanation=''):
 
         TIME_BEFORE_FAILURE = get_TIME_BEFORE_FAILURE()
 
-        timeout_detected = TIME_BEFORE_FAILURE is not None and time_spent_waiting > TIME_BEFORE_FAILURE
+        timeout_detected = TIME_BEFORE_FAILURE is not None and time_spent_waiting > (TIME_BEFORE_FAILURE * factor)
 
         if here['val'] > LIMIT_COUNTER or timeout_detected:
             browser = here['browser']

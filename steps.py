@@ -76,7 +76,9 @@ def until_a_equals_b(step, value1, value2):
         content_error = "I've waited too long on %s to become %s (last possibilities: %s)" % (value1, value2, possibilities)
 
         nb_loop += 1
-        tick(content_error)
+        tick(content_error, factor=5)
+
+        time.sleep(TIME_TO_WAIT)
 
     world.steps_to_run.pop()
     if not world.steps_to_run:
