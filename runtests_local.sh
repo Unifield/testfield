@@ -1,13 +1,29 @@
 #!/usr/bin/env bash
 
-
-getopts ":s:" VALUE
 TIME_BEFORE=0
-if [[ $VALUE == "s" ]]
+HAS_OPTION=no
+
+while getopts ":s:" OPTION
+do
+    case $OPTION in
+    s)
+        TIME_BEFORE=$OPTARG
+        ;;
+    *)
+        HAS_OPTION=yes
+        break
+        ;;
+    esac
+done;
+
+if [[ $HAS_OPTION == yes ]]
 then
-    TIME_BEFORE=$OPTARG
+    shift $((OPTIND-2));
+else
+    shift $((OPTIND-1));
 fi
-shift $(((OPTIND-1)));
+
+set -o errexit
 
 # from: http://stackoverflow.com/questions/3572030/bash-script-absolute-path-with-osx
 realpath() {
