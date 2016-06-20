@@ -189,6 +189,15 @@ def disconnect_to_db(total):
         except OSError as e:
             pass
 
+@after.all
+def debug_scenarios(total):
+    for scenario_result in total.scenario_results:
+        scenario = scenario_result.scenario
+        if scenario.passed:
+            print scenario.name, ": OK"
+        else:
+            print scenario.name, ": FAILED"
+
 #}%}
 
 # Log into/out of/restore an instance{%{
