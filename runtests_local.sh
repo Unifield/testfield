@@ -2,12 +2,30 @@
 
 TIME_BEFORE=0
 HAS_OPTION=no
+BROWSER=firefox
 
-while getopts ":s:" OPTION
+function usage()
+{
+    echo "Usage: "
+    echo "  $0 [-b browser] [-s seconds] [ lettuce args ]"
+    echo "  -h: help"
+    echo "  -s: the number of seconds to shift"
+    echo "  -b: the browser (firefox or chrome). Firefox: <= 46. Chrome += chromedriver"
+    exit 1
+}
+
+while getopts ":s:b:h" OPTION
 do
     case $OPTION in
     s)
         TIME_BEFORE=$OPTARG
+        ;;
+    b)
+        BROWSER=$OPTARG
+        ;;
+    h)
+        usage;
+        exit 1
         ;;
     *)
         HAS_OPTION=yes
@@ -22,6 +40,10 @@ then
 else
     shift $((OPTIND-1));
 fi
+
+echo "[INFO] start tests:"
+echo " browser: $BROWSER"
+echo " time shift: $TIME_BEFORE"
 
 set -o errexit
 
@@ -51,7 +73,7 @@ then
     export DISPLAY=:$$
 fi
 
-faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@
+BROWSER="$BROWSER" faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@
 
 RETVAR=$?
 

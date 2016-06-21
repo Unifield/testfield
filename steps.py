@@ -104,9 +104,15 @@ def connect_to_db():
     # /Applications/Firefox.app/Contents/MacOS/firefox
     #world.browser = webdriver.Firefox(firefox_binary=FirefoxBinary('/Users/sblanc/Desktop/msf/testfield/bin/firefox2/main'))
 
-    world.browser = webdriver.Firefox()
-    #world.browser = webdriver.PhantomJS()
-    #world.browser = webdriver.Chrome()
+    if 'BROWSER' not in os.environ or os.environ['BROWSER'] == "firefox":
+        world.browser = webdriver.Firefox()
+    elif os.environ['BROWSER'] == "chrome":
+        world.browser = webdriver.Chrome()
+        #FIXME: PhantomJS doesn't like testfield. It seems that keeps on loading pages...
+        #elif os.environ['BROWSER'] == "phantomjs":
+        #world.browser = webdriver.PhantomJS()
+    else:
+        raise UnifieldException("Unknown browser: %s" % os.environ["BROWSER"])
 
     # say if a step involves buttons in the side bar or the menu
     #  (we should show the whole printscreen in that case)
@@ -215,7 +221,6 @@ def remove_iframes(scenario):
 
 @after.all
 def disconnect_to_db(total):
-    #world.browser = webdriver.PhantomJS()
 
     if not os.path.isdir(RESULTS_DIR):
         os.mkdir(RESULTS_DIR)
