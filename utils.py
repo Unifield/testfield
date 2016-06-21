@@ -489,37 +489,37 @@ def wait_until_no_ajax(world, message="A javascript operation is still ongoing")
                     return "BLOCKED 2 IN WINDOW";
                 }
 
-                elements = window.document.getElementsByTagName('iframe');
+                elemAjax = window.document.getElementsByTagName('iframe');
 
                 totcount = (typeof window.openobject == 'undefined') ? 0 : window.openobject.http.AJAX_COUNT;
                 totcount += (typeof window.TIMEOUT_COUNT == 'undefined') ? 0 : window.TIMEOUT_COUNT;
                 totcount += (typeof $ == 'undefined') ? 0 : $.active;
 
-                for(var i = 0; i < elements.length; i++){
-                    if (elements[i] === undefined || elements[i] === null) {
+                for(var i = 0; i < elemAjax.length; i++){
+                    if (elemAjax[i] === undefined || elemAjax[i] === null) {
                         return "UNDEFINED iframe"
                     }
 
-                    if(!check(elements[i].contentWindow.TOT)){
+                    if(!check(elemAjax[i].contentWindow.TOT)){
                         return "BLOCKED IN INFRAME " + i;
                     }
-                    if(!check(elements[i].contentWindow.TOT2)){
+                    if(!check(elemAjax[i].contentWindow.TOT2)){
                         return "BLOCKED IN INFRAME WINDOW " + i;
                     }
 
-                    var local_ajaxcount1 = (typeof elements[i].contentWindow.openobject == 'undefined' || typeof elements[i].contentWindow.openobject.http == 'undefined') ? 0 : elements[i].contentWindow.openobject.http.AJAX_COUNT;
+                    var local_ajaxcount1 = (typeof elemAjax[i].contentWindow.openobject == 'undefined' || typeof elemAjax[i].contentWindow.openobject.http == 'undefined') ? 0 : elemAjax[i].contentWindow.openobject.http.AJAX_COUNT;
                     if(local_ajaxcount1 > 0){
                         return "BLOCKED IN AJAXCOUNT WINDOW";
                     }
 
-                    var local_ajaxcount2 = (typeof elements[i].contentWindow.$ == 'undefined') ? 0 : elements[i].contentWindow.$.active;
+                    var local_ajaxcount2 = (typeof elemAjax[i].contentWindow.$ == 'undefined') ? 0 : elemAjax[i].contentWindow.$.active;
 
                     if(local_ajaxcount2 > 0){
                         return "VOILAAA";
                     }
 
 
-                    totcount += (typeof elements[i].contentWindow.TIMEOUT_COUNT == 'undefined') ? 0 : elements[i].contentWindow.TIMEOUT_COUNT;
+                    totcount += (typeof elemAjax[i].contentWindow.TIMEOUT_COUNT == 'undefined') ? 0 : elemAjax[i].contentWindow.TIMEOUT_COUNT;
 
                     totcount += local_ajaxcount1;
                     totcount += local_ajaxcount2;
