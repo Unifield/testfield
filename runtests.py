@@ -150,9 +150,24 @@ def run_preprocessor(path):
 
 if __name__ == '__main__':
     try:
+
+        import argparse
+        parser = argparse.ArgumentParser(description='Run the tests')
+        parser.add_argument('-t', type=str, dest="tags", action='store', nargs=1, help='the tag to select')
+        parser.add_argument('files', type=str, nargs='*', help='the files to execute')
+        args = parser.parse_args()
+
         if os.path.isdir(FEATURE_DIR):
             shutil.rmtree(FEATURE_DIR)
         os.mkdir(FEATURE_DIR)
+
+        # we have to extract the filenames if necessary (ends with meta_feature or feature)
+        #if args.files:
+        filename_only = []
+        for filename in args.files:
+            filename = os.path.basename(filename)
+            filename, _ = os.path.splitext(filename)
+            filename_only.append(filename)
 
         for dirpath, dirnames, filenames in os.walk(META_FEATURE_DIR):
 
@@ -163,6 +178,12 @@ if __name__ == '__main__':
 
             # Which file ends with the extension we have to convert?
             for filename in filenames:
+
+                filename_without_ext, _ = os.path.splitext(filename)
+
+                if filename_without_ext.lower() not in filename_only and filename_only:
+                    continue
+
                 m = re.match('(?P<filename>.*)\.meta_feature$', filename, re.IGNORECASE)
                 if m:
                     from_path = os.path.join(dirpath, filename)
@@ -184,9 +205,17 @@ if __name__ == '__main__':
                     except DBException as e:
                         sys.stderr.write('DB FAILURE:%s: %s\n\n' % (filename, e))
 
+        args_found = []
+
+        if args.tags:
+            args_found = ['-t'] + args.tags
+
+        if args.files:
+            args_found += args.files
+
         # we can run lettuce now
         import subprocess
-        ret = subprocess.call(["lettuce"] + sys.argv[1:])
+        ret = subprocess.call(["lettuce"] + args_found)
 
         sys.exit(ret)
 
