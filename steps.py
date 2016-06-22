@@ -257,7 +257,7 @@ def disconnect_to_db(total):
 def debug_scenarios(total):
     for scenario_result in total.scenario_results:
         scenario = scenario_result.scenario
-        if scenario.passed:
+        if scenario_result.passed:
             print scenario.name, ": OK"
         else:
             print scenario.name, ": FAILED"
