@@ -687,7 +687,7 @@ def fill_field_table(step, fieldname):
             celltype = 'String'
             if re.match('^\d{4}-\d{2}-\d{2}$', cell) is not None:
                 celltype = 'DateTime'
-            elif re.match('^\d+$', cell) is not None:
+            elif re.match('^\d+(\.\d+)?$', cell) is not None:
                 celltype = 'Number'
 
             localdict = dict(ROW=str(row_number))
