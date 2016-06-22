@@ -169,6 +169,16 @@ if __name__ == '__main__':
                 if reset_versions:
                     run_script(dbname, "DELETE FROM sync_client_version WHERE sum NOT IN ('88888888888888888888888888888888', '66f490e4359128c556be7ea2d152e03b')")
 
+                #FIXME use the same ariable as in steps.py
+                #FIXME here we rely on the fact that lettuce and the database run on the same server
+                FILE_DIR = 'files'
+                base_dir = os.path.dirname(__file__)
+                file_path = os.path.join(base_dir, FILE_DIR)
+                file_path = os.path.abspath(file_path)
+
+                # this is not safe
+                run_script(dbname, "UPDATE backup_config SET name = '%s'" % file_path)
+
     except (OSError, IOError) as e:
         sys.stderr.write("Unable to access an environment (cause: %s)" % e)
         sys.exit(-1)
