@@ -197,7 +197,7 @@ if __name__ == '__main__':
                         content = run_preprocessor(from_path)
 
                         f = open(to_path, 'w')
-                        f.write(content)
+                        f.write(content.encode('utf-8'))
                         f.close()
 
                     except SyntaxException as e:
