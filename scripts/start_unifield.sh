@@ -61,6 +61,13 @@ then
     START_FAKETIME="faketime -f -${TIME_BEFORE}s"
 fi
 
+if ! which unbuffer >&2 > /dev/null;
+then
+    UNBUFFER_CMD=
+else
+    UNBUFFER_CMD="unbuffer"
+fi
+
 SERVERDIR=$BDIR/server_$NAME
 WEBDIR=$BDIR/web_$NAME
 CFG_WEB=$BDIR/openerp-web-$NAME.cfg
@@ -272,12 +279,12 @@ case $ACTION in
         tmux new -d -s $SESSION_NAME -n server "
 
             tmux new-window -n web \"
-            $START_FAKETIME python $WEBDIR/openerp-web.py -c $CFG_WEB & PID="'\$!'" ;
+            $START_FAKETIME $UNBUFFER_CMD python $WEBDIR/openerp-web.py -c $CFG_WEB > $WEBDIR/web.logs 2>&1 & PID="'\$!'" ;
             echo \\\$PID > $PID_WEB_FILE;
             wait \\\$PID;
             \";
 
-            $START_FAKETIME python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER & PID="'$!'" ;
+            $START_FAKETIME $UNBUFFER_CMD python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER $SERVERDIR/web.logs 2>&1 & PID="'$!'" ;
             echo \$PID > $PID_SERVER_FILE;
             wait \$PID;
             \""
