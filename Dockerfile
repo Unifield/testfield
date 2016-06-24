@@ -32,6 +32,8 @@ ADD docker/docker-entrypoint.sh .
 ADD docker/root-entrypoint.sh .
 ADD docker/config.sh .
 
+RUN apt-get update && apt-get install -y expect
+
 ENTRYPOINT ["/home/testing/root-entrypoint.sh"]
 
 EXPOSE 8080
