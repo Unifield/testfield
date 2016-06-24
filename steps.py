@@ -1267,9 +1267,6 @@ def click_on_line(step, action, window_will_exist=True):
 def click_on_line_line(step):
     click_on_line(step, "line")
 
-
-
-
 @step('I click "([^"]*)" on line:')
 @handle_delayed_step
 @output.register_for_printscreen
@@ -1337,6 +1334,24 @@ def check_that_line(step, should_see_lines, action=None):
 @output.register_for_printscreen
 def check_line(step):
     check_that_line(step, True)
+
+@step("I shouldn't be able to click \"([^\"]*)\"")
+@handle_delayed_step
+@output.register_for_printscreen
+def check_not_click_on_line(step, action):
+    #TODO: Check that the button is not available
+
+    # we have an issue when the user is not logged in... the important buttons are "at the end of the page". We have to
+    #  fetch them in another order
+    msg = "This button is still available and might be clicked on %s" % action
+    tick = monitor(world.browser, msg)
+
+    while True:
+        if get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait=None):
+            time.sleep(TIME_TO_SLEEP)
+            tick()
+        else:
+            break
 
 @step("I shouldn't be able to click \"([^\"]*)\" on line:")
 @handle_delayed_step
