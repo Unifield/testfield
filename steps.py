@@ -1025,13 +1025,28 @@ def should_see(step, content, fieldname):
 @output.register_for_printscreen
 def see_status(step, message_to_see):
     wait_until_not_loading(world.browser)
-    elem = get_element(world.browser, tag_name="tr", id_attr="actions_row", wait="I don't see any text status")
+    tick = monitor(world.browser)
+    found = False
 
     reg = create_regex(message_to_see)
 
-    if re.match(reg, elem.text, flags=re.DOTALL) is None:
-        print "No '%s' found in '%s'" % (message_to_see, elem.text)
-        raise UniFieldElementException("No '%s' found in '%s'" % (message_to_see, elem.text))
+    while not found:
+        elements = get_elements(world.browser, tag_name="tr", id_attr="actions_row")
+        elements += get_elements(world.browser, tag_name="td", class_attr="item-htmlview")
+        options = []
+
+        for element in elements:
+            if re.match(reg, element.text, flags=re.DOTALL):
+                found = True
+                break
+            else:
+                options.append(element.text)
+
+        if not found:
+            time.sleep(TIME_TO_SLEEP)
+            msg = "No '%s' found among %s" % (message_to_see, ', '.join(options))
+            tick(msg)
+
 
 @step('I should see a popup with "([^"]*)"$')
 @handle_delayed_step
