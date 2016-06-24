@@ -284,7 +284,7 @@ case $ACTION in
             wait \\\$PID;
             \";
 
-            $START_FAKETIME $UNBUFFER_CMD python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER $SERVERDIR/web.logs 2>&1 & PID="'$!'" ;
+            $START_FAKETIME $UNBUFFER_CMD python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER > $SERVERDIR/server.logs 2>&1 & PID="'$!'" ;
             echo \$PID > $PID_SERVER_FILE;
             wait \$PID;
             \""
