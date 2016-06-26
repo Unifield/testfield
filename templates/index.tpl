@@ -88,9 +88,9 @@
                     </a>
                 </td>
 
-                <td>{{ ratio }}</td>
+                <td>{{ '%.2f' % (ratio) }}</td>
 
-                <td>{{ time }}</td>
+                <td>{{ '%.2f' % time if time is not None else '' }}</td>
 
                 <td>
                     <div class="text-center">
@@ -105,5 +105,31 @@
             </tr>
         %end
     </tbody>
+
+    <tfoot>
+        <tr>
+            <th>
+                <div class="text-left">
+                    {{ total_scenarios }}
+                </div>
+            </th>
+            <th>-</th>
+            <th>
+                <div class="text-left">
+                    {{ '%.2f' % total_percentage }}
+                </div>
+            </th>
+            <th>
+                <div class="text-left">
+                    {{ '%.2f' % total_time }}
+                </div>
+            </th>
+            <th>
+                <div class="text-left">
+                    {{ total_passed }}
+                </div>
+            </th>
+        </tr>
+    </tfoot>
 </table>
 

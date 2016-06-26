@@ -147,11 +147,29 @@ def create_real_repport(total):
     values = filter(lambda x : x[1] > 1, values)
     alltags = map(lambda x : x[0], values)
 
+    total_time = 0
+    #FIXME: scenarios don't last the same amount of time
+    total_percentage = 0.0
+    total_passed = 0
+    for scenario in world.scenarios:
+        time = scenario[3] or 0
+        percentage = scenario[2]
+        valid = scenario[0]
+
+        total_time += time
+        total_percentage += percentage
+        total_passed += 1 if valid else 0
+
+    total_scenarios = len(world.scenarios)
+    total_percentage = total_percentage / len(world.scenarios) if len(world.scenarios) else 0.0
+
     with open(path_tpl, 'r') as f:
         content = ''.join(f.xreadlines())
 
         mytemplate = SimpleTemplate(content)
-        content = mytemplate.render(scenarios=world.scenarios, alltags=alltags)
+        content = mytemplate.render(scenarios=world.scenarios, alltags=alltags,
+                                    total_scenarios=total_scenarios, total_time=total_time,
+                                    total_percentage=total_percentage, total_passed=total_passed)
 
         path_html = os.path.join(OUTPUT_DIR, "index.html")
         output_index_file = open(path_html, 'w')
@@ -169,8 +187,8 @@ def write_end_of_section(scenario):
 
     all_ok = all(map(lambda x : x.passed, scenario.steps))
     filter_passed = sum(map(lambda x : 1 if x.passed else 0, scenario.steps))
-    percentage_ok = '%.2f' % (float(filter_passed) / len(scenario.steps) * 100.0)
-    time_total = ('%.2f' % timedelta_total_seconds(datetime.datetime.now() - world.time_before)) if all_ok else ''
+    percentage_ok = float(filter_passed) / len(scenario.steps) * 100.0
+    time_total = timedelta_total_seconds(datetime.datetime.now() - world.time_before) if all_ok else None
     index_page = 'index%d.html' % world.idscenario
     tags = scenario.tags
 
