@@ -130,6 +130,9 @@ def create_website():
     world.idprintscreen = 1
     world.failure_found = False
 
+    world.scenarios_ran = 0
+    world.scenarios_passed = 0
+
 @after.all
 def create_real_repport(total):
 
@@ -317,14 +320,21 @@ def write_printscreen(world, full_printscreen):
 
     world.printscreen_to_display.append(RegularPrintscreen(filename, world.current_instance, steps_to_print))
 
+@after.each_scenario
+def after_scenario(scenario):
+    all_ok = all(map(lambda x : x.passed, scenario.steps))
+    world.scenarios_ran += 1
+    if all_ok:
+        world.scenarios_passed += 1
+
 @after.all
 def save_meta(total):
     path_meta = os.path.join(OUTPUT_DIR, 'meta')
     f = open(path_meta, 'w')
     f.write('name=%s\r\n' % (os.environ['TEST_NAME'] if 'TEST_NAME' in os.environ else 'Unknown'))
     f.write('description=%s\r\n' % (os.environ['TEST_DESCRIPTION'] if 'TEST_DESCRIPTION' in os.environ else 'Unknown'))
-    f.write('scenario_ran=%s\r\n' % str(total.scenarios_ran))
-    f.write('scenario_passed=%s\r\n' % str(total.scenarios_passed))
+    f.write('scenario_ran=%s\r\n' % str(world.scenarios_ran))
+    f.write('scenario_passed=%s\r\n' % str(world.scenarios_passed))
 
     f.write('result=%s\r\n' % ('ok' if not world.failure_found else 'ko'))
     f.write('date=%s\r\n' % (os.environ['TEST_DATE'] if 'TEST_DATE' in os.environ else '-'))
