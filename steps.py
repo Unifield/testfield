@@ -1347,7 +1347,21 @@ def check_not_click_on_line(step, action):
     tick = monitor(world.browser, msg)
 
     while True:
-        if get_elements_from_text(world.browser, tag_name=["button", "a"], text=button, wait=None):
+        elements = get_elements_from_text(world.browser, tag_name=["button", "a"], text=action, wait=None)
+        # we have to ensure that the button is clickable. Otherwise it means that the steps
+        #  is "done"
+        
+        # we sometimes fetch node nested in the button or a area. We have to fetch the parent
+        real_elements = []
+        for element in elements:
+            if element.tag_name in ["button", "a"]:
+                real_elements.append(element.tag_name)
+            else:
+                table_node = element.find_elements_by_xpath("ancestor::button[1]|ancestor::a[1]")
+                real_elements.append(table_node[0])
+        real_elements = filter(lambda x : not x.get_attribute("readonly") and not x.get_attribute("disabled"), real_elements)
+
+        if real_elements:
             time.sleep(TIME_TO_SLEEP)
             tick()
         else:
