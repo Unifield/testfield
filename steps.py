@@ -101,11 +101,17 @@ def connect_to_db():
     from selenium.webdriver.firefox.options import Options
     from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 
-    # /Applications/Firefox.app/Contents/MacOS/firefox
-    #world.browser = webdriver.Firefox(firefox_binary=FirefoxBinary('/Users/sblanc/Desktop/msf/testfield/bin/firefox2/main'))
+    base_dir = os.path.dirname(__file__)
+    file_path = os.path.join(base_dir, FILE_DIR)
 
     if 'BROWSER' not in os.environ or os.environ['BROWSER'] == "firefox":
-        world.browser = webdriver.Firefox()
+        # we are going to download all the files in the file directory
+        profile = webdriver.FirefoxProfile()
+        profile.set_preference('browser.download.folderList', 2)
+        profile.set_preference('browser.download.manager.showWhenStarting', False)
+        profile.set_preference('browser.download.dir', file_path)
+        profile.set_preference('browser.helperApps.neverAsk.saveToDisk','application/vnd.ms-excel')
+        world.browser = webdriver.Firefox(firefox_profile=profile)
     elif os.environ['BROWSER'] == "chrome":
         world.browser = webdriver.Chrome()
         #FIXME: PhantomJS doesn't like testfield. It seems that keeps on loading pages...
@@ -135,12 +141,6 @@ def connect_to_db():
         world.monkeypatch = '\r\n'.join(f.readlines())
 
     world.nofailure = 0
-
-    # we have to save the files in the directory to remove those who are not
-    #  useful anymore
-    base_dir = os.path.dirname(__file__)
-    file_path = os.path.join(base_dir, FILE_DIR)
-    world.files_before = os.listdir(file_path) if os.path.isdir(file_path) else set([])
 
     world.must_fail = None
 
@@ -239,6 +239,16 @@ def disconnect_to_db(total):
     world.browser.close()
     world.browser.quit()
 
+@before.each_feature
+def save_all_files(feature):
+    # we have to save the files in the directory to remove those who are not
+    #  useful anymore
+    base_dir = os.path.dirname(__file__)
+    file_path = os.path.join(base_dir, FILE_DIR)
+    world.files_before = os.listdir(file_path) if os.path.isdir(file_path) else set([])
+
+@after.each_feature
+def debug_scenarios(feature):
     base_dir = os.path.dirname(__file__)
     file_path = os.path.join(base_dir, FILE_DIR)
     files_after = os.listdir(file_path) if os.path.isdir(file_path) else set([])
@@ -653,6 +663,46 @@ def fill_field_and_open(step, fieldname, content):
     world.nbframes += 1
 
     wait_until_no_ajax(world)
+
+@step('I store the last downloaded file as "([^"]*)"')
+@handle_delayed_step
+def store_last_file(step, to_filename):
+    import os.path
+    import os
+
+    base_dir = os.path.dirname(__file__)
+    file_path = os.path.join(base_dir, FILE_DIR)
+
+    tick = monitor(world.browser, "No new file found")
+
+    while True:
+
+        files_after = os.listdir(file_path) if os.path.isdir(file_path) else set([])
+
+        files_in_addition = set(files_after) - set(world.files_before)
+
+        files = os.path.join('files', '*')
+        try:
+            files_to_delete = set(files_after) - set(world.files_before)
+
+            if not files_to_delete:
+                tick()
+                continue
+
+            newest_filename = max(files_in_addition, key=lambda x : os.path.getctime(os.path.join(file_path, x)))
+
+            to_path = os.path.join(file_path, to_filename)
+            if os.path.exists(to_path):
+                raise Exception("The following file already exists: %s" % to_path)
+
+            from_path = os.path.join(file_path, newest_filename)
+
+            os.rename(from_path, to_path)
+
+        except ValueError as e:
+            raise Exception("No file has been downloaded until now")
+
+        break
 
 @step('I fill "([^"]*)" with table:$')
 @handle_delayed_step
