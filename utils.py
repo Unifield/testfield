@@ -457,6 +457,8 @@ def get_table_row_from_hashes(world, keydict):
 def wait_until_no_ajax(world, message="A javascript operation is still ongoing"):
     tick = monitor(world.browser, message)
     while True:
+        ret = 'init'
+
         # sometimes, openobject doesn't exist in some windows
         try:
 
@@ -529,9 +531,9 @@ def wait_until_no_ajax(world, message="A javascript operation is still ongoing")
             ''')
         except WebDriverException as e:
             print e
-            ret = "FAIL"
+            ret = "fail"
 
-        tick()
+        tick(message_if_error="A javascript operation is still ongoing (last: %s)" % str(ret))
         time.sleep(TIME_TO_SLEEP)
 
         if str(ret) != "0":
