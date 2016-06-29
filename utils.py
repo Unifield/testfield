@@ -323,11 +323,18 @@ def get_element_from_text(browser, tag_name, text, class_attr='', wait=False):
 
 def get_column_position_in_table(maintable, columnname):
     message = "Cannot find column %s in table" % columnname
+    offset = 0
+
+    # we have to check if this column set a specific offset
+    if '_' in columnname and columnname.split('_')[-1].isdigit():
+        columnname_split = columnname.split('_')
+        columnname = '_'.join(columnname_split[:-1])
+        offset = int(columnname_split[-1])-1
 
     elems = get_elements_from_text(maintable, tag_name="th", text=columnname, wait=message)
-    if not elems:
+    if len(elems) <= offset or offset < 0:
         return None
-    elem = elems[0]
+    elem = elems[offset]
 
     #FIXME: This is the maintable! It doesn't work that way.
     # The parent element is the element that generated this node but
