@@ -69,7 +69,9 @@ def until_a_equals_b(step, value1, value2):
         conv_value1 = convert_input(world, value1)
         conv_value2 = convert_input(world, value2)
 
-        if conv_value1 == conv_value2:
+        reg = create_regex(conv_value2)
+
+        if re.match(reg, conv_value1, flags=re.DOTALL) is not None:
             break
 
         deque.appendleft("%s != %s" % (conv_value1, conv_value2))
@@ -1488,10 +1490,8 @@ def click_on_search_until_not(step, action_search):
 def click_on_search_until(step, action_search):
     search_until_I(step, action_search, True)
 
-@step('I click "([^"]*)" in the side panel$')
-@handle_delayed_step
-@output.add_printscreen
-def open_side_panel(step, menuname):
+
+def open_side_panel_internal(step, menuname):
     wait_until_no_ajax(world)
     wait_until_not_loading(world.browser)
 
@@ -1514,12 +1514,18 @@ def open_side_panel(step, menuname):
 
     wait_until_not_loading(world.browser)
 
+@step('I click "([^"]*)" in the side panel$')
+@handle_delayed_step
+@output.add_printscreen
+def open_side_panel(step, menuname):
+    open_side_panel_internal(step, menuname)
+
 @step('I click "([^"]*)" in the side panel and open the window$')
 @handle_delayed_step
 @output.add_printscreen
 def open_side_panel_and_open(step, menuname):
 
-    open_side_panel(step, menuname)
+    open_side_panel_internal(step, menuname)
 
     world.browser.switch_to_default_content()
     world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait="I don't find the new window"))
