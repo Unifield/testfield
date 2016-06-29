@@ -17,6 +17,8 @@ RESULTS_DIR = 'results/'
 ENV_DIR = 'instances/'
 FILE_DIR = 'files'
 
+TEMP_FILENAME = 'tempfile'
+
 RUN_NUMBER_FILE = 'run_scenario'
 RUN_FEATURE_NUMBER_FILE = 'run_feature'
 
@@ -617,7 +619,26 @@ def fill_field(step, fieldname, content):
 
         if not os.path.isfile(content_path):
             raise UniFieldElementException("%s is not a file" % content_path)
+
+        # we have to check if we have to inject the local variables in this file (only for text files)
+        filename, ext = os.path.splitext(content)
+
+        if ext.lower() in ['.xml', '.xls', '.xlsx', '.csv']:
+            try:
+                #FIXME: We hope that this file is not too big
+                f = open(content_path, 'r').read()
+                new_content = convert_input(world, f)
+
+                base_dir = os.path.dirname(__file__)
+                content_path = os.path.join(base_dir, FILE_DIR, TEMP_FILENAME)
+                f = open(content_path, 'w')
+                f.write(new_content)
+                f.close()
+            except (OSError, IOError) as e:
+                raise Exception("Unable to inject local variables in %s (reason: %s)" % (content, str(e)))
+
         my_input.send_keys(content_path)
+
     elif my_input.tag_name == "input" and my_input.get_attribute("type") and my_input.get_attribute("type") == "checkbox":
 
         if content.lower() not in ["yes", "no"]:
@@ -712,8 +733,6 @@ def store_last_file(step, to_filename):
 def fill_field_table(step, fieldname):
     if not step.hashes:
         raise UniFieldElementException("Why don't you define at least one row?")
-
-    TEMP_FILENAME = 'tempfile'
 
     base_dir = os.path.dirname(__file__)
     content_path = os.path.join(base_dir, FILE_DIR, TEMP_FILENAME)
