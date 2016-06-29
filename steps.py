@@ -633,7 +633,10 @@ def fill_field(step, fieldname, content):
                     new_content += convert_input(world, line, localdict)
 
                 base_dir = os.path.dirname(__file__)
-                content_path = os.path.join(base_dir, FILE_DIR, TEMP_FILENAME)
+                #FIXME: We could overide a file that was saved by the user in the "files" directory in order to use 
+                # it in other scenarios.
+                realfilename = '%s%s' % (TEMP_FILENAME, ext.lower())
+                content_path = os.path.join(base_dir, FILE_DIR, realfilename)
                 f = open(content_path, 'w')
                 f.write(new_content)
                 f.close()
@@ -690,9 +693,9 @@ def fill_field_and_open(step, fieldname, content):
 
     wait_until_no_ajax(world)
 
-@step('I store the last downloaded file as "([^"]*)"')
+@step('I store the downloaded file as "([^"]*)" when (.*)')
 @handle_delayed_step
-def store_last_file(step, to_filename):
+def store_last_file(step, to_filename, other_step):
     import os.path
     import os
 
@@ -701,32 +704,38 @@ def store_last_file(step, to_filename):
 
     tick = monitor(world.browser, "No new file found")
 
-    while True:
+    files_before = os.listdir(file_path) if os.path.isdir(file_path) else set([])
 
+    before = world.steps_to_run
+    world.steps_to_run = None
+
+    step.given(other_step)
+
+    world.steps_to_run = before
+
+    while True:
         files_after = os.listdir(file_path) if os.path.isdir(file_path) else set([])
 
-        files_in_addition = set(files_after) - set(world.files_before)
+        files_in_addition = set(files_after) - set(files_before)
 
-        files = os.path.join('files', '*')
-        try:
-            files_to_delete = set(files_after) - set(world.files_before)
+        if not files_in_addition:
+            tick()
+            continue
 
-            if not files_to_delete:
-                tick()
-                continue
+        if len(files_in_addition) > 1:
+            raise Exception("There are more than one new files: %s" % ', '.join(files_in_addition))
 
-            newest_filename = max(files_in_addition, key=lambda x : os.path.getctime(os.path.join(file_path, x)))
+        newest_filename = list(files_in_addition)[0]
 
-            to_path = os.path.join(file_path, to_filename)
-            if os.path.exists(to_path):
-                raise Exception("The following file already exists: %s" % to_path)
+        to_path = os.path.join(file_path, to_filename)
+        #FIXME: We could overide a file that was saved by the user in the "files" directory in order to use 
+        # it in other scenarios.
+        if os.path.exists(to_path):
+            os.unlink(to_path)
 
-            from_path = os.path.join(file_path, newest_filename)
+        from_path = os.path.join(file_path, newest_filename)
 
-            os.rename(from_path, to_path)
-
-        except ValueError as e:
-            raise Exception("No file has been downloaded until now")
+        os.rename(from_path, to_path)
 
         break
 
