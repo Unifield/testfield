@@ -626,8 +626,11 @@ def fill_field(step, fieldname, content):
         if ext.lower() in ['.xml', '.xls', '.xlsx', '.csv']:
             try:
                 #FIXME: We hope that this file is not too big
-                f = open(content_path, 'r').read()
-                new_content = convert_input(world, f)
+                lines = open(content_path, 'r').readlines()
+                new_content = ''
+                for row_number, line in enumerate(lines):
+                    localdict = dict(ROW=str(row_number))
+                    new_content += convert_input(world, line, localdict)
 
                 base_dir = os.path.dirname(__file__)
                 content_path = os.path.join(base_dir, FILE_DIR, TEMP_FILENAME)
