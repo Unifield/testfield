@@ -893,6 +893,8 @@ def click_until_not_available1(step, button, value, fieldname):
             pass
             print e
 
+# }%}
+
 # I click on ... {%{
 # I click on "Search/New/Clear"
 
@@ -993,7 +995,8 @@ def click_on_button_and_open(step, button):
     wait_until_not_loading(world.browser, wait=False)
     wait_until_no_ajax(world)
     msg = "Cannot find button %s" % button
-    click_on(world, lambda : get_element_from_text(world.browser, tag_name="button", text=button, wait=msg), msg)
+
+    click_on(world, lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg), msg)
 
     wait_until_not_loading(world.browser, wait=False)
 
@@ -1657,15 +1660,109 @@ def choose_field(step):
         # we don't need to check the change of IDs since it's always validates with the waits above
         break
 
+# Language management {%{
+
+
+def get_input_for_language_field(language, field):
+
+    table_node = get_element(world.browser, tag_name="table", class_attr="grid", wait="Cannot see the translation table")
+    row_header = get_element(table_node, tag_name="tr", class_attr="grid-header", wait="I cannot find the grid header")
+    headers = get_elements(row_header, tag_name="td", class_attr="grid-cell")
+
+    if not headers:
+        raise UniFieldElementException("No language found")
+
+    # we have to remove the first column which is always the Field
+    languages = headers[1:]
+    languages = map(lambda x : x.text, languages)
+    if language not in languages:
+        raise UniFieldElementException("We cannot find the language %s among %s" % (language, ', '.join(languages)))
+    position_language = languages.index(language)
+
+    descriptions_found = []
+
+    ret = None
+
+    for row in get_elements(table_node, tag_name="tr", class_attr="grid-row"):
+        cells = get_elements(row, tag_name="td", wait="I don't find the given fields")
+        field_row = cells[0].text
+
+        if field_row and field_row[-1] == ':':
+            field_row = field_row[:-1]
+
+        if field_row == field:
+            cell = cells[position_language+1]
+            ret = get_element(cell, tag_name="input")
+            break
+        else:
+            descriptions_found.append(field_row)
+    else:
+        raise UnifieldException("Unable to find the given description %s among %s" % (field, ', '.join(descriptions_found)))
+    
+    return ret
+
+@step('I set "([^"]*)" for language "([^"]*)" and field "([^"]*)"')
+@handle_delayed_step
+@output.register_for_printscreen
+def set_translation_value(step, value, language, field):
+    value = convert_input(world, value)
+
+    elem = get_input_for_language_field(language, field)
+    elem.send_keys((100*Keys.BACKSPACE) + value + Keys.TAB)
+
+@step('I should see "([^"]*)" for language "([^"]*)" and field "([^"]*)"')
+@handle_delayed_step
+@output.register_for_printscreen
+def check_translation_value(step, value, language, field):
+
+    value = convert_input(world, value)
+
+    elem = get_input_for_language_field(language, field)
+
+    reg = create_regex(value)
+
+    found = elem.get_attribute("value")
+
+    if re.match(reg, found, flags=re.DOTALL) is None:
+        raise UniFieldElementException("I don't find the right value: '%s' found, '%s' expected" % (found, value))
 
 #}%}
 
-@step('I wait "([^"]*)" seconds$')
+@step('I open the translation window for "([^"]*)"')
 @handle_delayed_step
-def selenium_sleeps(step, seconds):
-    #This step is used to instrument UniField. Don't change it!
-    import time
-    time.sleep(int(seconds))
+@output.register_for_printscreen
+def open_translation_window(step, fieldname):
+
+    tick = monitor(world.browser, "I cannot open the translation window for field %s" % fieldname)
+
+    while True:
+        try:
+            # Most of the fields use IDs, however, some of them are included in a table with strange fields.
+            #  We have to look for both
+            idattr, my_input = get_input(world.browser, fieldname)
+
+            # it seems that the translation icon is always included in a textbox
+            span_textbox = my_input.find_elements_by_xpath("following-sibling::*[1]")
+
+            if not span_textbox or span_textbox[0].get_attribute("class") != "translatable":
+                raise UniFieldElementException("We don't find the translation icon for this field")
+
+            span_textbox[0].click()
+
+            break
+        except (StaleElementReferenceException, ElementNotVisibleException) as e:
+            print e
+            pass
+
+        tick()
+
+    # we have to open the window!
+    world.browser.switch_to_default_content()
+    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait="Cannot find the window"))
+    world.nbframes += 1
+    wait_until_no_ajax(world)
+
+#}%}
 
 # Debugging steps {%{
 @step('I sleep')
@@ -1679,6 +1776,14 @@ def selenium_sleeps(step):
 @output.register_for_printscreen
 def selenium_sleeps(step):
     raw_input()
+
+
+@step('I wait "([^"]*)" seconds$')
+@handle_delayed_step
+def selenium_sleeps(step, seconds):
+    #This step is used to instrument UniField. Don't change it!
+    import time
+    time.sleep(int(seconds))
 
 #}%}
 
