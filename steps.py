@@ -693,7 +693,7 @@ def fill_field_and_open(step, fieldname, content):
 
     wait_until_no_ajax(world)
 
-@step('I store the downloaded file as "([^"]*)" when (.*)')
+@step('I store the downloaded file as "([^"]*)" when (.*)$')
 @handle_delayed_step
 def store_last_file(step, to_filename, other_step):
     import os.path

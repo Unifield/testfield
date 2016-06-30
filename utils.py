@@ -482,7 +482,7 @@ def wait_until_no_ajax(world, message="A javascript operation is still ongoing")
 
             ret = world.browser.execute_script('''
 
-                function check(tab){
+                function checkTabAjax(tab){
                     for(i in tab){
                         if(tab[i]){
                             return false;
@@ -491,52 +491,57 @@ def wait_until_no_ajax(world, message="A javascript operation is still ongoing")
                     return true;
                 }
 
-                if(!check(window.TOT)){
+                if(!checkTabAjax(window.TOT)){
                     return "BLOCKED IN WINDOW";
                 }
-                if(!check(window.TOT2)){
+                if(!checkTabAjax(window.TOT2)){
                     return "BLOCKED 2 IN WINDOW";
                 }
 
                 elemAjax = window.document.getElementsByTagName('iframe');
 
-                totcount = (typeof window.openobject == 'undefined') ? 0 : window.openobject.http.AJAX_COUNT;
-                totcount += (typeof window.TIMEOUT_COUNT == 'undefined') ? 0 : window.TIMEOUT_COUNT;
-                totcount += (typeof $ == 'undefined') ? 0 : $.active;
+                totcountAjax = (typeof window.openobject == 'undefined') ? 0 : window.openobject.http.AJAX_COUNT;
+                totcountAjax += (typeof window.TIMEOUT_COUNT == 'undefined') ? 0 : window.TIMEOUT_COUNT;
+                totcountAjax += (typeof $ == 'undefined') ? 0 : $.active;
 
-                for(var i = 0; i < elemAjax.length; i++){
-                    if (elemAjax[i] === undefined || elemAjax[i] === null) {
+                for(var iAjax = 0; iAjax < elemAjax.length; iAjax++){
+                    if (elemAjax[iAjax] === undefined || elemAjax[iAjax] === null) {
                         return "UNDEFINED iframe"
                     }
 
-                    if(!check(elemAjax[i].contentWindow.TOT)){
-                        return "BLOCKED IN INFRAME " + i;
+                    if(!checkTabAjax(elemAjax[iAjax].contentWindow.TOT)){
+                        return "BLOCKED IN INFRAME " + iAjax;
                     }
-                    if(!check(elemAjax[i].contentWindow.TOT2)){
-                        return "BLOCKED IN INFRAME WINDOW " + i;
+                    if(!checkTabAjax(elemAjax[iAjax].contentWindow.TOT2)){
+                        return "BLOCKED IN INFRAME WINDOW " + iAjax;
                     }
 
-                    var local_ajaxcount1 = (typeof elemAjax[i].contentWindow.openobject == 'undefined' || typeof elemAjax[i].contentWindow.openobject.http == 'undefined') ? 0 : elemAjax[i].contentWindow.openobject.http.AJAX_COUNT;
+                    var local_ajaxcount1 = (typeof elemAjax[iAjax].contentWindow.openobject == 'undefined' || typeof elemAjax[iAjax].contentWindow.openobject.http == 'undefined') ? 0 : elemAjax[iAjax].contentWindow.openobject.http.AJAX_COUNT;
                     if(local_ajaxcount1 > 0){
                         return "BLOCKED IN AJAXCOUNT WINDOW";
                     }
 
-                    var local_ajaxcount2 = (typeof elemAjax[i].contentWindow.$ == 'undefined') ? 0 : elemAjax[i].contentWindow.$.active;
+                    var local_ajaxcount2 = (typeof elemAjax[iAjax].contentWindow.$ == 'undefined') ? 0 : elemAjax[iAjax].contentWindow.$.active;
 
                     if(local_ajaxcount2 > 0){
                         return "VOILAAA";
                     }
 
+                    totcountAjax += (typeof elemAjax[iAjax].contentWindow.TIMEOUT_COUNT == 'undefined') ? 0 : elemAjax[iAjax].contentWindow.TIMEOUT_COUNT;
 
-                    totcount += (typeof elemAjax[i].contentWindow.TIMEOUT_COUNT == 'undefined') ? 0 : elemAjax[i].contentWindow.TIMEOUT_COUNT;
-
-                    totcount += local_ajaxcount1;
-                    totcount += local_ajaxcount2;
+                    totcountAjax += local_ajaxcount1;
+                    totcountAjax += local_ajaxcount2;
                 }
 
-                return totcount;
+                return totcountAjax;
             ''')
         except WebDriverException as e:
+            print e
+            print e
+            print e
+            print e
+            print e
+            print e
             print e
             ret = "fail"
 
