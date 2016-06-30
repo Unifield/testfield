@@ -133,6 +133,10 @@ if __name__ == '__main__':
                 # sometimes this extension already exist in the DB and in the dump.
                 #  We have to remove it before importing the DB otherwise we will get errors
                 pass
+            try:
+                run_script(dbname, 'DROP LANGUAGE plpgsql;')
+            except ScriptException:
+                pass
 
             path_dump = os.path.join(environment_dir, filename)
 
