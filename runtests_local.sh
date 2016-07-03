@@ -71,6 +71,11 @@ then
     rm -rf output
 fi
 
+mkdir output
+echo "name=${TEST_NAME-Unknown}" >> output/meta
+echo "description=${TEST_DESCRIPTION-Unknown}" >> output/meta
+echo "date=${TEST_DATE--}" >> output/meta
+
 KILL_ID_DISPLAY=
 if [[ -z "$DISPLAY" ]];
 then
@@ -91,3 +96,4 @@ fi
 
 
 exit $RETVAR
+

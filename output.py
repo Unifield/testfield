@@ -330,13 +330,10 @@ def after_scenario(scenario):
 @after.all
 def save_meta(total):
     path_meta = os.path.join(OUTPUT_DIR, 'meta')
-    f = open(path_meta, 'w')
-    f.write('name=%s\r\n' % (os.environ['TEST_NAME'] if 'TEST_NAME' in os.environ else 'Unknown'))
-    f.write('description=%s\r\n' % (os.environ['TEST_DESCRIPTION'] if 'TEST_DESCRIPTION' in os.environ else 'Unknown'))
+    f = open(path_meta, 'wa')
     f.write('scenario_ran=%s\r\n' % str(world.scenarios_ran))
     f.write('scenario_passed=%s\r\n' % str(world.scenarios_passed))
 
     f.write('result=%s\r\n' % ('ok' if not world.failure_found else 'ko'))
-    f.write('date=%s\r\n' % (os.environ['TEST_DATE'] if 'TEST_DATE' in os.environ else '-'))
     f.close()
 
