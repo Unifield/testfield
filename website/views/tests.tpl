@@ -52,14 +52,24 @@
                 %end
                 ">
                 <td>
-                    <a href="/test/{{test['id']}}/index.html">
-                        {{test['name']}}
-                    </a>
+                    %if test['valid']:
+                        <a href="/test/{{test['id']}}/index.html">
+                    %end
+
+                    {{test['name']}}
+
+                    %if test['valid']:
+                        </a>
+                    %end
                 </td>
                 <td>
-                    <a href="/test/{{test['id']}}/index.html">
+                    %if test['valid']:
+                        <a href="/test/{{test['id']}}/index.html">
+                    %end
                         {{test['description']}}
-                    </a>
+                    %if test['valid']:
+                        </a>
+                    %end
                 </td>
                 <td>
                     %if test['result'] == 'ok':

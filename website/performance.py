@@ -163,6 +163,9 @@ def get_functional_tests(path_dir, offset, length):
             if os.path.isfile(path_version):
                 tests_meta["version"] = ''.join(map(lambda x : x.strip(), open(path_version, 'r')))
 
+            path_index = os.path.join(path_dir, "index.html")
+            tests_meta['valid'] = os.path.isfile(path_index)
+
             tests.append(tests_meta)
 
     tests.sort(key=lambda x : x["date"])
