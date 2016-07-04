@@ -606,10 +606,16 @@ def fill_field(step, fieldname, content):
 
         wait_until_no_ajax(world)
 
-        ## This version is quite the same as the previous one except that it sometimes fail
-        #   to select the right text (but the selected value is correct)
-        option = get_element_from_text(my_input, tag_name="option", text=content)
-        option.click()
+        # we cannot use the get_element_from_text because this method doesn't
+        #  detect html entities that "look like space"
+        the_option = None
+        for option in get_elements(my_input, tag_name="option"):
+            if content == option.text:
+                the_option = option
+
+        if the_option is None:
+            raise UniFieldElementException("No option %s found in the select field" % content)
+        the_option.click()
     elif my_input.tag_name == "input" and my_input.get_attribute("type") == "file":
         #FIXME: This clear is not allowed in ChromeWebDriver. It is allowed in Firefox.
         #  We should ensure that this method is still available.
