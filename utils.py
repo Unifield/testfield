@@ -130,7 +130,7 @@ def monitor(browser, explanation=''):
 
     return counter
 
-def get_input(browser, fieldname):
+def get_input(browser, fieldname, position=0):
     # Most of the fields use IDs, however, some of them are included in a table with strange fields.
     #  We have to look for both
     my_input = None
@@ -145,8 +145,10 @@ def get_input(browser, fieldname):
         labels = get_elements_from_text(browser, tag_name="label", text=fieldname)
 
         # we have a label!
-        if labels:
-            label = labels[0]
+        if len(labels) > position:
+            # there are sometimes several labels... we have to take them in the right order if the same steps
+            #  follow each other
+            label = labels[position]
             idattr = label.get_attribute("for")
             my_input = get_element(browser, id_attr=idattr.replace('/', '\\/'), wait=True)
             break

@@ -587,16 +587,13 @@ def open_tab(step, tabtoopen):
 
 # Fill fields {%{
 
-@step('I fill "([^"]*)" with "([^"]*)"$')
-@handle_delayed_step
-@output.register_for_printscreen
-def fill_field(step, fieldname, content):
+def internal_fill_field(fieldname, content, position=0):
 
     content = convert_input(world, content)
 
     # Most of the fields use IDs, however, some of them are included in a table with strange fields.
     #  We have to look for both
-    idattr, my_input = get_input(world.browser, fieldname)
+    idattr, my_input = get_input(world.browser, fieldname, position=position)
 
     if my_input.tag_name == "select":
         #FIXME: Sometimes it doesn't work... the input is not selected
@@ -686,6 +683,34 @@ def fill_field(step, fieldname, content):
             time.sleep(TIME_TO_SLEEP)
 
     wait_until_no_ajax(world)
+
+@step('I fill "([^"]*)" with "([^"]*)"$')
+@handle_delayed_step
+@output.register_for_printscreen
+def fill_field(step, fieldname, content):
+    internal_fill_field(fieldname, content, position=0)
+
+@step('I fill:$')
+@handle_delayed_step
+@output.register_for_printscreen
+def fill_set_of_fields(step):
+
+    import collections
+    pos_by_label = collections.defaultdict(lambda : 0)
+
+    for field in step.hashes:
+        if 'label' not in field:
+            raise UniFieldElementException("You have to set the label for each value")
+        if 'value' not in field:
+            raise UniFieldElementException("You have to set the label for each value")
+
+        current_pos = pos_by_label[field['label']]
+
+        idattr, my_input = get_input(world.browser, field['label'], position=current_pos)
+
+        internal_fill_field(field['label'], field['value'], position=current_pos)
+
+        pos_by_label[field['label']] += 1
 
 @step('I fill "([^"]*)" with "([^"]*)" and open the window$')
 @handle_delayed_step
