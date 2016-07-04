@@ -209,6 +209,10 @@ netrpc_port = $NETRPC_PORT
 server.socket_port = $WEB_PORT
 openerp.server.port = '$NETRPC_PORT'
     """ >> $CFG_WEB
+
+    # we have to create the homere.conf file
+    echo -e $HOMEREDB >> $SERVERDIR/bin/homere.conf
+
 }
 
 function check_unifield_up()
