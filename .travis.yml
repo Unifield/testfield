@@ -4,11 +4,11 @@ services:
     - docker
 
 before_install:
-    - travis_wait 50 docker build -t mine .
-    - docker build -t mine2 -f DockerfileTests  .
+    - travis_wait 50 docker build -t testfield .
+    - docker build -t testfield_test -f DockerfileTests  .
     - docker ps -a
 
 script:
-    - docker run -it mine2 test FUNCTEST lp:unifield-server/uf2.1-2 lp:unifield-web/uf2.1-2
+    - docker run -it testfield_test test FUNCTEST lp:unifield-server/uf2.1-2 lp:unifield-web/uf2.1-2
 
 
