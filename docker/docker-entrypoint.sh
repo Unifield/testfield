@@ -84,10 +84,10 @@ FROM_PATH=
 if [[ "$1" == "benchmark" ]];
 then
     TO_PATH=/output/benchmarks/${ARRPARAMS[1]}
-    FROM_PATH=/home/testing/testfield/website/performances/${ARRPARAMS[1]}
+    FROM_PATH=/home/testing/testfield/results
 else
     TO_PATH=/output/tests/${ARRPARAMS[1]}
-    FROM_PATH=/home/testing/testfield/website/tests/${ARRPARAMS[1]}
+    FROM_PATH=/home/testing/testfield/output
 fi
 
 if [[ -e $TO_PATH ]];
