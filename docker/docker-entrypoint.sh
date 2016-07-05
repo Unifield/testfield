@@ -78,17 +78,18 @@ then
     exit 1
 fi
 
-TO_PATH=
+PARENT_TO_PATH=
 FROM_PATH=
 
 if [[ "$1" == "benchmark" ]];
 then
-    TO_PATH=/output/benchmarks/${ARRPARAMS[1]}
+    PARENT_TO_PATH=/output/benchmarks
     FROM_PATH=/home/testing/testfield/results
 else
-    TO_PATH=/output/tests/${ARRPARAMS[1]}
+    PARENT_TO_PATH=/output/tests
     FROM_PATH=/home/testing/testfield/output
 fi
+TO_PATH=$PARENT_TO_PATH/${ARRPARAMS[1]}
 
 if [[ -e $TO_PATH ]];
 then
@@ -109,6 +110,11 @@ cd /home/testing/testfield
 
 function copy()
 {
+    if [[ ! -e ${PARENT_TO_PATH} ]]
+    then
+        mkdir ${PARENT_TO_PATH}
+    fi
+
     if [[ -e $TO_PATH ]];
     then
         rm -rf $TO_PATH;
