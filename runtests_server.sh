@@ -154,7 +154,10 @@ fi
 
 python restore.py --reset-versions $ENVNAME
 
-./scripts/upgrade_unifield.sh -d $SERVER_TMPDIR $NAME $ENVNAME
+if [[ "${UPGRADE_MODULES}" != no ]]
+then
+    ./scripts/upgrade_unifield.sh -d $SERVER_TMPDIR $NAME $ENVNAME
+fi
 
 ./scripts/start_unifield.sh -s $MINUS_IN_SECOND -d $SERVER_TMPDIR run $NAME
 

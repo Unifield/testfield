@@ -1,5 +1,6 @@
 FROM mine
 
+ENV UPGRADE_MODULES no
 ENV PATH_GIT /home/testing/testfield
 ENV FILENAME_FETCH fetch_tests.sh
 
