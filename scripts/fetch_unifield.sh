@@ -77,11 +77,13 @@ checkout_revision_in()
     REVISION=`python -c "import sys; print '' if '|' not in sys.argv[1] else sys.argv[1][sys.argv[1].index('|')+1:]" "$1"`
     BRANCH=`python -c "import sys; print sys.argv[1] if '|' not in sys.argv[1] else sys.argv[1][:sys.argv[1].index('|'):]" "$1"`
 
-    bzr checkout "$BRANCH" "$2" || { echo Cannot checkout $BRANCH; exit 1; }
-
     if [[ ! ( -z "$REVISION" ) ]];
     then
+        bzr checkout "$BRANCH" "$2" || { echo Cannot checkout $BRANCH; exit 1; }
+
         bzr revert -r "$REVISION" "$2" || { echo Cannot revert $BRANCH to revision $REVISION; exit 1; }
+    else
+        bzr checkout --lightweight "$BRANCH" "$2" || { echo Cannot checkout $BRANCH; exit 1; }
     fi
 }
 
