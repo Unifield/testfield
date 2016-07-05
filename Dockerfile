@@ -20,8 +20,6 @@ USER testing
 WORKDIR /home/testing
 
 RUN bzr init-repo --no-trees repo
-RUN cd repo && bzr checkout lp:unifield-server server
-RUN cd repo && bzr checkout lp:unifield-web web
 
 USER root
 
