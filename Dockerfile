@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y firefox=45.0.2+build1-0ubuntu1
 
 RUN wget https://bootstrap.pypa.io/get-pip.py
 RUN python get-pip.py
-ADD requirements.txt .
+ADD requirements.txt ./
 RUN pip install -r requirements.txt
 
 
@@ -28,10 +28,6 @@ USER root
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 RUN apt-get update && apt-get install -y --allow-unauthenticated postgresql-8.4
 
-ADD docker/docker-entrypoint.sh .
-ADD docker/root-entrypoint.sh .
-ADD docker/config.sh .
-
 RUN apt-get update && apt-get install -y expect
 
 ENTRYPOINT ["/home/testing/root-entrypoint.sh"]
@@ -42,3 +38,8 @@ EXPOSE 8061
 
 VOLUME ["/output"]
 
+USER testing
+
+ADD docker/docker-entrypoint.sh ./
+ADD docker/root-entrypoint.sh ./
+ADD docker/config.sh ./

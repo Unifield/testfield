@@ -48,11 +48,16 @@ function run_website
 
 function get_repo
 {
-    git clone -b $BRANCH_TOO_CLONE https://github.com/hectord/testfield.git && cd testfield
+    if [[ ! "$PATH_GIT" ]]
+    then
+        git clone -b $BRANCH_TOO_CLONE https://github.com/hectord/testfield.git && cd testfield
+    else
+        cd testfield
+    fi
 
     if [[ -f config.sh ]];
     then
-        rm config.sh
+        rm -rf config.sh
     fi
     cp ../config.sh .
 }
@@ -95,7 +100,7 @@ get_repo;
 
 cd /home/testing/testfield
 
-./fetch/owncloud/fetch.sh
+./fetch/owncloud/${FILENAME_FETCH-fetch.sh}
 
 # we have to create the directories for the input/output files (features & dumps)
 mkdir output || true

@@ -57,6 +57,8 @@ export PGPASSWORD=$DBPASSWORD
 
 run_tests()
 {
+    RET=0
+
     case $VERB in
 
     test|setup)
@@ -69,7 +71,7 @@ run_tests()
 
         rm output/* || true
 
-        ./runtests_local.sh -s $MINUS_IN_SECOND $LETTUCE_PARAMS || true
+        ./runtests_local.sh -s $MINUS_IN_SECOND $LETTUCE_PARAMS || RET=1
 
         DIREXPORT=website/tests/$($DATEUTILS '+%Y%m%d')_$NAME
         if [[ -e "$DIREXPORT" ]]
@@ -111,6 +113,8 @@ run_tests()
         ;;
 
     esac
+
+    return $RET
 }
 
 launch_database()
@@ -154,5 +158,8 @@ python restore.py --reset-versions $ENVNAME
 
 ./scripts/start_unifield.sh -s $MINUS_IN_SECOND -d $SERVER_TMPDIR run $NAME
 
-run_tests;
+RET=0
+run_tests || RET=$?
+
+exit $RET
 

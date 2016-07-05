@@ -1,0 +1,15 @@
+FROM mine
+
+ENV PATH_GIT /home/testing/testfield
+ENV FILENAME_FETCH fetch_tests.sh
+
+USER testing
+
+RUN mkdir testfield
+WORKDIR /home/testing/testfield
+ADD . ./
+WORKDIR /home/testing
+
+USER root
+
+RUN mkdir /output/tests

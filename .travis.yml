@@ -1,0 +1,14 @@
+sudo: required
+
+services:
+    - docker
+
+before_install:
+    - docker build -t mine .
+    - docker build -t mine2 -f DockerfileTests  .
+    - docker ps -a
+
+script:
+    - docker run -it mine2 test FUNCTEST
+
+
