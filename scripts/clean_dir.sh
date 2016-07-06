@@ -2,7 +2,7 @@
 
 set -e
 
-NBDIR_TO_KEEP=0
+NBDIR_TO_KEEP=15
 PATH_TO_CLEAN=$1
 
 if [[ ! -d $PATH_TO_CLEAN ]]

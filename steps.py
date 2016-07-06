@@ -1654,42 +1654,10 @@ def choose_field(step):
     wait_until_no_ajax(world)
     wait_until_not_loading(world.browser)
 
-    # We have to ensure that the number of rows changes, otherwise, we could continue
-    #  without validating it effectively
-    nbrows_before = len(filter(lambda x : x.get_attribute("record") is not None, get_elements(world.browser, tag_name="tr", class_attr='inline_editors')))
+    click_on(world, lambda : get_element(world.browser, tag_name="img", attrs={'title': 'Update'}, wait=True), "Cannot find the button to validate the line")
 
-
-    records_before = map(lambda x : x.get_attribute("record"), filter(lambda x : x.get_attribute("record") is not None, get_elements(world.browser, tag_name="tr", class_attr='inline_editors')))
-
-    tick = monitor(world.browser)
-    while True:
-        tick()
-        # We cannot click using Selenium because the button is sometimes outside
-        #  of the window. But sometimes we click on "the new update". So we have to choose the first one.
-        world.browser.execute_script("$('img[title=Update]').first().triggerHandler('click')")
-        #click_on(lambda : get_element(world.browser, tag_name="img", attrs={'title': 'Update'}, wait=True))
-
-        wait_until_no_ajax(world)
-        wait_until_not_loading(world.browser)
-
-        try:
-            nbrows_after = len(filter(lambda x : x.get_attribute("record") is not None, get_elements(world.browser, tag_name="tr", class_attr='inline_editors')))
-            records_after = map(lambda x : x.get_attribute("record"), filter(lambda x : x.get_attribute("record") is not None, get_elements(world.browser, tag_name="tr", class_attr='inline_editors')))
-
-        except StaleElementReferenceException as e:
-            print "StaleElementReferenceException"
-            continue
-
-        # We have to check if a new ID has just appeard. We cannot just compare the sizes because
-        #  a pager could be used. As a result, the number of rows won't change if we add a new one
-        #  since one of them will become hidden directly.
-        if set(records_after) ^ set(records_before):
-            break
-
-        time.sleep(TIME_TO_SLEEP)
-
-        # we don't need to check the change of IDs since it's always validates with the waits above
-        break
+    wait_until_no_ajax(world)
+    wait_until_not_loading(world.browser)
 
 # Language management {%{
 
