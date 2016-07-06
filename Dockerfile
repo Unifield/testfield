@@ -41,3 +41,5 @@ USER testing
 ADD docker/docker-entrypoint.sh ./
 ADD docker/root-entrypoint.sh ./
 ADD docker/config.sh ./
+
+USER root
