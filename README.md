@@ -26,12 +26,17 @@ This tool is based on [Lettuce](https://github.com/gabrielfalcao/lettuce) and [S
 
 ## How do I use it? (for business analysts)
 
+The language we use is straightforward since the user interface has always the same structure.  Clicking on a button is always done the same way.  As a result, we only need to name the button and use the right syntax (a/k/a **a step**) to perform the click:
+> I click on "ABC"
+
+There are only a few steps to instrument the whole application. They are described below.
+
 ### Use variables
-You can use the variable {{ID}} in all your tests. This value is an integer that is new at each run. It can be used to create unique identifiers (for example: a stock name, a register name, and so on). Our goal is that every test should be designed so that we can run it as many times as we want on the same database. It shouldn’t interact with results coming from other tests. 
+You can use the variable {{ID}} in all your tests. This value is an integer that is new at each run. It can be used to create unique identifiers (for example: a stock name, a register name, and so on). Our goal is that every test should be designed to be run as many times as we want on the same database. It shouldn’t interact with results coming from other tests. 
 
-You can also declare variables when executing a scenario. It's especially useful when an output changes at every run. As a writer, you are the only one aware of this complexity. It will be abstract away from the readers who will see only the "real" value during the run (see the web interface description below)
+You can also declare variables when executing a scenario. It's especially useful when an output changes at every run. As a writer, you are the only one aware of this complexity. It will be abstracted away from the readers who will see only the "real" value during the run (see the web interface description below)
 
-Finally, can also use functions to alter variables while executing a scenario. There are two modifiers:
+Finally, you can also use functions to alter variables while executing a scenario. Two modifies have been created:
 * **INCR**: increment the last integer contained in the value. If the value of a variable called _ENTYNUMBER_ is _COR209_.  _{{ENTRYNUMBER}}_ is _COR209_ _{{**INCR**(ENTRYNUMBER)}}_ is _COR300_.
 * **NOW**: use the current date. the only parameter is a date format that will be used to express the current date.
 
