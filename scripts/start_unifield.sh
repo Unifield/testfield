@@ -71,7 +71,7 @@ fi
 SERVERDIR=$BDIR/server_$NAME
 WEBDIR=$BDIR/web_$NAME
 CFG_WEB=$BDIR/openerp-web-$NAME.cfg
-CFG_SERVER=$BDIR/openerp-server.conf
+CFG_SERVER=$BDIR/openerp-server-${NAME}.conf
 
 case $ACTION in
 
