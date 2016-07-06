@@ -29,7 +29,7 @@ This tool is based on [Lettuce](https://github.com/gabrielfalcao/lettuce) and [S
 The language we use is straightforward since the user interface has always the same structure.  Clicking on a button is always done the same way.  As a result, we only need to name the button and use the right syntax (a/k/a **a step**) to perform the click:
 > I click on "ABC"
 
-There are only a few steps to instrument the whole application. They are described below.
+There are only a few steps to instrument the whole application. They are described [here](https://github.com/hectord/testfield/wiki/Steps).
 
 ### Use variables
 You can use the variable {{ID}} in all your tests. This value is an integer that is new at each run. It can be used to create unique identifiers (for example: a stock name, a register name, and so on). Our goal is that every test should be designed to be run as many times as we want on the same database. It shouldn’t interact with results coming from other tests. 
@@ -42,80 +42,58 @@ Finally, you can also use functions to alter variables while executing a scenari
 
 ### Use steps
 
-#### First steps
-
-| Step                      | Interface                                  |
-| -------------             |:------------------------------------------:|
-| I log on the homepage<br><br>**Example**: I go on the homepage | <img src="/media/image1.png" width="500" > |
-| I log into _"INSTANCE_NAME"_ as _"USERNAME"_ with password _"PASSWORD"_<br><br>**Example**: I log into "HQ1" as "supply-manager" with password "1234" | <img src="/media/image2.png" width="500" > |
-| I log into _"INSTANCE_NAME"_<br><br>**Example**: I log into _"HQ1"_ | <img src="/media/image3.png" width="500" > |
-
-#### Synchronization
-
-| Step                      | Interface                                  |
-| -------------             |:------------------------------------------:|
-| I synchronize "INSTANCE NAME"<br><br>**Example**: I synchronize _"HQ1"_<br><br>**:information_source:** : You don’t need to be logged in when you synchronize. It will work anyway. | <img src="/media/image4.png" width="500" > |
-
-#### Go to the right interface
-
-| Step                      | Interface                                  |
-| -------------             |:------------------------------------------:|
-| I open tab menu _"TAB MENU NAME"_<br><br>**Example**: I open tab menu _"PURCHASES"_ | <img src="/media/image5.png" width="500" > |
-| I open accordion menu _"ACCORDION NAME"_<br><br>**Example**: I open accordion menu _"Claim"_<br><br><br>**:warning:** : Don’t try to open an accordion that is already open | <img src="/media/image6.png" width="500" > |
-| I click on menu _"MENU NAME"_ and open the window. <br>**Example**: I click on menu _"Purchase Order Follow-Up"_ and open the window<br>**:warning:** : You must use this step when a window opens after clicking on the menu (as show here). Otherwise, your next step will be blocked.<br><br>If you need to open submenus, separate the menu’s names by a "\|"<br>**Example**: I click on menu _"Theoretical Kit\|Theoretical Kit Item"_ and open the window | <img src="/media/image8.png" width="500" > <img src="/media/image9.png" width="500" > |
-| I click on menu _"MENU NAME"_<br><br>**Example**: I click on menu _"Financial Accounting\|Journals\|Journals"_<br><br>If you need to open submenus, separate the menu’s names by a "\|". | <img src="/media/image10.png" width="500" > |
-
-#### Fill fields (outside a tabular format)
-
-| Step                      | Interface                                  |
-| -------------             |:------------------------------------------:|
-| I fill _"FIELD NAME"_ with _"VALUE"_<br>**Example**: I fill “Code” with _“MY_CODE”_<br><br>**:warning:** :  If you want to set a value in a select box you have to use the exact name as used in the interface.<br>**:warning:** : If you want to change the value of a checkbox you have to choose between “yes” and “no”. | <img src="/media/image11.png" width="500" > |
-| I fill "FIELD NAME" with table: <br><br>**Example**:<br><img src="/media/image34.png" width="250"><br> **:warning:** : The first line has to be filled with letters in the right order (from left to right, from ‘A’ to ...).<br> **:warning:** : The dates have to use this format YYYY-MM-DD (for example: 2016-05-01).<br> **:warning:** : We don’t handle boolean values yet. This feature will come a bit later. | <img src="/media/image12.png" width="500" > |
-
-#### Click
-
-#### Checks
-
-#### Tables
-
-#### Save values
-
-#### Debug
-
-<!--
-
-| Step                      | Interface                                   |
-| -------------             |:-------------------------------------------:|
-| I click on _"BUTTON"_<br>**Example**: I click on "New" | <img src="/media/image7.png" width="500" > |
-| I click on _"BUTTON"_ and open the window<br> **Example**: I click on “New” and open the window<br><br> **:warning:** : You must use this step when a window opens after clicking on the menu (as show here). Otherwise, your next step will be blocked. | - |
-| I click on _"BUTTON"_ and close the window<br>**Example**: I click on “Save & Close” and close the window | <img src="/media/image13.png" width="500" > |
-| I click on _"BUTTON"_ until not available<br>**Example**: I click on “Update” until not available<br><br>This step is used when you have to wait on a process to complete. It’s the case in most of the import process. | - |
-| I click on _"BUTTON"_ until _"CONTENT"_ in _"FIELD"_ | - |
-| ... if a window is open<br>The step described before that is run only if a window has been opened. Otherwise we just skip it. | - |
-| I click on _"BUTTON"_ and close the window if necessary | - |
-| I click _"BUTTON"_ until I see: | <img src="/media/image14.png" width="500" > |
-| I click _"BUTTON"_ until I don’t see: | <img src="/media/image15.png" width="500" > |
-| -                         | <img src="/media/image16.png" width="500" > |
-| -                         | <img src="/media/image17.png" width="500" > |
-| -                         | <img src="/media/image18.png" width="500" > |
-| -                         | <img src="/media/image19.png" width="500" > |
-| -                         | <img src="/media/image20.png" width="500" > |
-| -                         | <img src="/media/image21.png" width="500" > |
-| -                         | <img src="/media/image22.png" width="500" > |
-| -                         | <img src="/media/image23.png" width="500" > |
-| -                         | <img src="/media/image24.png" width="500" > |
-| -                         | <img src="/media/image25.png" width="500" > |
-| -                         | <img src="/media/image26.png" width="500" > |
-| -                         | <img src="/media/image27.png" width="500" > |
-| -                         | <img src="/media/image28.png" width="500" > |
-| -                         | <img src="/media/image29.png" width="500" > |
-| -                         | <img src="/media/image30.png" width="500" > |
-| -                         | <img src="/media/image31.png" width="500" > |
-| -                         | <img src="/media/image32.png" width="500" > |
-| -                         | <img src="/media/image33.png" width="500" > |
--->
+All the steps are described [here](https://github.com/hectord/testfield/wiki/Steps). The are grouped by:
++ First steps: how to log into/out of a database (with or without password)
++ Synchronization: synchronize an instance
++ Go to the right interface: browse the interface (menu, tabs and so on)
++ Fill fields (outside a tabular format): edit fields (except in a table)
++ Click: click on UI elements
++ Checks: check that a content appears or doesn't appear on the current interface
++ Tables: manage tables
++ Save values: save values available in the interface
++ Debug: debut an scenario
 
 ## How do I install it? (for the geeks)
+
+testfield can be installed on your computer. The installation procedure is available below.
+
+Alternatively, you might use a docker image available on [dockerhub](https://hub.docker.com/r/hectord/autotestfield/).
+
+### The easy way (Docker)
+
+Go to the docker directory and initialize testfield:
+> sudo ./init-test.sh
+
+This script is going to create an **output** directory to store the results and a script called **run.sh**. This script is your single entrypoint for testfield.
+
+You can run it to:
+
+1. run the tests written by the business analysts
+   > ./run.sh test TEST_NAME [server_branch] [web_branch] [params]
+
+   where:
+   + _test_ is the verb (mandatory)
+   + _TEST\_NAME_ is the name that is going to be used to export the results. It must be unique.
+   + _server\_branch_ is the server branch under test. You can select a revision in the branch with _"server\_branch\|XXX"_ where **XXX** is the revision number (an integer). Don't forget the double quotes otherwise your bash will interpret it as a pipe. lp:unifield-server is used if no branch is specified.
+   + _web\_branch_ is the web branch under test. You can select a revision in the branch with _"web\_branch\|XXX"_ where **XXX** is the revision number (an integer). Don't forget the double quotes otherwise your bash will interpret it as a pipe. lp:unifield-web is used if no branch is specified.
+   + _params_ are the parameters that will be passed to lettuce. You can select a tag with **-t my_tag** to run the tests with the specified tag. All the tests are run if you don't specify any tag.
+
+2. run the benchmarks
+   > ./run.sh test BENCHMARK_NAME [server_branch] [web_branch] [params]
+
+   where:
+   + _benchmark_ is the verb (mandatory)
+   + _BENCHMARK\_NAME_ is the name that is going to be used to export the results. It must be unique.
+   + _server\_branch_ (same as above)
+   + _web\_branch_ (same as above)
+   + _params_ are the parameters that will be passed to lettuce (same as above). We warmly encourage you to use the tag called testperf (-t testperf) to run only scenarios that assess the application performance.
+
+3. display the results on a website
+   > ./run.sh web
+
+   Run a website on port 8080 to display performance and test results that have been run.
+
+### The challenging way (install everything on your computer)
 
 + faketime (0.9.6)
 + unbuffer (optional)
@@ -126,4 +104,3 @@ Finally, you can also use functions to alter variables while executing a scenari
  + bottle
 + PostgreSQL (9.X or 8.X)
 
-Alternatively, you might use a docker image available on [dockerhub](https://hub.docker.com/r/hectord/autotestfield/).
