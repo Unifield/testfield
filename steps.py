@@ -716,7 +716,7 @@ def fill_set_of_fields(step):
 @handle_delayed_step
 @output.register_for_printscreen
 def fill_field_and_open(step, fieldname, content):
-    fill_field(step, fieldname, content)
+    internal_fill_field(fieldname, content, position=0)
 
     world.browser.switch_to_default_content()
     world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes, tag_name="iframe", wait="I don't find the new window"))
