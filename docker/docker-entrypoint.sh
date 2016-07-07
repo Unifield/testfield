@@ -101,7 +101,7 @@ get_repo;
 
 cd /home/testing/testfield
 
-./fetch/owncloud/${FILENAME_FETCH-fetch.sh}
+./fetch/owncloud/fetch.sh
 
 # we have to create the directories for the input/output files (features & dumps)
 mkdir output || true

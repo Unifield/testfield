@@ -2,7 +2,9 @@ FROM testfield
 
 ENV UPGRADE_MODULES no
 ENV PATH_GIT /home/testing/testfield
-ENV FILENAME_FETCH fetch_tests.sh
+
+ENV KEY_FETCH GqurD9dOcYqlFrl
+ENV DIR_FETCH testfield_tests
 
 USER testing
 
