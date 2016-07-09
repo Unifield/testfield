@@ -94,7 +94,7 @@ def register_for_printscreen(function):
         except Exception as e:
             import traceback
             for i in xrange(10):
-                print e
+                print unicode(e).encode('ascii', 'ignore')
                 traceback.print_exc()
             raise
     return newfonc
