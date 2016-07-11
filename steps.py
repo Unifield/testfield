@@ -445,13 +445,13 @@ def open_tab(step, tab_to_open):
 
     tab_to_open_normalized = to_camel_case(tab_to_open)
 
-    elem_menu = get_element(world.browser, tag_name="div", id_attr="applications_menu")
-    button_label = get_element_from_text(elem_menu, tag_name="span", text=tab_to_open_normalized, wait="Cannot find tab menu %s" % tab_to_open)
-    button_label.click()
+    def get_tab_menu():
+        elem_menu = get_element(world.browser, tag_name="div", id_attr="applications_menu")
+        button_label = get_element_from_text(elem_menu, tag_name="span", text=tab_to_open_normalized, wait="Cannot find tab menu %s" % tab_to_open)
+        return button_label
 
+    click_on(world, get_tab_menu, "Cannot click on tab menu %s" % tab_to_open)
     wait_until_not_loading(world.browser, wait="We cannot open fully tab menu '%s'. Something is still processing" % tab_to_open)
-
-    #world.browser.save_screenshot("after_tab.png")
 
 @step('I open accordion menu "([^"]*)"')
 @handle_delayed_step
