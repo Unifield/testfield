@@ -66,7 +66,12 @@ Go to the docker directory and initialize testfield:
 
 This script is going to create an **output** directory to store the results and a script called **run.sh**. This script is your single entrypoint for testfield.
 
-You can run it to:
+By default, the environment used for the tests and the benchmarks is always the same. It's the standard one built by our testers. You might decide to use the lightweight one to test the tool (that's what happens in Travis CI). This environment contains only a few tests that contain most of the steps included in testfield. To achieve that, you'll run that command prior to any test:
+```
+export TESTFIELD_TEST_KEY=GqurD9dOcYqlFrl
+```
+
+You can run testfield in several ways:
 
 1. run the tests written by the business analysts
    > ./run.sh test TEST_NAME [server_branch] [web_branch] [params]
@@ -86,7 +91,7 @@ You can run it to:
    + _BENCHMARK\_NAME_ is the name that is going to be used to export the results. It must be unique.
    + _server\_branch_ (same as above)
    + _web\_branch_ (same as above)
-   + _params_ are the parameters that will be passed to lettuce (same as above). We warmly encourage you to use the tag called testperf (-t testperf) to run only scenarios that assess the application performance.
+   + _params_ are the parameters that will be passed to lettuce (same as above). We warmly encourage you to use the tag called testperf (-t testperf) to run only scenarios that assess the application performance. This is less important when you use another environment tailored for benchmarking (using the TESTFIELD_TEST_KEY environment variable) because only benchmarking scenarios are included.
 
 3. display the results on a website
    > ./run.sh web
