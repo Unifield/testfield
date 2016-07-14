@@ -338,10 +338,11 @@ def performance(test, metric):
 
     for version in config_by_test_by_version.iteritems():
         t, config = version
-        description = config[test][1]['instances']
+        if test in config:
+            description = config[test][1]['instances']
 
-        for instance in description.split():
-            instances.add(instance)
+            for instance in description.split():
+                instances.add(instance)
 
     instances = list(instances)
     instances.sort()
