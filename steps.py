@@ -490,6 +490,10 @@ def open_tab(step, menu_to_click_on):
             time.sleep(TIME_TO_SLEEP)
 
 def open_menu(menu_to_click_on):
+    # we have to wait for the page refresh. It sometimes happen when we close a window and it refreshes
+    #  the main "frame". If we click on a menu, it doesn't seem to be taken into account
+    wait_until_not_loading(world.browser, wait="It seems that the current process is still executing")
+
     menu_node = get_element(world.browser, tag_name="td", id_attr="secondary")
 
     menus = menu_to_click_on.split("|")
