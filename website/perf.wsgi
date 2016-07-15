@@ -1,10 +1,11 @@
 import sys, os
 import os.path
 
+os.environ['MPLCONFIGDIR'] = "/tmp"
+
 path = "~/.myenv/bin/activate_this.py"
-if os.path.isfile(path):
-    activate_env = os.path.expanduser(path)
-    execfile(activate_env, dict(__file__=activate_env))
+activate_env = os.path.expanduser(path)
+execfile(activate_env, dict(__file__=activate_env))
 
 import bottle
 

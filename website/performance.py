@@ -281,8 +281,9 @@ def performance(test, metric):
 
     ys, series_dict = get_table(test, metric)
 
+    import matplotlib
+    matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-    from matplotlib.legend_handler import HandlerLine2D
 
     all_ys_values = set([])
     all_xs_values = set([])
