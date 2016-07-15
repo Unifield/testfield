@@ -219,7 +219,7 @@ function check_unifield_up()
 {
     # we have to ensure that the services work
     FAILURE=no
-    for i in $(seq 1 10);
+    for i in $(seq 1 30);
     do
         FAILURE=no
 
