@@ -84,7 +84,7 @@ You can run testfield in several ways:
    + _params_ are the parameters that will be passed to lettuce. You can select a tag with **-t my_tag** to run the tests with the specified tag. All the tests are run if you don't specify any tag.
 
 2. run the benchmarks
-   > ./run.sh test BENCHMARK_NAME [server_branch] [web_branch] [params]
+   > ./run.sh benchmark BENCHMARK_NAME [server_branch] [web_branch] [params]
 
    where:
    + _benchmark_ is the verb (mandatory)
