@@ -49,9 +49,12 @@ All the steps are described [here](https://github.com/hectord/testfield/wiki/Ste
 + Fill fields (outside a tabular format): edit fields (except in a table)
 + Click: click on UI elements
 + Checks: check that a content appears or doesn't appear on the current interface
++ File management: store files downloaded in the interface
 + Tables: manage tables
 + Save values: save values available in the interface
++ Translation: steps to change and check translations in the interface for a given field
 + Debug: debut an scenario
++ Benchmarking: steps to benchmark unifield (how long does a set of steps last?)
 
 ## How do I install it? (for the geeks)
 

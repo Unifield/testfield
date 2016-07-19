@@ -280,7 +280,6 @@ def debug_scenarios(total):
 
 # Log into/out of/restore an instance{%{
 
-#WARNING: Undocumented!
 @step('I go on the homepage')
 @handle_delayed_step
 @output.register_for_printscreen
@@ -1182,6 +1181,7 @@ def see_popup(step, message_to_see):
         print "No '%s' found in '%s'" % (message_to_see, elem.text)
         raise UniFieldElementException("No '%s' found in '%s'" % (message_to_see, elem.text))
 
+#WARNING: Undocumented!
 @step('I should see "([^"]*)" in the section "([^"]*)"$')
 @handle_delayed_step
 @output.register_for_printscreen
