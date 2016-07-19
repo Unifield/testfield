@@ -83,7 +83,12 @@ You can run testfield in several ways:
    + _web\_branch_ is the web branch under test. You can select a revision in the branch with _"web\_branch\|XXX"_ where **XXX** is the revision number (an integer). Don't forget the double quotes otherwise your bash will interpret it as a pipe. lp:unifield-web is used if no branch is specified.
    + _params_ are the parameters that will be passed to lettuce. You can select a tag with **-t my_tag** to run the tests with the specified tag. All the tests are run if you don't specify any tag.
 
-2. run the benchmarks
+2. run the tests and let the environment as it is (database and application) afterwards to ease troubleshooting
+   > ./run.sh setup TEST_NAME [server_branch] [web_branch] [params]
+
+   The parameters are the same as the ones for "test".
+
+3. run the benchmarks
    > ./run.sh benchmark BENCHMARK_NAME [server_branch] [web_branch] [params]
 
    where:
@@ -93,7 +98,7 @@ You can run testfield in several ways:
    + _web\_branch_ (same as above)
    + _params_ are the parameters that will be passed to lettuce (same as above). We warmly encourage you to use the tag called testperf (-t testperf) to run only scenarios that assess the application performance. This is less important when you use another environment tailored for benchmarking (using the TESTFIELD_TEST_KEY environment variable) because only benchmarking scenarios are included.
 
-3. display the results on a website
+4. display the results on a website
    > ./run.sh web
 
    Run a website on port 8080 to display performance and test results that have been run.
