@@ -76,24 +76,16 @@ echo "name=${TEST_NAME-Unknown}" >> output/meta
 echo "description=${TEST_DESCRIPTION-Unknown}" >> output/meta
 echo "date=${TEST_DATE--}" >> output/meta
 
-KILL_ID_DISPLAY=
+PREFIX_RUN=
 if [[ -z "$DISPLAY" ]];
 then
-    Xvfb :$$ &
-    KILL_ID_DISPLAY=$!
-    export DISPLAY=:$$
+    PREFIX_RUN=xvfb-run
 fi
 
-BROWSER="$BROWSER" faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@
+
+BROWSER="$BROWSER" $PREFIX_RUN faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@
 
 RETVAR=$?
-
-if [[ ${KILL_ID_DISPLAY} ]];
-then
-    echo Kill the screen
-    kill -9 $KILL_ID_DISPLAY
-fi
-
 
 exit $RETVAR
 
