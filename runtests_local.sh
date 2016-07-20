@@ -76,14 +76,12 @@ echo "name=${TEST_NAME-Unknown}" >> output/meta
 echo "description=${TEST_DESCRIPTION-Unknown}" >> output/meta
 echo "date=${TEST_DATE--}" >> output/meta
 
-PREFIX_RUN=
 if [[ -z "$DISPLAY" ]];
 then
-    PREFIX_RUN=xvfb-run
+    BROWSER="$BROWSER" xvfb-run -s '-screen 1 1024x768x16' faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@
+else
+    BROWSER="$BROWSER" faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@
 fi
-
-
-BROWSER="$BROWSER" $PREFIX_RUN faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@
 
 RETVAR=$?
 
