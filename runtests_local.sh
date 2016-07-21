@@ -78,7 +78,7 @@ echo "date=${TEST_DATE--}" >> output/meta
 
 if [[ -z "$DISPLAY" ]];
 then
-    BROWSER="$BROWSER" xvfb-run -s '-screen 1 1024x768x16' faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@
+    BROWSER="$BROWSER" xvfb-run -s '-screen 1 1024x768x16' -a faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@
 else
     BROWSER="$BROWSER" faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@
 fi
