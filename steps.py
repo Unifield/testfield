@@ -1619,6 +1619,10 @@ def do_action_and_open_popup(world, action, *params, **vparams):
 
         # have we found a new popup?
         if new_handles:
+            for previous_handle in handles_before:
+                world.browser.switch_to.window(previous_handle)
+                world.browser.close()
+
             new_handles = list(new_handles)
             new_handle = new_handles[0]
             world.browser.switch_to.window(new_handle)
