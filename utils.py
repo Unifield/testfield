@@ -74,14 +74,19 @@ def create_regex(raw_text):
         return '^%s$' % re.escape(raw_text)
 
 class UnifieldException(Exception):
-    pass
+
+    def __str__(self):
+        # we have to return a string from __str__. Unfortunately
+        #  we don't know if self.message is unicode or string
+        #  (...). If the exception cannot be printed, lettuce will
+        #  fail silently. That's not what we want...
+        return self.message.encode('ascii', 'replace')
 
 class TimeoutException(UnifieldException):
     pass
 
 class UniFieldElementException(UnifieldException):
     pass
-
 
 # Get an element {%{
 
