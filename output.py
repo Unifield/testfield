@@ -190,7 +190,7 @@ def write_end_of_section(scenario):
 
     all_ok = all(map(lambda x : x.passed, scenario.steps))
     filter_passed = sum(map(lambda x : 1 if x.passed else 0, scenario.steps))
-    percentage_ok = float(filter_passed) / len(scenario.steps) * 100.0
+    percentage_ok = (float(filter_passed) / len(scenario.steps) * 100.0) if scenario.steps else 100.0
     time_total = timedelta_total_seconds(datetime.datetime.now() - world.time_before) if all_ok else None
     index_page = 'index%d.html' % world.idscenario
     tags = scenario.tags
