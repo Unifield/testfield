@@ -8,6 +8,7 @@ function usage()
     echo $0 [-h] [-d dir] [-c config_file] upgrade name db
     echo $0 [-h] [-d dir] [-c config_file] run name
     echo $0 [-h] [-d dir] version name
+    echo $0 [-h] [-d dir] logs name
     echo "  -h: help"
     echo "  -s: number of seconds to shift"
     echo "  -c: configuration file (default \$(pwd)/config.sh). Values looked up in this file are:"
@@ -74,6 +75,23 @@ CFG_WEB=$BDIR/openerp-web-$NAME.cfg
 CFG_SERVER=$BDIR/openerp-server-${NAME}.conf
 
 case $ACTION in
+
+    logs)
+
+        if [[ ${#POS_PARAM[*]} != 2 ]]
+        then
+            echo "You should define the install name (only one argument)" >&2
+            usage;
+            exit 1
+        fi
+
+        if [[ -f "$SERVERDIR/server.logs" ]]
+        then
+            cat $SERVERDIR/server.logs
+        fi
+
+        exit 0
+        ;;
 
     run)
         if [[ ${#POS_PARAM[*]} != 2 ]]

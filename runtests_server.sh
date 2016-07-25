@@ -82,6 +82,8 @@ run_tests()
 
         ./scripts/start_unifield.sh -d $SERVER_TMPDIR version $NAME > output/version
 
+        ./scripts/start_unifield.sh -d $SERVER_TMPDIR logs $NAME > output/server_logs.logs
+
         cp -R output/* $DIREXPORT/ || true
 
         ;;
