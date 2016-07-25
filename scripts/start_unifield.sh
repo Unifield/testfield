@@ -141,6 +141,7 @@ case $ACTION in
 
     *)
         echo "Bad action" >&2
+        usage;
         exit 1
 esac
 
