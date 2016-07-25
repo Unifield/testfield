@@ -419,7 +419,7 @@ def synchronize_instance(step, instance_name):
         sync_obj = connection.get('sync.client.sync_manager')
 
         conn_ids = conn_obj.search([])
-        conn_obj.write(conn_ids, {'login': UNIFIELD_ADMIN, 'password': UNIFIELD_PASSWORD})
+        conn_obj.write(conn_ids, {'login': UNIFIELD_ADMIN, 'password': UNIFIELD_PASSWORD, 'port': XMLRPC_PORT, 'protocol': 'xmlrpc'})
         conn_obj.connect(conn_ids)
         sync_ids = sync_obj.search([])
         sync_obj.sync(sync_ids)
