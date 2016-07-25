@@ -441,15 +441,12 @@ def synchronize_instance(step, instance_name):
 @output.register_for_printscreen
 def open_tab(step, tab_to_open):
     world.full_printscreen = True
+    world.browser.get("%(url)s/" % dict(url=HTTP_URL_SERVER))
 
-    tab_to_open_normalized = to_camel_case(tab_to_open)
+    # we cannot click on the menu because it's sometimes hidden by a low resolution
+    btn_web_dashboard = get_element_from_text(world.browser, tag_name="li", text=tab_to_open, class_attr="web_dashboard", wait="Cannot find tab menu %s" % tab_to_open)
+    btn_web_dashboard.click()
 
-    def get_tab_menu():
-        elem_menu = get_element(world.browser, tag_name="div", id_attr="applications_menu")
-        button_label = get_element_from_text(elem_menu, tag_name="span", text=tab_to_open_normalized, wait="Cannot find tab menu %s" % tab_to_open)
-        return button_label
-
-    click_on(world, get_tab_menu, "Cannot click on tab menu %s" % tab_to_open)
     wait_until_not_loading(world.browser, wait="We cannot open fully tab menu '%s'. Something is still processing" % tab_to_open)
 
 @step('I open accordion menu "([^"]*)"')
