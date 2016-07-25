@@ -69,11 +69,12 @@ then
     exit 0
 fi
 
-if [[ $# -lt 2 || ( "$1" != benchmark && "$1" != "test" ) ]];
+if [[ $# -lt 2 || ( "$1" != benchmark && "$1" != "test" && "$1" != "setup") ]];
 then
     echo "Usage: "
     echo "  $0 benchmark name [--branch=git_branch] [server_branch] [web_branch] [tag]"
     echo "  $0 test name [--branch=git_branch] [server_branch] [web_branch] [tag]"
+    echo "  $0 setup name [--branch=git_branch] [server_branch] [web_branch] [tag]"
     echo "  $0 web"
     exit 1
 fi
