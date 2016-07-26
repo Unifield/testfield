@@ -1178,6 +1178,9 @@ def see_status(step, message_to_see):
 @handle_delayed_step
 @output.register_for_printscreen
 def see_popup(step, message_to_see):
+
+    world.browser.switch_to_default_content()
+
     wait_until_not_loading(world.browser)
     elem = get_element(world.browser, tag_name="td", class_attr="error_message_content", wait="I don't find any popup")
 
@@ -1186,6 +1189,11 @@ def see_popup(step, message_to_see):
     if re.match(reg, elem.text, flags=re.DOTALL) is None:
         print "No '%s' found in '%s'" % (message_to_see, elem.text)
         raise UniFieldElementException("No '%s' found in '%s'" % (message_to_see, elem.text))
+
+    step.given('I click on "OK"')
+
+    if world.nbframes:
+        world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes-1, wait="I don't find the previous window"))
 
 #WARNING: Undocumented!
 @step('I should see "([^"]*)" in the section "([^"]*)"$')
