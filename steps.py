@@ -3,6 +3,7 @@ from credentials import *
 import output
 from lettuce import *
 from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.common.exceptions import StaleElementReferenceException, ElementNotVisibleException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
@@ -115,6 +116,12 @@ def connect_to_db():
         profile.set_preference('browser.download.manager.showWhenStarting', False)
         profile.set_preference('browser.download.dir', file_path)
         profile.set_preference('browser.helperApps.neverAsk.saveToDisk','application/vnd.ms-excel')
+        #### If you want to use the gecko driver (the new tool by the Mozilla fundation to
+        ####  run interface Selenium with Firefox) you should uncomment these three lines
+        ####  and comment the line below. It cannot be used with Firefox 47.
+        # caps = DesiredCapabilities.FIREFOX
+        # caps["marionette"] = True
+        # world.browser = webdriver.Firefox(firefox_profile=profile, capabilities=caps)
         world.browser = webdriver.Firefox(firefox_profile=profile)
     elif os.environ['BROWSER'] == "chrome":
         world.browser = webdriver.Chrome()
