@@ -44,11 +44,8 @@ LETTUCE_PARAMS="${*:5}"
 
 function cleanup()
 {
-    if [[ $VERB != setup ]];
-    then
-        ./scripts/kill_db.sh -D $SERVER_TMPDIR $NAME || true
-        ./scripts/stop_unifield.sh -d $SERVER_TMPDIR $NAME || true
-    fi
+    ./scripts/kill_db.sh -D $SERVER_TMPDIR $NAME || true
+    ./scripts/stop_unifield.sh -d $SERVER_TMPDIR $NAME || true
 }
 trap "cleanup;" EXIT
 
@@ -85,6 +82,19 @@ run_tests()
         ./scripts/start_unifield.sh -d $SERVER_TMPDIR logs $NAME > output/server.log
 
         cp -R output/* $DIREXPORT/ || true
+
+        if [[ $VERB == setup ]]
+        then
+            while true;
+            do
+                echo Write KILL to stop testfield;
+                read OK;
+                if [[ $OK == KILL ]];
+                then
+                    break;
+                fi;
+            done
+        fi
 
         ;;
 
