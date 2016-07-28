@@ -155,7 +155,7 @@ if __name__ == '__main__':
             ret = run_script(dbname, "select 1 from pg_class where relname='sync_server_entity'")
 
             if filter(lambda x : x, ret.split('\n')):
-                hwid = get_hardware_id()
+                hwid = SERVER_HWID or get_hardware_id()
                 run_script(dbname, "UPDATE sync_server_entity SET hardware_id = '%s'" % hwid)
                 if reset_versions:
                     run_script(dbname, "DELETE FROM sync_server_version WHERE sum NOT IN ('88888888888888888888888888888888', '66f490e4359128c556be7ea2d152e03b')")
