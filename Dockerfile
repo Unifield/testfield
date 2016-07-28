@@ -8,8 +8,8 @@ RUN apt-get update && apt-get install -y firefox=45.0.2+build1-0ubuntu1
 
 RUN wget https://bootstrap.pypa.io/get-pip.py
 RUN python get-pip.py
-ADD requirements.txt ./
-RUN pip install -r requirements.txt
+ADD requirements_unifield.txt ./
+RUN pip install -r requirements_unifield.txt
 
 
 RUN git clone https://github.com/wolfcw/libfaketime.git && cd libfaketime && make && make install

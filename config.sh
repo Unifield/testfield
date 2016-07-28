@@ -1,28 +1,60 @@
 #!/bin/bash
 
-NETRPC_PORT=8001
-WEB_PORT=8003
-XMLRPC_PORT=8000
-XMLRPCS_PORT=8002
+####################################################################
+## UNIFIELD
+####################################################################
 
+# The HTTP port of Unifield
+WEB_PORT=8061
+# The XMLRPC port of Unifield (used to synchronize and to build tests)
+XMLRPC_PORT=8069
+
+# The credentials used to log into Unifield as administrator
 UNIFIELDADMIN=admin
 UNIFIELDPASSWORD=admin
 
+# Unifield's address
+SERVER_HOST=127.0.0.1
+
+# The hardware ID that will be used to link the databases with the
+#  sync server. If it's not available, the current computer's hardware
+#  ID will be computed automatically.
+SERVER_HWID=
+
+####################################################################
+## DATABASE
+####################################################################
+
+DBADDR=$SERVER_HOST
 DBPASSWORD=unifield_dev
-DBADDR=127.0.0.1
 DBUSERNAME=unifield_dev
 DBPORT=5432
+# the prefix used to name the databases. If DBPREFIX=YYY, the databases' name
+#  will all start with YYY_.
 DBPREFIX=''
 
-SERVER_HOST=127.0.0.1
-SERVER_TMPDIR=/root/repo
+####################################################################
+## UNIFIELD CONFIG
+####################################################################
+
+# directory name in directory instances/ where the databases are stored
+#  they will be restored before each run.
 SERVER_ENVNAME=lightweight
 
+####################################################################
+## UNIFIELD CONFIG (IN DOCKER CONTAINERS ONLY)
+####################################################################
+
+NETRPC_PORT=8070
+
+# directory where we store Unifield and its database
+SERVER_TMPDIR=/root/repo
+
+# the database's path to launch it in the container with faketime
 DBPATH=
 FORCED_DATE=
 
-OWNCLOUDUSERNAME=
-OWNCLOUDPASSWORD=
-
+# HOMERE password (if available, otherwise, the tests related to Homere will
+#  fail everytime)
 HOMEREDB=$''
 
