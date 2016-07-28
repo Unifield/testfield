@@ -3,7 +3,7 @@ FROM testfield
 ENV UPGRADE_MODULES no
 ENV PATH_GIT /home/testing/testfield
 
-ENV KEY_FETCH GqurD9dOcYqlFrl
+ENV KEY_FETCH kGErp4oQBbKX31C
 
 USER testing
 
