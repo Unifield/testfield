@@ -1186,21 +1186,43 @@ def see_status(step, message_to_see):
 @output.register_for_printscreen
 def see_popup(step, message_to_see):
 
-    world.browser.switch_to_default_content()
-
     wait_until_not_loading(world.browser)
-    elem = get_element(world.browser, tag_name="td", class_attr="error_message_content", wait="I don't find any popup")
+    tick = monitor(world.browser, "I don't find any popup")
 
-    reg = create_regex(message_to_see)
+    message_found = False
 
-    if re.match(reg, elem.text, flags=re.DOTALL) is None:
-        print "No '%s' found in '%s'" % (message_to_see, elem.text)
-        raise UniFieldElementException("No '%s' found in '%s'" % (message_to_see, elem.text))
+    while not message_found:
 
-    step.given('I click on "OK"')
+        for noframe in xrange(world.nbframes+1):
+            if noframe == 0:
+                world.browser.switch_to_default_content()
+            else:
+                frame = get_element(world.browser, tag_name="iframe", position=noframe-1, wait="I don't find a window")
+                world.browser.switch_to_frame(frame)
+
+            wait_until_not_loading(world.browser)
+
+            elements = get_elements(world.browser, tag_name="td", class_attr="error_message_content")
+
+            if elements:
+                elem = elements[0]
+                reg = create_regex(message_to_see)
+
+                if re.match(reg, elem.text, flags=re.DOTALL) is None:
+                    print "No '%s' found in '%s'" % (message_to_see, elem.text)
+                    raise UniFieldElementException("No '%s' found in '%s'" % (message_to_see, elem.text))
+
+                step.given('I click on "OK"')
+                message_found = True
+                break
+            else:
+                tick()
 
     if world.nbframes:
+        world.browser.switch_to_default_content()
         world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes-1, wait="I don't find the previous window"))
+    else:
+        world.browser.switch_to_default_content()
 
 #WARNING: Undocumented!
 @step('I should see "([^"]*)" in the section "([^"]*)"$')
