@@ -108,12 +108,33 @@ You can run testfield in several ways:
 
 ### The challenging way (install everything on your computer)
 
-+ faketime (0.9.6)
-+ unbuffer (optional)
-+ python
- + lettuce
- + OERPLib
- + Pillow
- + bottle
-+ PostgreSQL (9.X or 8.X)
+You might decide to run testfield directly on your computer to debug a specific version of Unifield. It's especially useful for troubleshooting.
+
+To achieve that, you need an up and running version of Unifield with the dumps matching the tests you want to run. You can either:
++ set up your own environment (either in a docker container as in [docker-unifield](https://github.com/TeMPO-Consulting/docker-unifield) or directly on your computer). If you do that, you'll have to restore the test databases.
++ use Unifield after running the tests in a Docker container. Don't forget to let the environment as it is after the tests with "setup".
+
+Prior to testfield's installation, you need to ensure that you have already set up [faketime](https://github.com/wolfcw/libfaketime) (>= 0.9.6) on your computer. It must be in your path. To check that, please run:
+```
+faketime "2010-01-01" date
+```
+You should see: ```Fri Jan  1 00:00:00 CET 2010```.
+
++ Clone the repository
+```
+git clone testfield
+```
++ Create a virtualenv, activate it and install the Python packages
+```
+virtualenv myenv
+source myenv/bin/activate
+cd testfield
+pip install -r requirements.txt
+```
++ Set the configuration variable in `config.sh` in order to connect testfield to Unifield.
++ Launch testfield
+```
+./runtests_local.sh
+```
+
 
