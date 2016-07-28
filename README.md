@@ -53,7 +53,7 @@ All the steps are described [here](https://github.com/hectord/testfield/wiki/Ste
 + Tables: manage tables
 + Save values: save values available in the interface
 + Translation: steps to change and check translations in the interface for a given field
-+ Debug: debut an scenario
++ Debug: debug a scenario
 + Benchmarking: steps to benchmark unifield (how long does a set of steps last?)
 
 ## How do I install it? (for the geeks)
