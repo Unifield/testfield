@@ -148,11 +148,10 @@ do
 
     DATABASES="$DATABASES $DBNAME"
 done
-FIRST_DATABASE=`echo $DATABASES | cut -d " " -f1`
 
 export DATABASES=$DATABASES
 
-./generate_credentials.sh $FIRST_DATABASE $DBPREFIX
+./generate_credentials.sh
 
 ./scripts/fetch_unifield.sh -W "$WEBBRANCH" -S "$SERVERBRANCH" -d $SERVER_TMPDIR -r $NAME
 

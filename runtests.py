@@ -63,18 +63,14 @@ def run_preprocessor(path):
             # is it a macro line?
             cleaned_line = line.strip()
 
-            iterate_over_without_database = re.match('^\s*#loop{\s*(?P<kindof>[^} ),]+)\s*,\s*(?P<varname>[^} ),]+)\s*}\s*$', cleaned_line)
             iterate_over_with_database = re.match('^\s*#loop{\s*(?P<database>[^} ),]+)\s*,\s*(?P<kindof>[^} ),]+)\s*,\s*(?P<varname>[^} ),]+)\s*}\s*$', cleaned_line)
             begin_block_count = re.match('^\s*#begin{\s*(?P<macro>[^}]+)\s*}\s*$', cleaned_line)
             end_block = re.match('\s*#end\s*', cleaned_line)
 
-            if iterate_over_without_database is not None or iterate_over_with_database is not None:
-                values = (iterate_over_without_database or iterate_over_with_database).groupdict()
+            if iterate_over_with_database is not None:
+                values = iterate_over_with_database.groupdict()
 
-                if iterate_over_without_database is not None:
-                    database = utils.prefix_db_name(DB_NAME)
-                else:
-                    database = utils.prefix_db_name(values['database'])
+                database = utils.prefix_db_name(values['database'])
                 varname = values['varname']
 
                 try:
