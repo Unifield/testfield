@@ -207,7 +207,7 @@ def write_end_of_section(scenario):
         #  We don't want to crash a second time because the "real" error message would be hidden
         exception_failure = failures[0].why.exception if failures else None
 
-        msg_error =  str(exception_failure) + ' (' + str(type(exception_failure)) + ')'
+        msg_error =  unicode(exception_failure).encode('ascii', 'ignore') + ' (' + str(type(exception_failure)) + ')'
 
         write_errorscreen(world, msg_error)
 
