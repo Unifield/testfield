@@ -47,6 +47,8 @@ SERVER_ENVNAME=lightweight
 
 NETRPC_PORT=8070
 
+XMLRPCS_PORT=8071
+
 # directory where we store Unifield and its database
 SERVER_TMPDIR=/root/repo
 
