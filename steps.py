@@ -1213,6 +1213,9 @@ def see_popup(step, message_to_see):
                     raise UniFieldElementException("No '%s' found in '%s'" % (message_to_see, elem.text))
 
                 step.given('I click on "OK"')
+
+                wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="td", class_attr="error_message_content"))
+
                 message_found = True
                 break
             else:
