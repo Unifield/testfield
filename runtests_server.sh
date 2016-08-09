@@ -33,6 +33,16 @@ else
 fi
 #################################################################
 
+IN_DOCKER=
+if [[ -f /proc/1/cgroup ]]
+then
+    CGROUP=$(cat /proc/1/cgroup | cut -f 3 -d ":" | sort | uniq)
+    if [[ $CGROUP != / ]]
+    then
+        IN_DOCKER=1
+    fi
+fi
+
 VERB=${1:-test}
 ENVNAME=$SERVER_ENVNAME
 
@@ -83,7 +93,8 @@ run_tests()
 
         cp -R output/* $DIREXPORT/ || true
 
-        if [[ $VERB == setup ]]
+        
+        if [[ $VERB == setup && "$IN_DOCKER" ]]
         then
             while true;
             do
