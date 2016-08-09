@@ -132,6 +132,10 @@ cd testfield
 pip install -r requirements.txt
 ```
 + Set the configuration variable in `config.sh` in order to connect testfield to Unifield.
++ Update the credentials
+```
+./generate_credentials.sh
+```
 + Launch testfield. By default, your Firefox instance will be used. testfield doesn't work with the last version of Firefox (47.0 now). You need Firefox <= 46.0 or Firefox >= 48.0 with [Mozilla Marionette](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette).
 ```
 ./runtests_local.sh
