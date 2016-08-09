@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ####################################################################
-## UNIFIELD
+## UNIFIELD (LOCAL CONFIG)
 ####################################################################
 
 # The HTTP port of Unifield
@@ -22,28 +22,26 @@ SERVER_HOST=127.0.0.1
 SERVER_HWID=
 
 ####################################################################
-## DATABASE
-####################################################################
-
-DBADDR=$SERVER_HOST
-DBPASSWORD=unifield_dev
-DBUSERNAME=unifield_dev
-DBPORT=5432
-# the prefix used to name the databases. If DBPREFIX=YYY, the databases' name
-#  will all start with YYY_.
-DBPREFIX=''
-
-####################################################################
-## UNIFIELD CONFIG
+## UNIFIELD (OPTIONAL CONFIG)
 ####################################################################
 
 # directory name in directory instances/ where the databases are stored
 #  they will be restored before each run.
 SERVER_ENVNAME=lightweight
 
+# the prefix used to name the databases. If DBPREFIX=YYY, the databases' name
+#  will all start with YYY_.
+DBPREFIX=''
+
 ####################################################################
 ## UNIFIELD CONFIG (IN DOCKER CONTAINERS ONLY)
 ####################################################################
+
+## DATABASE credentials/port
+DBADDR=$SERVER_HOST
+DBPASSWORD=unifield_dev
+DBUSERNAME=unifield_dev
+DBPORT=5432
 
 NETRPC_PORT=8070
 

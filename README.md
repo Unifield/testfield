@@ -131,10 +131,14 @@ source myenv/bin/activate
 cd testfield
 pip install -r requirements.txt
 ```
-+ Set the configuration variable in `config.sh` in order to connect testfield to Unifield.
++ Set the configuration variable in `config.sh` in order to connect testfield to Unifield (only the local configuration section)
 + Update the credentials
 ```
 ./generate_credentials.sh
+```
++ Download the functional tests (optional, otherwise you'll have to create the following directories: files meta_features instances)
+```
+./fetch/owncloud/fetch.sh
 ```
 + Launch testfield. By default, your Firefox instance will be used. testfield doesn't work with the last version of Firefox (47.0 now). You need Firefox <= 46.0 or Firefox >= 48.0 with [Mozilla Marionette](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette).
 ```
