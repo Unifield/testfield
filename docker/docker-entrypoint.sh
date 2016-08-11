@@ -126,6 +126,36 @@ function copy()
     then
         cp -R $FROM_PATH/* $TO_PATH;
     fi
+
+    # we have to wait if we are in a docker container
+    if [[ $1 == setup ]];
+    then
+        IN_DOCKER=
+        if [[ -f /proc/1/cgroup ]]
+        then
+            CGROUP=$(cat /proc/1/cgroup | cut -f 3 -d ":" | sort | uniq)
+            if [[ $CGROUP != / ]]
+            then
+                IN_DOCKER=1
+            fi
+        fi
+
+        if [[ "$IN_DOCKER" ]]
+        then
+            while true;
+            do
+                echo Write KILL to stop testfield;
+                read OK;
+                if [[ $OK == KILL ]];
+                then
+                    break;
+                fi;
+            done
+        fi
+
+
+    fi
+
 }
 trap "copy;" EXIT;
 

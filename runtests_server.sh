@@ -33,16 +33,6 @@ else
 fi
 #################################################################
 
-IN_DOCKER=
-if [[ -f /proc/1/cgroup ]]
-then
-    CGROUP=$(cat /proc/1/cgroup | cut -f 3 -d ":" | sort | uniq)
-    if [[ $CGROUP != / ]]
-    then
-        IN_DOCKER=1
-    fi
-fi
-
 VERB=${1:-test}
 ENVNAME=$SERVER_ENVNAME
 
@@ -54,8 +44,11 @@ LETTUCE_PARAMS="${*:5}"
 
 function cleanup()
 {
-    ./scripts/kill_db.sh -D $SERVER_TMPDIR $NAME || true
-    ./scripts/stop_unifield.sh -d $SERVER_TMPDIR $NAME || true
+    if [[ $VERB != setup ]];
+    then
+        ./scripts/kill_db.sh -D $SERVER_TMPDIR $NAME || true
+        ./scripts/stop_unifield.sh -d $SERVER_TMPDIR $NAME || true
+    fi
 }
 trap "cleanup;" EXIT
 
@@ -92,20 +85,6 @@ run_tests()
         ./scripts/start_unifield.sh -d $SERVER_TMPDIR logs $NAME > output/server.log
 
         cp -R output/* $DIREXPORT/ || true
-
-        
-        if [[ $VERB == setup && "$IN_DOCKER" ]]
-        then
-            while true;
-            do
-                echo Write KILL to stop testfield;
-                read OK;
-                if [[ $OK == KILL ]];
-                then
-                    break;
-                fi;
-            done
-        fi
 
         ;;
 
