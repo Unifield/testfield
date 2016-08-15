@@ -1212,7 +1212,8 @@ def see_popup(step, message_to_see):
                     print "No '%s' found in '%s'" % (message_to_see, elem.text)
                     raise UniFieldElementException("No '%s' found in '%s'" % (message_to_see, elem.text))
 
-                step.given('I click on "OK"')
+                # we cannot click on OK because the button might be hidden by another window
+                world.browser.execute_script('$("a#fancybox-close").click()')
 
                 wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="td", class_attr="error_message_content"))
 
