@@ -603,8 +603,6 @@ def internal_fill_field(fieldname, content, position=0):
     idattr, my_input = get_input(world.browser, fieldname, position=position)
 
     if my_input.tag_name == "select":
-        #FIXME: Sometimes it doesn't work... the input is not selected
-        # or the value is not saved... Is it related to the Selenium's version?
         select = Select(my_input)
         select.select_by_visible_text(content)
 
@@ -621,9 +619,6 @@ def internal_fill_field(fieldname, content, position=0):
             raise UniFieldElementException("No option %s found in the select field" % content)
         the_option.click()
     elif my_input.tag_name == "input" and my_input.get_attribute("type") == "file":
-        #FIXME: This clear is not allowed in ChromeWebDriver. It is allowed in Firefox.
-        #  We should ensure that this method is still available.
-        #my_input.clear()
         base_dir = os.path.dirname(__file__)
         content_path = os.path.join(base_dir, FILE_DIR, content)
 
@@ -643,8 +638,6 @@ def internal_fill_field(fieldname, content, position=0):
                     new_content += convert_input(world, line, localdict)
 
                 base_dir = os.path.dirname(__file__)
-                #FIXME: We could overide a file that was saved by the user in the "files" directory in order to use 
-                # it in other scenarios.
                 realfilename = '%s%s' % (TEMP_FILENAME, ext.lower())
                 content_path = os.path.join(base_dir, FILE_DIR, realfilename)
                 f = open(content_path, 'w')
@@ -766,8 +759,6 @@ def store_last_file(step, to_filename, other_step):
         newest_filename = list(files_in_addition)[0]
 
         to_path = os.path.join(file_path, to_filename)
-        #FIXME: We could overide a file that was saved by the user in the "files" directory in order to use 
-        # it in other scenarios.
         if os.path.exists(to_path):
             os.unlink(to_path)
 
@@ -981,8 +972,8 @@ def close_window_if_necessary(step, button):
             current_url = current_iframes[-1].get_attribute("src")
 
             if current_url != previous_url:
-                #TODO ADD AN EXPLANATION HERE ET BELOW
-                #TODO GIVE AN EXPLANATION FOR ALL THE CALLS TO monitor(...) and the others (except get_element(s) and get_elemnets_from_text...)
+                # We have to ensure that the URL changes. If it's the case, then we can continue with this new window.
+                #  Otherwise, it means that it's still the previous window.
                 world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait="I cannot find the new window"))
                 return
 
@@ -1260,7 +1251,8 @@ def get_pos_for_fieldname(fieldname):
         tick()
         # A new table is sometimes created
         try:
-            #FIXME we should look for this value in all the tables
+            #FIXME we should look for this value in all the tables. This bug will only exists
+            # if a column exist twice in several time on the same screen. This is very unlikely.
             gridtable = get_element(world.browser, tag_name="table", class_attr="grid")
             right_pos = get_column_position_in_table(gridtable, fieldname)
 
@@ -1283,7 +1275,6 @@ def check_checkbox_action(content, fieldname, action=None):
 
     content = convert_input(world, content)
 
-    #FIXME: This method should use the same behaviour as "I fill ... with ..."
     def get_text_box():
         row_in_edit_mode = get_element(world.browser, tag_name="tr", class_attr="editors", wait="I don't find any line to edit")
 
@@ -1512,7 +1503,6 @@ def check_line(step):
 @handle_delayed_step
 @output.register_for_printscreen
 def check_not_click_on_line(step, action):
-    #TODO: Check that the button is not available
 
     # we have an issue when the user is not logged in... the important buttons are "at the end of the page". We have to
     #  fetch them in another order
@@ -1621,8 +1611,6 @@ def open_side_panel_internal(step, menuname):
 
     # sometimes the click is not done (or at least the side panel doesn't open...)
     #  it seems that this is related to a new
-    #FIXME: On Firefox, this click sometimes doesn't work because it click on the window
-    #  and not on the small button to open the window...
     element = get_element(world.browser, id_attr="a_main_sidebar", wait="I don't find the side bar")
     tick = monitor(world.browser)
     while 'closed' in element.get_attribute("class"):

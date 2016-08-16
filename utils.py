@@ -145,8 +145,6 @@ def get_input(browser, fieldname, position=0):
 
     while not my_input:
 
-        #FIXME: I don't understand how that works... we shouldn't wait since the field description
-        #  could be something else than a label (see below)
         labels = get_elements_from_text(browser, tag_name="label", text=fieldname)
 
         # we have a label!
@@ -279,7 +277,7 @@ def get_elements_from_text(element, tag_name, text, class_attr='', wait=''):
         tag_name = [tag_name]
     possibilities = []
 
-    #FIXME: It won't work in French...
+    #FIXME: It won't work in French if we look for fields with accents...
     from_translate = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
     to_translate = 'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz'
 
@@ -324,8 +322,9 @@ def get_element_from_text(browser, tag_name, text, class_attr='', wait=False):
     To find it, you must provide the name of the tag and its text.
 
     You can indicate wether this method is expected to wait for this element to appear.
+
+    If it doesn't wait and the element doesn't exist, an IndexError is raised.
     '''
-    #FIXME: We cannot crash if an element is not found (especially an IndexError...)
     return get_elements_from_text(browser, tag_name, text, class_attr, wait)[0]
 
 def get_column_position_in_table(maintable, columnname):
@@ -343,14 +342,11 @@ def get_column_position_in_table(maintable, columnname):
         return None
     elem = elems[offset]
 
-    #FIXME: This is the maintable! It doesn't work that way.
-    # The parent element is the element that generated this node but
-    # it isn't the parent element in the DOM
     parent = elem.parent
     right_pos = None
 
+    # a table should always have an id, we've never come across a table without an ID
     idtable = maintable.get_attribute("id")
-    #FIXME: a table should always have an id, but... but who knows...
     assert idtable is not None
 
     data = dict(id=idtable)
@@ -412,9 +408,6 @@ def get_options_for_table(world, columns):
 
     for maintable in maintables:
 
-        #FIXME: We now that when a column is not found in one array, we look in the
-        #        next one. This is not good since we could detect a column in another
-        #        table...
         position_per_column = {}
         for column in columns:
             # We cannot normalize columns here because some columns don't follow
@@ -448,8 +441,7 @@ def get_table_row_from_hashes(world, keydict):
     Returns all the rows that contains the columns given in the
      dictionary's key (keydict) with the right values.
     '''
-    #TODO: Check that we don't find twice the same row...
-    #TODO: Check that all the lines are in the same table...
+    #TODO: Check that all the lines are in the same table... although it might be considered as a feature
     columns = list(keydict.keys())
 
     for maintable, row_node, values in get_options_for_table(world, columns):
