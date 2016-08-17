@@ -1244,20 +1244,34 @@ def see_popup(step, content, section):
 
 # Table management {%{
 
-def get_pos_for_fieldname(fieldname):
+def get_pos_for_fieldname_4_editon(fieldname):
 
     tick = monitor(world.browser)
     while True:
+        table_found = None
+        right_pos = None
+
         tick()
         # A new table is sometimes created
         try:
-            #FIXME we should look for this value in all the tables. This bug will only exists
-            # if a column exist twice in several time on the same screen. This is very unlikely.
-            gridtable = get_element(world.browser, tag_name="table", class_attr="grid")
-            right_pos = get_column_position_in_table(gridtable, fieldname)
+            gridtables = get_elements(world.browser, tag_name="table", class_attr="grid")
+            found = False
 
-            # we have to wait on the table to be editable (or at least one row)
-            if get_elements(gridtable, tag_name="tr", class_attr="editors", wait=False):
+            for gridtable in gridtables:
+                # We have to ensure that the row is editable, otherwise we have to look
+                #  for another table
+                if not get_elements(gridtable, tag_name="tr", class_attr="editors", wait=False):
+                    continue
+
+                right_pos = get_column_position_in_table(gridtable, fieldname)
+
+                # we have to wait on the table to be editable (or at least one row)
+                if right_pos is not None:
+                    table_found = gridtable
+                    found = True
+                    break
+
+            if found:
                 break
 
             time.sleep(TIME_TO_SLEEP)
@@ -1269,14 +1283,16 @@ def get_pos_for_fieldname(fieldname):
     if right_pos is None:
         raise UniFieldElementException("Cannot find column '%s'" % fieldname)
     
-    return right_pos
+    return table_found, right_pos
 
 def check_checkbox_action(content, fieldname, action=None):
 
     content = convert_input(world, content)
 
+    table_found, right_pos = get_pos_for_fieldname_4_editon(fieldname)
+
     def get_text_box():
-        row_in_edit_mode = get_element(world.browser, tag_name="tr", class_attr="editors", wait="I don't find any line to edit")
+        row_in_edit_mode = get_element(table_found, tag_name="tr", class_attr="editors", wait="I don't find any line to edit")
 
         td_node = get_element(row_in_edit_mode, class_attr="grid-cell", tag_name="td", position=right_pos)
 
@@ -1298,8 +1314,6 @@ def check_checkbox_action(content, fieldname, action=None):
 
             return my_input, action or action_write_in_element
 
-    right_pos = get_pos_for_fieldname(fieldname)
-
     select_in_field_an_option(world, get_text_box, content)
 
 @step('I fill "([^"]*)" within column "([^"]*)"$')
@@ -1313,6 +1327,9 @@ def fill_column(step, content, fieldname):
 @output.register_for_printscreen
 def fill_column_with_window(step, content, fieldname):
     fill_column(step, content, fieldname)
+
+    wait_until_no_ajax(world)
+    wait_until_not_loading(world.browser, wait=False)
 
     world.browser.switch_to_default_content()
     world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait="I don't find the new window"))
@@ -1445,6 +1462,8 @@ def click_on_line_and_open_the_window(step, action):
     world.nbframes -= 1
 
     world.browser.switch_to_default_content()
+
+    wait_until_no_ajax(world)
 
     wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe", position=world.nbframes))
 
