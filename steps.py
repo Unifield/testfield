@@ -431,7 +431,7 @@ def synchronize_instance(step, instance_name):
         sync_ids = sync_obj.search([])
         sync_obj.sync(sync_ids)
     except RPCError as e:
-        message = str(e)
+        message = str(e).encode('utf-8', 'ignore')
 
         #FIXME: This is a dirty hack. We don't want to fail if there is a revision
         #  available. That's part of a normal scenario. As a result, the code
