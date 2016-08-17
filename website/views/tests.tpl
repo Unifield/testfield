@@ -37,6 +37,7 @@
 
             <th>Health</th>
             <th>Version</th>
+            <th>Count</th>
             <th>Date</th>
         </tr>
     </thead>
@@ -92,6 +93,12 @@
 
                 <td>
                     {{test['version']}}
+                </td>
+
+                <td>
+                    %if test['scenario_passed'] and test['scenario_ran']:
+                        {{test['scenario_passed']}} / {{test['scenario_ran']}}
+                    %end
                 </td>
 
                 <td>
