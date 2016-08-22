@@ -109,54 +109,50 @@ mkdir output || true
 
 cd /home/testing/testfield
 
-function copy()
-{
-    if [[ ! -e ${PARENT_TO_PATH} ]]
-    then
-        mkdir ${PARENT_TO_PATH}
-    fi
-
-    if [[ -e $TO_PATH ]];
-    then
-        rm -rf $TO_PATH;
-    fi
-    mkdir $TO_PATH;
-
-    if [[ -e $FROM_PATH ]]
-    then
-        cp -R $FROM_PATH/* $TO_PATH;
-    fi
-
-    # we have to wait if we are in a docker container
-    if [[ $1 == setup ]];
-    then
-        IN_DOCKER=
-        if [[ -f /proc/1/cgroup ]]
-        then
-            CGROUP=$(cat /proc/1/cgroup | cut -f 3 -d ":" | sort | uniq)
-            if [[ $CGROUP != / ]]
-            then
-                IN_DOCKER=1
-            fi
-        fi
-
-        if [[ "$IN_DOCKER" ]]
-        then
-            while true;
-            do
-                echo Write KILL to stop testfield;
-                read OK;
-                if [[ $OK == KILL ]];
-                then
-                    break;
-                fi;
-            done
-        fi
-
-
-    fi
-
-}
-trap "copy;" EXIT;
-
 ./runtests_server.sh $PARAMS
+
+VALUE_EXIT=$?
+
+if [[ ! -e ${PARENT_TO_PATH} ]]
+then
+    mkdir ${PARENT_TO_PATH}
+fi
+
+if [[ -e $TO_PATH ]];
+then
+    rm -rf $TO_PATH;
+fi
+mkdir $TO_PATH;
+
+if [[ -e $FROM_PATH ]]
+then
+    cp -R $FROM_PATH/* $TO_PATH;
+fi
+
+IN_DOCKER=
+if [[ -f /proc/1/cgroup ]]
+then
+    CGROUP=$(cat /proc/1/cgroup | cut -f 3 -d ":" | sort | uniq)
+    if [[ $CGROUP != / ]]
+    then
+        IN_DOCKER=1
+    fi
+fi
+
+# We have to wait in a docker container as well as a shell script
+if [[ -t 1 || $IN_DOCKER ]]
+then
+    while true;
+    do
+        echo Write KILL to stop testfield;
+        read OK;
+        echo "AFTER"
+        if [[ $OK == KILL ]];
+        then
+            break;
+        fi;
+    done
+fi
+
+exit $VALUE_EXIT
+
