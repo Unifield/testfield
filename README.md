@@ -114,7 +114,7 @@ To achieve that, you need an up and running version of Unifield with the dumps m
 + set up your own environment (either in a docker container as in [docker-unifield](https://github.com/TeMPO-Consulting/docker-unifield) or directly on your computer). If you do that, you'll have to restore the test databases.
 + use Unifield after running the tests in a Docker container. Don't forget to let the environment as it is after the tests with "setup".
 
-Prior to testfield's installation, you need to ensure that you have already set up [faketime](https://github.com/wolfcw/libfaketime) (>= 0.9.6) on your computer. It must be in your path. To check that, please run:
+Prior to testfield's installation, you need to ensure that you have already set up [faketime](https://github.com/wolfcw/libfaketime) (>= 0.9.6) on your computer (```make```, ```sudo make install``` and so on). It must be in your path. To check that, please run:
 ```
 faketime "2010-01-01" date
 ```
@@ -124,14 +124,16 @@ You should see: ```Fri Jan  1 00:00:00 CET 2010```.
 ```
 git clone testfield
 ```
-+ Create a virtualenv, activate it and install the Python packages
++ Create a virtualenv (*outside the testfield repository you've just cloned*), activate it and install the Python packages
 ```
 virtualenv myenv
 source myenv/bin/activate
 cd testfield
 pip install -r requirements.txt
+# if you want to install Unifield on your system:
+pip install -r requirements_unifield.txt
 ```
-+ Set the configuration variable in `config.sh` in order to connect testfield to Unifield (only the local configuration section)
++ Set the configuration variable in `config.sh` in order to connect testfield to Unifield (only the local configuration section if you want to launch the tests against an existing version of Unifield)
 + Update the credentials
 ```
 ./generate_credentials.sh
@@ -142,6 +144,9 @@ pip install -r requirements.txt
 ```
 + Launch testfield. By default, your Firefox instance will be used. testfield doesn't work with the last version of Firefox (47.0 now). You need Firefox <= 46.0 or Firefox >= 48.0 with [Mozilla Marionette](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette).
 ```
+# if you want to launch testfield against an existing version of Unifield
 ./runtests_local.sh
+# if you want to launch testfield against a new version of Unifield
+./runtests_server.sh test MY_FIRST_TESTS
 ```
 
