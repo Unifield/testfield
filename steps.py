@@ -319,8 +319,8 @@ def log_into(database_name, username, password):
 
         elem_options = get_elements(elem_select, tag_name="option", attrs={'value': database_name})
         username_textinputs = get_elements(world.browser, tag_name="input", id_attr="user")
-        password_textinputs = get_elements(world.browser, tag_name="input", id_attr="password")
-        submit_inputs = get_elements(world.browser, tag_name="button", attrs={'type': 'submit'})
+        password_textinputs = get_elements(world.browser, tag_name="input", id_attr="show_password")
+        submit_inputs = get_elements(world.browser, tag_name="button", attrs={'onclick': 'disable_save()'})
 
         if not elem_options or not username_textinputs or not password_textinputs or not submit_inputs:
             time.sleep(TIME_TO_SLEEP)
