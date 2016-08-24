@@ -9,6 +9,6 @@ before_install:
     - docker ps -a
 
 script:
-    - docker run -it testfield_test test FUNCTEST lp:unifield-server/uf2.1-2 lp:unifield-web/uf2.1-2
+    - docker run -it testfield_test test FUNCTEST lp:unifield-server lp:unifield-web
 
 
