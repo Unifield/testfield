@@ -3,6 +3,7 @@
 set -o errexit
 
 export LANG=C.UTF-8
+export PATH=/home/testing/firefox:$PATH
 # if you want to create a RAMFS with the database
 PARAMS=$@
 
