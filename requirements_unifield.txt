@@ -1,3 +1,4 @@
+Babel==2.1.1
 CherryPy==3.1.2
 FormEncode==1.2.2
 Mako==0.2.5
@@ -10,3 +11,5 @@ reportlab==2.4
 simplejson==2.0.9
 six==1.10.0
 bzr==2.7.0
+egenix-mx-base==3.2.9
+PyYAML==3.11
