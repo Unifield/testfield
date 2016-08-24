@@ -1,10 +1,13 @@
-FROM ubuntu:xenial
+FROM ubuntu:precise
 MAINTAINER hectord
 
 WORKDIR /root
 
-RUN apt-get update && apt-get install -y tmux libxml2-dev libxslt1-dev python-dev libjpeg-dev libpng-dev libfreetype6-dev build-essential wget pkg-config libpq-dev python-dev bzr git vim telnet net-tools unzip netcat-openbsd xvfb
-RUN apt-get update && apt-get install -y firefox=45.0.2+build1-0ubuntu1
+RUN echo deb http://ppa.launchpad.net/fkrull/deadsnakes/ubuntu precise main >> /etc/apt/sources.list
+
+RUN apt-get update && apt-get install -y --force-yes python-dev python2.6 tmux libxml2-dev libxslt1-dev libjpeg-dev libpng-dev libfreetype6-dev build-essential wget pkg-config libpq-dev bzr git vim telnet net-tools unzip netcat-openbsd xvfb
+
+RUN ln -f /usr/bin/python2.6 $(which python)
 
 RUN wget https://bootstrap.pypa.io/get-pip.py
 RUN python get-pip.py
@@ -36,7 +39,16 @@ EXPOSE 8061
 
 VOLUME ["/output"]
 
+# Install some specific packages needed for Firefox 20.0 (installed below)
+RUN apt-get update && apt-get install -y libgtk2.0-0 libgtk-3-0 libasound2 libcanberra0 libdbus-glib-1-2 libdbusmenu-glib4 libdbusmenu-gtk4 libltdl7 libogg0 libstartup-notification0 libtdb1 libvorbis0a libvorbisfile3 libx11-xcb1 libxcb-util0 sound-theme-freedesktop
+
 USER testing
+
+RUN wget https://ftp.mozilla.org/pub/firefox/releases/20.0/linux-x86_64/en-GB/firefox-20.0.tar.bz2
+RUN bunzip2 firefox-20.0.tar.bz2
+RUN tar -xvvf firefox-20.0.tar
+ENV PATH /home/testing/firefox:${PATH}
+
 
 ADD docker/docker-entrypoint.sh ./
 ADD docker/root-entrypoint.sh ./
