@@ -5,7 +5,7 @@ WORKDIR /root
 
 RUN echo deb http://ppa.launchpad.net/fkrull/deadsnakes/ubuntu precise main >> /etc/apt/sources.list
 
-RUN apt-get update && apt-get install -y --force-yes python-dev python2.6 tmux libxml2-dev libxslt1-dev libjpeg-dev libpng-dev libfreetype6-dev build-essential wget pkg-config libpq-dev bzr git vim telnet net-tools unzip netcat-openbsd xvfb
+RUN apt-get update && apt-get install -y --force-yes python2.6-dev python2.6 tmux libxml2-dev libxslt1-dev libjpeg-dev libpng-dev libfreetype6-dev build-essential wget pkg-config libpq-dev bzr git vim telnet net-tools unzip netcat-openbsd xvfb
 
 RUN ln -f /usr/bin/python2.6 $(which python)
 
@@ -55,3 +55,8 @@ ADD docker/root-entrypoint.sh ./
 ADD docker/config.sh ./
 
 USER root
+
+ADD requirements.txt ./
+RUN pip install numpy==1.5.0
+RUN pip install -r requirements.txt
+
