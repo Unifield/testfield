@@ -153,7 +153,12 @@ else
     FORCED_DATE=no
 fi
 
-python restore.py --reset-versions $ENVNAME
+if [[ ${FORCED_DATE} == yes ]]
+then
+    python restore.py --reset-sync --reset-versions $ENVNAME
+else
+    python restore.py --reset-versions $ENVNAME
+fi
 
 if [[ "${UPGRADE_MODULES}" != no ]]
 then

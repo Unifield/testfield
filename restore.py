@@ -27,11 +27,14 @@ if __name__ == '__main__':
     from utils import *
 
     FLAG_RESET_VERSION ='--reset-versions'
+    FLAG_RESET_SYNC ='--reset-sync'
 
     db_address_with_flag = '' if not DB_ADDRESS else "-h %s" % DB_ADDRESS
 
     reset_versions = FLAG_RESET_VERSION in sys.argv
+    reset_sync = FLAG_RESET_SYNC in sys.argv
     arguments = filter(lambda x : x != FLAG_RESET_VERSION, sys.argv)
+    arguments = filter(lambda x : x != FLAG_RESET_SYNC, arguments)
 
     if len(arguments) == 1:
         sys.stdout.write("Env name: ")
@@ -172,6 +175,11 @@ if __name__ == '__main__':
                     run_script(dbname, "UPDATE sync_client_sync_server_connection SET database = '%s', host = 'localhost', protocol = 'netrpc_gzip', port = %d" % (new_name, NETRPC_PORT))
                 if reset_versions:
                     run_script(dbname, "DELETE FROM sync_client_version WHERE sum NOT IN ('88888888888888888888888888888888', '66f490e4359128c556be7ea2d152e03b')")
+
+                if reset_sync:
+                    run_script(dbname, "UPDATE ir_model_data SET create_date = '2016-05-24' WHERE create_date > '2016-05-24' OR create_date IS NULL")
+                    run_script(dbname, "UPDATE ir_model_data SET last_modification =  CASE WHEN sync_date < last_modification OR sync_date IS NULL THEN TIMESTAMP '2016-05-24 23:00:00' ELSE TIMESTAMP '2016-05-24 01:00:00' END")
+                    run_script(dbname, "UPDATE ir_model_data SET sync_date = TIMESTAMP '2016-05-24 12:00:00'")
 
                 #FIXME use the same ariable as in steps.py
                 #FIXME here we rely on the fact that lettuce and the database run on the same server
