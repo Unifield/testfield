@@ -564,6 +564,8 @@ def repeat_until_no_exception(world, action, exceptions, *params, **vparams):
             tick(str(e))
             time.sleep(TIME_TO_SLEEP)
 
+            refresh_window(world)
+
 def wait_until_element_does_not_exist(browser, get_elem, message=''):
     '''
     This method tries to click on the elem(ent) until the click doesn't raise en exception.
