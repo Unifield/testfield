@@ -141,7 +141,7 @@ then
 fi
 
 # We have to wait in a docker container as well as a shell script
-if [[ -t 1 || $IN_DOCKER ]]
+if [[ ( -t 1 || $IN_DOCKER ) && $1 == setup ]]
 then
     while true;
     do
