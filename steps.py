@@ -688,7 +688,7 @@ def internal_fill_field(fieldname, content, position=0):
 @handle_delayed_step
 @output.register_for_printscreen
 def fill_field(step, fieldname, content):
-    internal_fill_field(fieldname, content, position=0)
+    repeat_until_no_exception(world, internal_fill_field, StaleElementReferenceException, fieldname, content, position=0)
 
 @step('I fill:$')
 @handle_delayed_step
@@ -1320,7 +1320,7 @@ def check_checkbox_action(content, fieldname, action=None):
 @handle_delayed_step
 @output.register_for_printscreen
 def fill_column(step, content, fieldname):
-    check_checkbox_action(content, fieldname)
+    repeat_until_no_exception(world, check_checkbox_action, StaleElementReferenceException, content, fieldname)
 
 @step('I fill "([^"]*)" within column "([^"]*)" and open the window')
 @handle_delayed_step

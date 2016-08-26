@@ -552,13 +552,13 @@ def wait_until_no_ajax(world, message="A javascript operation is still ongoing")
 
         return
 
-def repeat_until_no_exception(world, action, exceptions, *params):
+def repeat_until_no_exception(world, action, exceptions, *params, **vparams):
     # We use a monitor only after the first exception because we don't know
     tick = monitor(world.browser, "We have waited for too long")
 
     while True:
         try:
-            return action(*params)
+            return action(*params, **vparams)
         except exceptions as e:
             print str(e)
             tick(str(e))
