@@ -122,6 +122,7 @@ then
     START_FAKETIME="faketime -f -${TIME_BEFORE}s"
 fi
 
+sleep 1
 tmux new -d -s PostGre_$NAME_KILL "${START_FAKETIME} $DBDIR/postgres -D $DATADIR"
 
 #TODO: Fix that... we should wait until psql can connect

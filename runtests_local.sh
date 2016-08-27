@@ -76,6 +76,8 @@ echo "name=${TEST_NAME-Unknown}" >> output/meta
 echo "description=${TEST_DESCRIPTION-Unknown}" >> output/meta
 echo "date=${TEST_DATE--}" >> output/meta
 
+sleep 1
+
 if [[ -z "$DISPLAY" ]];
 then
     BROWSER="$BROWSER" xvfb-run -s '-screen 1 1024x768x16' -l -a faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@

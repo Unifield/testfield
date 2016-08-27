@@ -300,12 +300,14 @@ case $ACTION in
         #  We'll launch them later in a tmux
         SESSION_NAME=unifield_$NAME
         tmux new -d -s $SESSION_NAME -n server "
+            sleep 1;
 
             tmux new-window -n web \"
             $START_FAKETIME $UNBUFFER_CMD python $WEBDIR/openerp-web.py -c $CFG_WEB > $WEBDIR/web.logs 2>&1 & PID="'\$!'" ;
             echo \\\$PID > $PID_WEB_FILE;
             wait \\\$PID;
             \";
+            sleep 1;
 
             $START_FAKETIME $UNBUFFER_CMD python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER > $SERVERDIR/server.logs 2>&1 & PID="'$!'" ;
             echo \$PID > $PID_SERVER_FILE;
