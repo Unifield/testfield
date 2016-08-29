@@ -10,7 +10,7 @@ function usage()
     echo $0 [-h] [-d dir] version name
     echo $0 [-h] [-d dir] logs name
     echo "  -h: help"
-    echo "  -s: number of seconds to shift"
+    echo "  -s: number of seconds to shift (default: no)"
     echo "  -c: configuration file (default \$(pwd)/config.sh). Values looked up in this file are:"
     echo "       XMLRPCS_PORT:"
     echo "       XMLRPC_PORT:"
@@ -328,7 +328,7 @@ case $ACTION in
             REAL_NAME=${DBPREFIX}_${REAL_NAME}
         fi
 
-        python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER -u base --stop-after-init -d $REAL_NAME
+        $START_FAKETIME python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER -u base --stop-after-init -d $REAL_NAME
 
         ;;
     *)
