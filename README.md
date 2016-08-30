@@ -137,7 +137,7 @@ pip install -r requirements.txt
 # if you want to install Unifield on your system:
 pip install -r requirements_unifield.txt
 ```
-+ Set the configuration variable in `config.sh` in order to connect testfield to Unifield (only the local configuration section if you want to launch the tests against an existing version of Unifield, otherwise you'll have to update the DB configuration variables)
++ Set the configuration variable in `config.sh` in order to connect testfield to Unifield (only the local configuration section if you want to launch the tests against an existing version of Unifield, otherwise you'll have to update the DB configuration variables: ```SERVER_TMPDIR=/tmp```, ```DBPATH=/usr/lib/postgresql/8.4/bin/```, ```FORCED_DATE=yes```)
 + Update the credentials
 ```
 ./generate_credentials.sh
@@ -146,7 +146,8 @@ pip install -r requirements_unifield.txt
 ```
 ./fetch/owncloud/fetch.sh
 ```
-+ Launch testfield. By default, your Firefox instance will be used. testfield doesn't work with the last version of Firefox (47.0 now). You need Firefox <= 46.0 or Firefox >= 48.0 with [Mozilla Marionette](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette).
++ Install Firefox (if necessary). By default, your Firefox instance will be used. testfield doesn't work with the last version of Firefox (47.0 now). You need Firefox <= 46.0 or Firefox >= 48.0 with [Mozilla Marionette](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette). If you execute testfield on a server, you'll have to install Xvfb ```sudo apt-get install Xvfb```.
++ Launch testfield.
 ```
 # if you want to launch testfield against an existing version of Unifield
 ./runtests_local.sh
