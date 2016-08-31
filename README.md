@@ -154,4 +154,10 @@ pip install -r requirements_unifield.txt
 # if you want to launch testfield against a new version of Unifield
 ./runtests_server.sh test MY_FIRST_TESTS
 ```
++ When the test or benchmark is done, you can see the result on the webserver included in [testfield on port 8080](http://localhost:8080).
+```
+cd website
+python performance.py
+```
+
 
