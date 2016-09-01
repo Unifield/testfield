@@ -109,6 +109,11 @@ def connect_to_db():
     base_dir = os.path.dirname(__file__)
     file_path = os.path.join(base_dir, FILE_DIR)
 
+    # we have to clean the environment variables, otherwise Firefox crash with the following
+    #  error message: SQLite Version Error
+    if 'DYLD_FORCE_FLAT_NAMESPACE' in os.environ:
+        del os.environ['DYLD_FORCE_FLAT_NAMESPACE']
+
     if 'BROWSER' not in os.environ or os.environ['BROWSER'] == "firefox":
         # we are going to download all the files in the file directory
         profile = webdriver.FirefoxProfile()
