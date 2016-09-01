@@ -5,9 +5,10 @@ set -o pipefail
 
 DBPATH=/tmp
 DBDIR=
-FORCED_DATE=no
 DBPORT=5432
 CREDENTIALS=testing
+FORCED_DATE=no
+TIME_BEFORE=0
 
 function usage()
 {
@@ -54,6 +55,7 @@ echo " dir: $DBDIR"
 echo " port: $DBPORT"
 echo " username: $CREDENTIALS"
 echo " password: $CREDENTIALS"
+echo " time shift: -$TIME_BEFORE"
 
 POS_PARAM=(${@:$OPTIND})
 NAME_KILL=${POS_PARAM[0]}
@@ -107,6 +109,13 @@ DBADDR=localhost
 
 mkdir $DATADIR $RUNDIR
 
+# we have to change the date before the initdb otherwise PostgreSQL doesn't take the
+#   new date into account.
+if [[ $FORCED_DATE == yes ]]
+then
+    source scripts/setup_faketime.sh ${TIME_BEFORE}
+fi
+
 $DBDIR/initdb --username=$USER $DATADIR
 
 echo "port = $DBPORT" >> $DATADIR/postgresql.conf
@@ -116,14 +125,7 @@ then
     echo "unix_socket_directory = '$RUNDIR'" >> $DATADIR/postgresql.conf
 fi
 
-START_FAKETIME=
-if [[ $FORCED_DATE == yes ]]
-then
-    START_FAKETIME="faketime -f -${TIME_BEFORE}s"
-fi
-
-sleep 1
-tmux new -d -s PostGre_$NAME_KILL "${START_FAKETIME} $DBDIR/postgres -D $DATADIR"
+tmux new -d -s PostGre_$NAME_KILL "$DBDIR/postgres -D $DATADIR"
 
 #TODO: Fix that... we should wait until psql can connect
 for i in $(seq 1 10);

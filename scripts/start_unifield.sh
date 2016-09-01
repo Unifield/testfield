@@ -27,6 +27,7 @@ function usage()
 BDIR=/tmp
 CONFIG_FILE="$(pwd)/config.sh"
 TIME_BEFORE=
+FORCED_DATE=no
 
 while getopts "s:d:h" OPTION
 do
@@ -36,6 +37,7 @@ do
         exit 1
         ;;
     s)
+        FORCED_DATE=yes
         TIME_BEFORE=$OPTARG
         ;;
     d)
@@ -55,11 +57,9 @@ POS_PARAM=(${@:$OPTIND})
 ACTION=${POS_PARAM[0]}
 NAME=${POS_PARAM[1]}
 
-
-START_FAKETIME=
-if [[ $TIME_BEFORE ]]
+if [[ $FORCED_DATE == yes ]]
 then
-    START_FAKETIME="faketime -f -${TIME_BEFORE}s"
+    source scripts/setup_faketime.sh ${TIME_BEFORE}
 fi
 
 if ! which unbuffer >&2 > /dev/null;
@@ -293,8 +293,8 @@ case $ACTION in
 
     run)
 
-        echo "Run WEB: $START_FAKETIME python $WEBDIR/openerp-web.py -c $CFG_WEB"
-        echo "RUN SERVER: $START_FAKETIME python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER"
+        echo "Run WEB: python $WEBDIR/openerp-web.py -c $CFG_WEB"
+        echo "RUN SERVER: python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER"
 
         # we print the commands to launch the components in a separate window in order to debug.
         #  We'll launch them later in a tmux
@@ -303,13 +303,13 @@ case $ACTION in
             sleep 1;
 
             tmux new-window -n web \"
-            $START_FAKETIME $UNBUFFER_CMD python $WEBDIR/openerp-web.py -c $CFG_WEB > $WEBDIR/web.logs 2>&1 & PID="'\$!'" ;
+            $UNBUFFER_CMD python $WEBDIR/openerp-web.py -c $CFG_WEB > $WEBDIR/web.logs 2>&1 & PID="'\$!'" ;
             echo \\\$PID > $PID_WEB_FILE;
             wait \\\$PID;
             \";
             sleep 1;
 
-            $START_FAKETIME $UNBUFFER_CMD python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER > $SERVERDIR/server.logs 2>&1 & PID="'$!'" ;
+            $UNBUFFER_CMD python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER > $SERVERDIR/server.logs 2>&1 & PID="'$!'" ;
             echo \$PID > $PID_SERVER_FILE;
             wait \$PID;
             \""
@@ -328,7 +328,7 @@ case $ACTION in
             REAL_NAME=${DBPREFIX}_${REAL_NAME}
         fi
 
-        $START_FAKETIME python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER -u base --stop-after-init -d $REAL_NAME
+        python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER -u base --stop-after-init -d $REAL_NAME
 
         ;;
     *)
