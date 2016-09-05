@@ -308,7 +308,6 @@ case $ACTION in
         #  We'll launch them later in a tmux
         SESSION_NAME=unifield_$NAME
         tmux new -d -s $SESSION_NAME -n server "
-            sleep 1;
 
             tmux new-window -n web \"
             $PREFIX_CONSOLE;
@@ -316,7 +315,6 @@ case $ACTION in
             echo \\\$PID > $PID_WEB_FILE;
             wait \\\$PID;
             \";
-            sleep 1;
 
             $PREFIX_CONSOLE;
 

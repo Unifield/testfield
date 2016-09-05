@@ -90,8 +90,6 @@ if [ $BROWSER = "firefox" ]; then
     fi
 fi
 
-sleep 1
-
 if [[ $FORCED_DATE == yes ]]
 then
     if [[ $(uname) == Darwin ]]
