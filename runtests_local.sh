@@ -76,6 +76,18 @@ echo "name=${TEST_NAME-Unknown}" >> output/meta
 echo "description=${TEST_DESCRIPTION-Unknown}" >> output/meta
 echo "date=${TEST_DATE--}" >> output/meta
 
+if [ $BROWSER = "firefox" ]; then
+    v=`firefox --version | cut -d' ' -f 3 | sed 's/\..*$//'`
+    if [ "$v" == 48 ]; then
+	if [ ! -d $TESTFIELDDIR/firefox ]; then
+	    echo "Firefox $v is not usable."
+	    echo "Run $TESTFIELDDIR/get-firefox.sh to get Firefox 46 into $TESTFIELDDIR/firefox"
+	    exit 1
+	fi
+	export PATH=$TESTFIELDDIR/firefox:$PATH
+    fi
+fi
+
 sleep 1
 
 if [[ -z "$DISPLAY" ]];

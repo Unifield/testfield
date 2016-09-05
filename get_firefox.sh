@@ -1,10 +1,5 @@
 #!/bin/bash
 
-PATHDIR=`realpath $0`
-TESTFIELDDIR=`dirname $PATHDIR`
-
-cd $TESTFIELDDIR;
-
 if [ ! -d firefox ];
 then
     echo "Download Firefox v.46";
