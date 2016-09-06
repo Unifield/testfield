@@ -92,9 +92,9 @@ sleep 1
 
 if [[ -z "$DISPLAY" ]];
 then
-    BROWSER="$BROWSER" xvfb-run -s '-screen 1 1024x768x16' -l -a faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@
+    BROWSER="$BROWSER" xvfb-run -s '-screen 1 1024x768x16' -l -a /usr/local/bin/faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@
 else
-    BROWSER="$BROWSER" faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@
+    BROWSER="$BROWSER" /usr/local/bin/faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@
 fi
 
 RETVAR=$?
