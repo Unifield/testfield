@@ -319,8 +319,17 @@ def log_into(database_name, username, password):
 
         elem_options = get_elements(elem_select, tag_name="option", attrs={'value': database_name})
         username_textinputs = get_elements(world.browser, tag_name="input", id_attr="user")
-        password_textinputs = get_elements(world.browser, tag_name="input", id_attr="show_password")
-        submit_inputs = get_elements(world.browser, tag_name="button", attrs={'onclick': 'disable_save()'})
+	# be careful to handle both 2.1-3 and previous versions
+	password_textinputs = get_elements(world.browser, tag_name="input", id_attr="show_password")
+        if len(password_textinputs) == 0:
+		# it is older than 2.1-3, so look for password
+        	password_textinputs = get_elements(world.browser, tag_name="input", id_attr="password")
+
+	# same for submit_inputs: it is sensitive to version
+        submit_inputs = get_elements(world.browser, tag_name="button", attrs={'type': 'submit'})
+	if len(submit_inputs) == 0:
+		# it is 2.1-3 or after
+		submit_inputs = get_elements(world.browser, tag_name="button", attrs={'onclick': 'disable_save()'})
 
         if not elem_options or not username_textinputs or not password_textinputs or not submit_inputs:
             time.sleep(TIME_TO_SLEEP)
