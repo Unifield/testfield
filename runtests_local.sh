@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 TIME_BEFORE=0
+FORCED_DATE=no
 HAS_OPTION=no
 BROWSER=firefox
 
@@ -20,6 +21,7 @@ do
     case $OPTION in
     s)
         TIME_BEFORE=$OPTARG
+        FORCED_DATE=yes
         ;;
     b)
         BROWSER=$OPTARG
@@ -53,7 +55,7 @@ export COUNT=$COUNT
 
 echo "[INFO] start tests:"
 echo " browser: $BROWSER"
-echo " time shift: $TIME_BEFORE"
+echo " time shift: -$TIME_BEFORE"
 echo " count: $COUNT"
 
 set -o errexit
@@ -88,13 +90,25 @@ if [ $BROWSER = "firefox" ]; then
     fi
 fi
 
-sleep 1
+if [[ $FORCED_DATE == yes ]]
+then
+    if [[ $(uname) == Darwin ]]
+    then
+        export DYLD_INSERT_LIBRARIES=/usr/local/lib/faketime/libfaketime.1.dylib
+    else
+        export LD_PRELOAD=/usr/local/lib/faketime/libfaketime.so.1
+    fi
+    export DYLD_FORCE_FLAT_NAMESPACE=1
+    export FAKETIME="-${TIME_BEFORE}s"
+fi
 
 if [[ -z "$DISPLAY" ]];
 then
-    BROWSER="$BROWSER" xvfb-run -s '-screen 1 1024x768x16' -l -a /usr/local/bin/faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@
+    echo BROWSER="$BROWSER" xvfb-run -s '-screen 1 1024x768x16' -l -a python $TESTFIELDDIR/runtests.py $@
+    BROWSER="$BROWSER" xvfb-run -s '-screen 1 1024x768x16' -l -a python $TESTFIELDDIR/runtests.py $@
 else
-    BROWSER="$BROWSER" /usr/local/bin/faketime -f -${TIME_BEFORE}s python $TESTFIELDDIR/runtests.py $@
+    echo BROWSER="$BROWSER" python $TESTFIELDDIR/runtests.py $@
+    BROWSER="$BROWSER" python $TESTFIELDDIR/runtests.py $@
 fi
 
 RETVAR=$?
