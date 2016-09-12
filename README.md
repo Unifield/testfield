@@ -1,4 +1,4 @@
-# testfield [![Build Status](https://travis-ci.org/hectord/testfield.svg?branch=master)](https://travis-ci.org/hectord/testfield)
+# testfield [![Build Status](https://travis-ci.org/Unifield/testfield.svg?branch=master)](https://travis-ci.org/Unifield/testfield)
 The main purpose of testfield is to be able to instrument a fork of OpenERP 6 with a lightweight language that can be used by business analysts to write specifications and integration tests. Our goal is to achieve continuous integration without involving too much work from the developper side.
 
 Here is an example of a test:
