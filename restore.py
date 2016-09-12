@@ -181,11 +181,10 @@ if __name__ == '__main__':
                     run_script(dbname, "UPDATE ir_model_data SET last_modification =  CASE WHEN sync_date < last_modification OR sync_date IS NULL THEN TIMESTAMP '2016-05-24 23:00:00' ELSE TIMESTAMP '2016-05-24 01:00:00' END")
                     run_script(dbname, "UPDATE ir_model_data SET sync_date = TIMESTAMP '2016-05-24 12:00:00'")
 
-                #FIXME use the same ariable as in steps.py
+                #FIXME use the same variable as in steps.py
                 #FIXME here we rely on the fact that lettuce and the database run on the same server
-                FILE_DIR = 'files'
                 base_dir = os.path.dirname(__file__)
-                file_path = os.path.join(base_dir, FILE_DIR)
+                file_path = os.path.join(base_dir, 'files')
                 file_path = os.path.abspath(file_path)
 
                 # this is not safe
