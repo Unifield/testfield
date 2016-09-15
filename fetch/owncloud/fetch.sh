@@ -11,10 +11,11 @@ rm -rf files meta_features instances
 KEY_FETCH=${KEY_FETCH-U1rh2XBegWVz78F}
 
 echo "Download the zip file"
-wget -O tests.zip https://cloud.msf.org/index.php/s/${KEY_FETCH}/download
-DIRNAME=$(unzip -qql tests.zip | head -n1 | tr -s ' ' | cut -d' ' -f5-)
+out=`date +test-%a.zip`
+wget -q -O $out https://cloud.msf.org/index.php/s/${KEY_FETCH}/download
+DIRNAME=$(unzip -qql $out | head -n1 | tr -s ' ' | cut -d' ' -f5-)
 
-mv tests.zip .tmp/
+cp $out .tmp/tests.zip
 cd .tmp
 
 echo "Unzip"
