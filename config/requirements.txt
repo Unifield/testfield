@@ -37,3 +37,6 @@ testtools==2.1.0
 traceback2==1.4.0
 unittest2==1.1.0
 OERPLib==0.8.3
+cffi=1.8.2
+passlib==1.6.5
+bcrypt==2.0.0
