@@ -29,7 +29,7 @@ This tool is based on [Lettuce](https://github.com/gabrielfalcao/lettuce) and [S
 The language we use is straightforward since the user interface has always the same structure.  Clicking on a button is always done the same way.  As a result, we only need to name the button and use the right syntax (a/k/a **a step**) to perform the click:
 > I click on "ABC"
 
-There are only a few steps to instrument the whole application. They are described [here](https://github.com/hectord/testfield/wiki/Steps).
+There are only a few steps to instrument the whole application. They are described [here](https://github.com/Unifield/testfield/wiki/Steps).
 
 ### Use variables
 You can use the variable {{ID}} in all your tests. This value is an integer that is new at each run. It can be used to create unique identifiers (for example: a stock name, a register name, and so on). Our goal is that every test should be designed to be run as many times as we want on the same database. It shouldn’t interact with results coming from other tests. 
@@ -42,7 +42,7 @@ Finally, you can also use functions to alter variables while executing a scenari
 
 ### Use steps
 
-All the steps are described [here](https://github.com/hectord/testfield/wiki/Steps). The are grouped by:
+All the steps are described [here](https://github.com/Unifield/testfield/wiki/Steps). The are grouped by:
 + First steps: how to log into/out of a database (with or without password)
 + Synchronization: synchronize an instance
 + Go to the right interface: browse the interface (menu, tabs and so on)
@@ -60,7 +60,7 @@ All the steps are described [here](https://github.com/hectord/testfield/wiki/Ste
 
 testfield can be installed on your computer. The installation procedure is available below.
 
-Alternatively, you might use a docker image available on [dockerhub](https://hub.docker.com/r/hectord/autotestfield/).
+Alternatively, you might use a docker image available on [dockerhub](https://hub.docker.com/r/unifield/testfield/).
 
 ### The easy way (Docker)
 
@@ -122,7 +122,7 @@ You should see: ```Fri Jan  1 00:00:00 CET 2010```.
 
 + Clone the repository
 ```
-git clone https://github.com/hectord/testfield.git
+git clone https://github.com/Unifield/testfield.git
 ```
 + Create a virtualenv (*outside the testfield repository you've just cloned*), activate it and install the Python packages
 ```
