@@ -111,7 +111,7 @@ You can run testfield in several ways:
 You might decide to run testfield directly on your computer to debug a specific version of Unifield. It's especially useful for troubleshooting.
 
 To achieve that, you need an up and running version of Unifield with the dumps matching the tests you want to run. You can either:
-+ set up your own environment (either in a docker container as in [docker-unifield](https://github.com/TeMPO-Consulting/docker-unifield) or directly on your computer). If you do that, you'll have to restore the test databases.
++ set up your own environment (either in a docker container as in [docker-unifield](https://github.com/Unifield/docker-unifield) or directly on your computer). If you do that, you'll have to restore the test databases.
 + use Unifield after running the tests in a Docker container. Don't forget to let the environment as it is after the tests with "setup".
 
 Prior to testfield's installation, you need to ensure that you have already set up [faketime](https://github.com/wolfcw/libfaketime) (>= 0.9.6) on your computer (```git clone https://github.com/wolfcw/libfaketime.git && libfaketime``` ```make```, ```sudo make install``` and so on). It must be in your path. To check that, please run:
