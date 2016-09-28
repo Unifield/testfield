@@ -17,3 +17,4 @@ cffi==1.8.2
 passlib==1.6.5
 bcrypt==2.0.0
 python-dateutil==2.5.3
+pylzma==0.4.8
