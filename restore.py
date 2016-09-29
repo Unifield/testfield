@@ -92,6 +92,9 @@ if __name__ == '__main__':
         elif not os.path.isdir(environment_dir):
             raise Exception("%s is not a valid directory" % environment_dir)
 
+        sync_server_db = False
+        to_restore = []
+
         for filename in os.listdir(environment_dir):
             dbname, _ = os.path.splitext(filename)
 
@@ -102,6 +105,11 @@ if __name__ == '__main__':
                 raise Exception("No database name in %s" % dbname)
 
             dbname = prefix_db_name(dbname)
+            to_restore.append((dbname, filename))
+            if 'SYNC_SERVER' in dbname:
+                sync_server_db = dbname
+
+        for dbname, filename in to_restore:
 
             print "Restoring", dbname
 
@@ -163,16 +171,17 @@ if __name__ == '__main__':
                 if reset_versions:
                     run_script(dbname, "DELETE FROM sync_server_version WHERE sum NOT IN ('88888888888888888888888888888888', '66f490e4359128c556be7ea2d152e03b')")
             else:
-                ret = run_script(dbname, "select database from sync_client_sync_server_connection")
-                other = ret.split('\n')
-                lines = filter(lambda x : x, other)
+                if not sync_server_db:
+                    ret = run_script(dbname, "select database from sync_client_sync_server_connection")
+                    other = ret.split('\n')
+                    lines = filter(lambda x : x, other)
 
-                if lines:
-                    line = lines[0]
-                    pointed_dbname = line.strip()
-                    new_name = prefix_db_name(pointed_dbname)
+                    if lines:
+                        line = lines[0]
+                        pointed_dbname = line.strip()
+                        sync_server_db = prefix_db_name(pointed_dbname)
 
-                    run_script(dbname, "UPDATE sync_client_sync_server_connection SET database = '%s', host = 'localhost', protocol = 'netrpc_gzip', port = %d" % (new_name, NETRPC_PORT))
+                run_script(dbname, "UPDATE sync_client_sync_server_connection SET database = '%s', host = 'localhost', protocol = 'netrpc_gzip', port = %d" % (sync_server_db, NETRPC_PORT))
                 if reset_versions:
                     run_script(dbname, "DELETE FROM sync_client_version WHERE sum NOT IN ('88888888888888888888888888888888', '66f490e4359128c556be7ea2d152e03b')")
 
