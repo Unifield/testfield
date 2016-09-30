@@ -30,7 +30,8 @@ then
 
         # we have to ensure to export the new environment variables
         #  if we create a new tmux session.
-        tmux set-option -ga update-environment ' FAKETIME DYLD_FORCE_FLAT_NAMESPACE LD_PRELOAD DYLD_INSERT_LIBRARIES' || true
+        # does not work !
+        # tmux set-option -ga update-environment ' FAKETIME DYLD_FORCE_FLAT_NAMESPACE LD_PRELOAD DYLD_INSERT_LIBRARIES' || true
     fi
 
 else

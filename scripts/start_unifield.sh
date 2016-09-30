@@ -56,17 +56,18 @@ POS_PARAM=(${@:$OPTIND})
 
 ACTION=${POS_PARAM[0]}
 NAME=${POS_PARAM[1]}
-
+FAKED_COMMAND=""
 if [[ $FORCED_DATE == yes ]]
 then
     source scripts/setup_faketime.sh ${TIME_BEFORE}
+    FAKED_COMMAND="FAKETIME=$FAKETIME LD_PRELOAD=$LD_PRELOAD"
 fi
 
 if ! which unbuffer >&2 > /dev/null;
 then
-    UNBUFFER_CMD=
+    UNBUFFER_CMD=$FAKED_COMMAND
 else
-    UNBUFFER_CMD="unbuffer"
+    UNBUFFER_CMD="unbuffer $FAKED_COMMAND"
 fi
 
 SERVERDIR=$BDIR/server_$NAME

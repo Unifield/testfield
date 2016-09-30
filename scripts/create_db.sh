@@ -12,7 +12,7 @@ TIME_BEFORE=0
 
 function usage()
 {
-    echo $0 [-h] -P execpath [-D dbpath] [-d seconds] [-p port] [-c credentials] name
+    echo $0 [-h] -P execpath [-D dbpath] [-s seconds] [-p port] [-c credentials] name
     echo "  -h: help"
     echo "  -P: path to PostgreSQL"
     echo "  -D: set the DB path var/run in a specific directory (default: /tmp)"
@@ -108,12 +108,13 @@ RUNDIR=$DBPATH/run-$NAME_KILL
 DBADDR=localhost
 
 mkdir $DATADIR $RUNDIR
-
+FAKED_COMMAND=''
 # we have to change the date before the initdb otherwise PostgreSQL doesn't take the
 #   new date into account.
 if [[ $FORCED_DATE == yes ]]
 then
     source scripts/setup_faketime.sh ${TIME_BEFORE}
+    FAKED_COMMAND="FAKETIME=$FAKETIME LD_PRELOAD=$LD_PRELOAD"
 fi
 
 $DBDIR/initdb --username=$USER $DATADIR
@@ -125,7 +126,7 @@ then
     echo "unix_socket_directory = '$RUNDIR'" >> $DATADIR/postgresql.conf
 fi
 
-tmux new -d -s PostGre_$NAME_KILL "$DBDIR/postgres -D $DATADIR"
+tmux new -d -s PostGre_$NAME_KILL "$FAKED_COMMAND $DBDIR/postgres -D $DATADIR"
 
 #TODO: Fix that... we should wait until psql can connect
 for i in $(seq 1 10);
