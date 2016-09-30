@@ -104,8 +104,8 @@ fi
 
 if [[ -z "$DISPLAY" ]];
 then
-    echo BROWSER="$BROWSER" xvfb-run -s '-screen 1 1024x768x16' -l -a python $TESTFIELDDIR/runtests.py $@
-    BROWSER="$BROWSER" xvfb-run -s '-screen 1 1024x768x16' -l -a python $TESTFIELDDIR/runtests.py $@
+    echo BROWSER="$BROWSER" xvfb-run -s '-screen 1 1024x768x16' -a python $TESTFIELDDIR/runtests.py $@
+    BROWSER="$BROWSER" xvfb-run -s '-screen 1 1024x768x16' -a python $TESTFIELDDIR/runtests.py $@
 else
     echo BROWSER="$BROWSER" python $TESTFIELDDIR/runtests.py $@
     BROWSER="$BROWSER" python $TESTFIELDDIR/runtests.py $@
