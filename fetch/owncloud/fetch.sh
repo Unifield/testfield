@@ -8,7 +8,7 @@ mkdir .tmp
 echo "Clean up data"
 rm -rf files meta_features instances
 
-KEY_FETCH=${KEY_FETCH-U1rh2XBegWVz78F}
+KEY_FETCH=${KEY_FETCH-tSrHBNFemfKIVuY}
 
 echo "Download the zip file"
 out=`date +test-%a.zip`
