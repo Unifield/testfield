@@ -271,7 +271,12 @@ def get_elements_from_text(element, tag_name, text, class_attr='', wait=''):
 
     You can indicate wether this method is expected to wait for this element to appear.
     '''
+
     class_attr = (" and @class = '%s'" % class_attr) if class_attr else ''
+
+    if text.endswith('@form'):
+        class_attr = "%s and not(contains(@class,'button-a'))" % class_attr
+        text = text.replace('@form', '')
 
     if not isinstance(tag_name, list):
         tag_name = [tag_name]
