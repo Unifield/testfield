@@ -702,12 +702,14 @@ def internal_fill_field(fieldname, content, position=0):
 @handle_delayed_step
 @output.register_for_printscreen
 def fill_field(step, fieldname, content):
+    refresh_window(world)
     repeat_until_no_exception(world, internal_fill_field, StaleElementReferenceException, fieldname, content, position=0)
 
 @step('I fill:$')
 @handle_delayed_step
 @output.register_for_printscreen
 def fill_set_of_fields(step):
+    refresh_window(world)
 
     import collections
     pos_by_label = collections.defaultdict(lambda : 0)
@@ -730,6 +732,7 @@ def fill_set_of_fields(step):
 @handle_delayed_step
 @output.register_for_printscreen
 def fill_field_and_open(step, fieldname, content):
+    refresh_window(world)
     internal_fill_field(fieldname, content, position=0)
 
     world.browser.switch_to_default_content()
@@ -845,6 +848,7 @@ def validate_variable(variable_name):
 @step('I store column "([^"]*)" in "([^"]*)" for line:$')
 @handle_delayed_step
 def remember_step_in_table(step, column_name, variable):
+    refresh_window(world)
 
     wait_until_not_loading(world.browser, wait=world.nbframes == 0)
     wait_until_no_ajax(world)
@@ -889,6 +893,7 @@ def remember_step(step, fieldname, variable):
 @step('I click on "([^"]*)" until not available$')
 @handle_delayed_step
 def click_until_not_available2(step, button):
+    refresh_window(world)
     wait_until_not_loading(world.browser, wait=world.nbframes == 0)
 
     tick = monitor(world.browser)
@@ -907,6 +912,7 @@ def click_until_not_available2(step, button):
 @step('I click on "([^"]*)" until "([^"]*)" in "([^"]*)"$')
 @handle_delayed_step
 def click_until_not_available1(step, button, value, fieldname):
+    refresh_window(world)
 
     wait_until_not_loading(world.browser, wait = "Loading before clicking takes too much time" if world.nbframes == 0 else '')
     tick = monitor(world.browser)
@@ -951,6 +957,7 @@ def if_a_window_is_open(step, nextstep):
 @handle_delayed_step
 @output.add_printscreen
 def close_window_if_necessary(step, button):
+    refresh_window(world)
 
     # It seems that some action could still be launched when clicking on a button,
     #  we have to wait on them for completion
@@ -1000,6 +1007,7 @@ def close_window_if_necessary(step, button):
 @handle_delayed_step
 @output.add_printscreen
 def click_on_button(step, button):
+    refresh_window(world)
     # It seems that some action could still be launched when clicking on a button,
     #  we have to wait on them for completion
     # But we cannot do that for frames because the "loading" menu item doesn't exist
@@ -1034,6 +1042,7 @@ def click_on_button(step, button):
 @handle_delayed_step
 @output.add_printscreen
 def click_on_button_and_open(step, button):
+    refresh_window(world)
 
     wait_until_not_loading(world.browser, wait=False)
     wait_until_no_ajax(world)
@@ -1053,6 +1062,7 @@ def click_on_button_and_open(step, button):
 @handle_delayed_step
 @output.add_printscreen
 def close_the_window(step):
+    refresh_window(world)
 
     world.browser.switch_to_default_content()
 
@@ -1071,6 +1081,7 @@ def close_the_window(step):
 @handle_delayed_step
 @output.add_printscreen
 def click_on_button_and_close(step, button):
+    refresh_window(world)
 
     msg = "Cannot find the button to close the window"
     click_on(world,  lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg), msg)
@@ -1133,6 +1144,7 @@ def get_values(fieldname):
 @handle_delayed_step
 @output.register_for_printscreen
 def should_see(step, content, fieldname):
+    refresh_window(world)
 
     wait_until_not_loading(world.browser, wait=False)
 
@@ -1334,12 +1346,14 @@ def check_checkbox_action(content, fieldname, action=None):
 @handle_delayed_step
 @output.register_for_printscreen
 def fill_column(step, content, fieldname):
+    refresh_window(world)
     repeat_until_no_exception(world, check_checkbox_action, StaleElementReferenceException, content, fieldname)
 
 @step('I fill "([^"]*)" within column "([^"]*)" and open the window')
 @handle_delayed_step
 @output.register_for_printscreen
 def fill_column_with_window(step, content, fieldname):
+    refresh_window(world)
     fill_column(step, content, fieldname)
 
     wait_until_no_ajax(world)
@@ -1355,6 +1369,7 @@ def fill_column_with_window(step, content, fieldname):
 @handle_delayed_step
 @output.register_for_printscreen
 def click_on_all_line(step):
+    refresh_window(world)
 
     wait_until_not_loading(world.browser, wait=False)
     wait_until_no_ajax(world)
@@ -1455,12 +1470,14 @@ def click_on_line(step, action, window_will_exist=True):
 @handle_delayed_step
 @output.add_printscreen
 def click_on_line_line(step):
+    refresh_window(world)
     click_on_line(step, "line")
 
 @step('I click "([^"]*)" on line:')
 @handle_delayed_step
 @output.register_for_printscreen
 def click_on_line_tooltip(step, action):
+    refresh_window(world)
     click_on_line(step, action)
 
 @step('I click "([^"]*)" on line and close the window:')
@@ -1470,6 +1487,7 @@ def click_on_line_and_open_the_window(step, action):
 
     if len(step.hashes) != 1:
         raise UnifieldException("You should click only on one line to close the window")
+    refresh_window(world)
 
     click_on_line(step, action, window_will_exist=False)
 
@@ -1491,6 +1509,7 @@ def click_on_line_and_open_the_window(step, action):
 @handle_delayed_step
 @output.add_printscreen
 def click_on_line_and_open_the_window(step, action):
+    refresh_window(world)
     click_on_line(step, action)
 
     world.browser.switch_to_default_content()
@@ -1530,12 +1549,14 @@ def check_that_line(step, should_see_lines, action=None):
 @handle_delayed_step
 @output.register_for_printscreen
 def check_line(step):
+    refresh_window(world)
     check_that_line(step, True)
 
 @step("I shouldn't be able to click \"([^\"]*)\"")
 @handle_delayed_step
 @output.register_for_printscreen
 def check_not_click_on_line(step, action):
+    refresh_window(world)
 
     # we have an issue when the user is not logged in... the important buttons are "at the end of the page". We have to
     #  fetch them in another order
@@ -1567,6 +1588,8 @@ def check_not_click_on_line(step, action):
 @handle_delayed_step
 @output.register_for_printscreen
 def check_not_click_on_line(step, action):
+    refresh_window(world)
+
     if len(step.hashes) != 1:
         raise UniFieldElementException("You should define what is the line unique line you want to click on")
 
@@ -1580,6 +1603,8 @@ def check_not_click_on_line(step, action):
 @handle_delayed_step
 @output.register_for_printscreen
 def should_be_able_to_edit(step, fieldname):
+    refresh_window(world)
+
     _, my_input = get_input(world.browser, fieldname)
 
     if not my_input.get_attribute("readonly") and not my_input.get_attribute("disabled"):
@@ -1589,6 +1614,7 @@ def should_be_able_to_edit(step, fieldname):
 @handle_delayed_step
 @output.register_for_printscreen
 def should_not_be_able_to_edit(step, fieldname):
+    refresh_window(world)
 
     def action_check(txt_input, content):
         if not txt_input.get_attribute("readonly") and not txt_input.get_attribute("disabled"):
@@ -1600,6 +1626,7 @@ def should_not_be_able_to_edit(step, fieldname):
 @handle_delayed_step
 @output.register_for_printscreen
 def check_line(step):
+    refresh_window(world)
     check_that_line(step, False)
 
 def search_until_I(step, action_search, see):
@@ -1620,6 +1647,7 @@ def search_until_I(step, action_search, see):
     tick = monitor(world.browser, ("I don't find the following row(s): %s" if see else "I still see %s") % myhashes)
 
     while repeat_until_no_exception(world, try_to_check_line, StaleElementReferenceException, myhashes) != see:
+        refresh_window(world)
         step.given('I click on "%s"' % action_search)
         time.sleep(TIME_TO_WAIT)
         tick()
@@ -1708,6 +1736,7 @@ def do_action_and_open_popup(world, action, *params, **vparams):
 @handle_delayed_step
 @output.add_printscreen
 def open_side_panel_and_open_popup(step, button):
+    refresh_window(world)
 
     def click_on_button(step, button):
         position_element = 0 if world.current_instance is not None else -1
@@ -1721,6 +1750,7 @@ def open_side_panel_and_open_popup(step, button):
 @handle_delayed_step
 @output.add_printscreen
 def open_side_panel_and_open_popup(step, menuname):
+    refresh_window(world)
 
     def open_side_panel_popup(step, menuname):
         open_side_panel(step, menuname)
@@ -1732,6 +1762,7 @@ def open_side_panel_and_open_popup(step, menuname):
 @handle_delayed_step
 @output.register_for_printscreen
 def choose_field(step):
+    refresh_window(world)
     wait_until_no_ajax(world)
     wait_until_not_loading(world.browser)
 
