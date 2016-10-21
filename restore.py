@@ -15,26 +15,27 @@ if __name__ == '__main__':
             hw_hash = hashlib.md5(''.join(mac)).hexdigest()
             return hw_hash
 
-    import re
     import sys
-    import shutil
     import os, os.path
     import tempfile
     import hashlib
     import subprocess
 
-    from credentials import *
-    from utils import *
+    import credentials as c
+    import utils
 
     FLAG_RESET_VERSION ='--reset-versions'
     FLAG_RESET_SYNC ='--reset-sync'
+    FLAG_BAK ='--bak'
 
-    db_address_with_flag = '' if not DB_ADDRESS else "-h %s" % DB_ADDRESS
+    db_address_with_flag = '' if not c.DB_ADDRESS else "-h %s" % c.DB_ADDRESS
 
     reset_versions = FLAG_RESET_VERSION in sys.argv
     reset_sync = FLAG_RESET_SYNC in sys.argv
+    do_bak = FLAG_BAK in sys.argv
     arguments = filter(lambda x : x != FLAG_RESET_VERSION, sys.argv)
     arguments = filter(lambda x : x != FLAG_RESET_SYNC, arguments)
+    arguments = filter(lambda x : x != FLAG_BAK, arguments)
 
     if len(arguments) == 1:
         sys.stdout.write("Env name: ")
@@ -64,9 +65,9 @@ if __name__ == '__main__':
         f.write(script)
         f.close()
 
-        os.environ['PGPASSWORD'] = DB_PASSWORD
+        os.environ['PGPASSWORD'] = c.DB_PASSWORD
 
-        p1 = subprocess.Popen('psql -v ON_ERROR_STOP=1 -p %d -t %s -U %s %s < %s' % (DB_PORT, db_address_with_flag, DB_USERNAME, dbname, scriptfile[1]),
+        p1 = subprocess.Popen('psql -v ON_ERROR_STOP=1 -p %d -t %s -U %s %s < %s' % (c.DB_PORT, db_address_with_flag, c.DB_USERNAME, dbname, scriptfile[1]),
                               shell=True,
                               stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE)
@@ -74,7 +75,7 @@ if __name__ == '__main__':
 
         try:
             os.unlink(scriptfile[1])
-        except OSError as e:
+        except OSError:
             pass
 
         code = p1.returncode
@@ -104,7 +105,7 @@ if __name__ == '__main__':
             if not dbname:
                 raise Exception("No database name in %s" % dbname)
 
-            dbname = prefix_db_name(dbname)
+            dbname = utils.prefix_db_name(dbname)
             to_restore.append((dbname, filename))
             if 'SYNC_SERVER' in dbname:
                 sync_server_db = dbname
@@ -151,7 +152,7 @@ if __name__ == '__main__':
 
             path_dump = os.path.join(environment_dir, filename)
 
-            p1 = subprocess.Popen('pg_restore -p %d %s -U %s --no-acl --no-owner -d %s %s' % (DB_PORT, db_address_with_flag, DB_USERNAME, dbname, path_dump),
+            p1 = subprocess.Popen('pg_restore -p %d %s -U %s --no-acl --no-owner -d %s %s' % (c.DB_PORT, db_address_with_flag, c.DB_USERNAME, dbname, path_dump),
                                   shell=True,
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
@@ -160,13 +161,13 @@ if __name__ == '__main__':
             if p1.returncode != 0:
                 raise DatabaseException("Unable to restore %s (reason: %s)" % (dbname, stderr))
 
-            run_script(dbname, "UPDATE res_users SET password = '%s' WHERE login = '%s'" % (UNIFIELD_PASSWORD, UNIFIELD_ADMIN))
+            run_script(dbname, "UPDATE res_users SET password = '%s' WHERE login = '%s'" % (c.UNIFIELD_PASSWORD, c.UNIFIELD_ADMIN))
 
             # if it's a sync server we have to update the hardware ids. Otherwise our instances won't synchronise
             ret = run_script(dbname, "select 1 from pg_class where relname='sync_server_entity'")
 
             if filter(lambda x : x, ret.split('\n')):
-                hwid = SERVER_HWID or get_hardware_id()
+                hwid = c.SERVER_HWID or get_hardware_id()
                 run_script(dbname, "UPDATE sync_server_entity SET hardware_id = '%s'" % hwid)
                 if reset_versions:
                     run_script(dbname, "DELETE FROM sync_server_version WHERE sum NOT IN ('88888888888888888888888888888888', '66f490e4359128c556be7ea2d152e03b')")
@@ -179,9 +180,9 @@ if __name__ == '__main__':
                     if lines:
                         line = lines[0]
                         pointed_dbname = line.strip()
-                        sync_server_db = prefix_db_name(pointed_dbname)
+                        sync_server_db = utils.prefix_db_name(pointed_dbname)
 
-                run_script(dbname, "UPDATE sync_client_sync_server_connection SET database = '%s', host = 'localhost', protocol = 'netrpc_gzip', port = %d" % (sync_server_db, NETRPC_PORT))
+                run_script(dbname, "UPDATE sync_client_sync_server_connection SET database = '%s', host = 'localhost', protocol = 'netrpc_gzip', port = %d" % (sync_server_db, c.NETRPC_PORT))
                 if reset_versions:
                     run_script(dbname, "DELETE FROM sync_client_version WHERE sum NOT IN ('88888888888888888888888888888888', '66f490e4359128c556be7ea2d152e03b')")
 
@@ -198,6 +199,8 @@ if __name__ == '__main__':
 
                 # this is not safe
                 run_script(dbname, "UPDATE backup_config SET name = '%s'" % file_path)
+                if do_bak:
+                    run_script("postgres", "create database \"%s\" template \"%s\"" % (dbname + "_bak", dbname))
 
     except (OSError, IOError) as e:
         sys.stderr.write("Unable to access an environment (cause: %s)" % e)
