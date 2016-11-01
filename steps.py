@@ -1055,7 +1055,7 @@ def click_on_button_and_open(step, button):
     world.browser.switch_to_default_content()
     world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes, tag_name="iframe", wait="I don't find the new window"))
     world.nbframes += 1
-
+    
     wait_until_no_ajax(world)
 
 @step('I close the window$')
@@ -1758,6 +1758,13 @@ def open_side_panel_and_open_popup(step, menuname):
 
     do_action_and_open_popup(world, open_side_panel_popup, step, menuname)
 
+@step('I debug')
+@handle_delayed_step
+@output.register_for_printscreen
+def i_debug(step):
+    import pdb
+    pdb.set_trace()
+    
 @step('I validate the line')
 @handle_delayed_step
 @output.register_for_printscreen

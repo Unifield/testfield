@@ -1,7 +1,6 @@
 
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import Select
-from selenium.webdriver.support.ui import Select
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.keys import Keys
@@ -26,7 +25,7 @@ def get_new_id(filename):
     idvar = 1
 
     if os.path.isdir(filename):
-        raise Error("A configuration file is a directory")
+        raise RuntimeError("A configuration file is a directory")
     if os.path.isfile(filename):
         #FIXME: A file could be huge, it could lead to a memory burst...
         f = open(filename)
@@ -35,7 +34,7 @@ def get_new_id(filename):
             last_idrun = int(s_idrun)
             idvar = last_idrun + 1
         except ValueError:
-            raise Error("Invalid value in %s" % filename)
+            raise RuntimeError("Invalid value in %s" % filename)
 
         f.close()
 
@@ -204,7 +203,7 @@ def get_elements(browser, tag_name=None, id_attr=None, class_attr=None, attrs=di
     '''
     This method fetch a node among the DOM based on its attributes.
 
-    You can indicate wether this method is expected to wait for this element to appear.
+    You can indicate whether this method is expected to wait for this element to appear.
 
     Be careful: this method also returns hidden elements!
     '''
@@ -269,7 +268,7 @@ def get_elements_from_text(element, tag_name, text, class_attr='', wait=''):
 
     To find it, you must provide the name of the tag and its text.
 
-    You can indicate wether this method is expected to wait for this element to appear.
+    You can indicate whether this method is expected to wait for this element to appear.
     '''
 
     class_attr = (" and @class = '%s'" % class_attr) if class_attr else ''
@@ -326,14 +325,13 @@ def get_element_from_text(browser, tag_name, text, class_attr='', wait=False):
 
     To find it, you must provide the name of the tag and its text.
 
-    You can indicate wether this method is expected to wait for this element to appear.
+    You can indicate whether this method is expected to wait for this element to appear.
 
     If it doesn't wait and the element doesn't exist, an IndexError is raised.
     '''
     return get_elements_from_text(browser, tag_name, text, class_attr, wait)[0]
 
 def get_column_position_in_table(maintable, columnname):
-    message = "Cannot find column %s in table" % columnname
     offset = 0
 
     # we have to check if this column set a specific offset
@@ -342,12 +340,11 @@ def get_column_position_in_table(maintable, columnname):
         columnname = '_'.join(columnname_split[:-1])
         offset = int(columnname_split[-1])-1
 
-    elems = get_elements_from_text(maintable, tag_name="th", text=columnname, wait=message)
+    elems = get_elements_from_text(maintable, tag_name="th", text=columnname)
     if len(elems) <= offset or offset < 0:
         return None
     elem = elems[offset]
 
-    parent = elem.parent
     right_pos = None
 
     # a table should always have an id, we've never come across a table without an ID
@@ -370,12 +367,12 @@ def open_all_the_tables(world):
     #  them again afterwards...
 
     def _open_all_the_tables():
+        refresh_window(world)
         pagers = get_elements(world.browser, class_attr="gridview", tag_name="table")
         pagers = filter(lambda x : x.is_displayed(), pagers)
         for pager in pagers:
             elem = get_element(pager, class_attr="pager_info", tag_name="span")
 
-            import re
             m = re.match('^\d+ - (?P<from>\d+) of (?P<to>\d+)$', elem.text.strip())
             do_it = False
 
@@ -409,10 +406,7 @@ def get_options_for_table(world, columns):
     maintables = get_elements(world.browser, tag_name="table", class_attr="grid")
     maintables = filter(lambda x : x.is_displayed(), maintables)
 
-    rows = []
-
     for maintable in maintables:
-
         position_per_column = {}
         for column in columns:
             # We cannot normalize columns here because some columns don't follow
@@ -584,7 +578,7 @@ def wait_until_element_does_not_exist(browser, get_elem, message=''):
             #browser.save_screenshot("wait_until_element_does_not_exist.png")
             if not get_elem() or not get_elem().is_displayed():
                 return
-        except Exception as e:
+        except Exception:
             return
         time.sleep(TIME_TO_SLEEP)
 
@@ -712,18 +706,7 @@ def select_in_field_an_option(world, fieldelement, content):
     '''
 
     field, action = fieldelement()
-    idattr = field.get_attribute("id")
-
-    value_before = None
-    ## we look for the value before (to check after)
-    end_value = "_text"
-    if idattr[-len(end_value):] == end_value:
-        idvalue_before = idattr[:-len(end_value)]
-        txtidinput = get_element(world.browser, id_attr=idvalue_before.replace('/', '\\/'), wait=True)
-        value_before = txtidinput.get_attribute("value")
-
     txtinput, _ = fieldelement()
-
     action(txtinput, content)
 
     # We have to wait until the information is completed
