@@ -4,6 +4,17 @@ rm credentials.py 2> /dev/null
 
 . config.sh
 
+if [ "$1" = sandbox ]; then
+	if [ -z "$2" ]; then
+		echo "usage: $0 sandbox database-prefix"
+		exit 1
+	fi
+	WEB_PORT=8004
+	XMLRPC_PORT=8005
+	SERVER_HOST=uf5.unifield.org
+	DBPREFIX=$2
+fi
+
 echo """#encoding=utf-8
 
 SRV_ADDRESS = '$SERVER_HOST'

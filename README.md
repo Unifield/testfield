@@ -56,6 +56,41 @@ All the steps are described [here](https://github.com/Unifield/testfield/wiki/St
 + Debug: debug a scenario
 + Benchmarking: steps to benchmark unifield (how long does a set of steps last?)
 
+## How do I install it to debug tests?
+
+In this configuration, you want to interactively see Firefox working
+against a stable, remote Unifield isntance. You will be able to run and
+debug one test at a time.
+
+Do these things to setup your environment:
+```cd $HOME
+git clone https://github.com/Unifield/testfield.git
+virtualenv venv
+. venv/bin/activate
+pip install -r testfield/requirements.txt
+cd testfield
+./generate_credentials sandbox ANDRES   <-- Choose one from: ANDRES, MARJUKKA, TEMPO, SARAH (agree with your colleagues first...)
+./get_firefox.sh
+fetch/owncloud/fetch.sh
+mv meta_features meta_features_owncloud
+mkdir meta_features
+cp meta_features_owncloud/IT/sync_article.meta_feature meta_features   <-- for example, you could choose another one
+```
+
+At this point, if you run ```./runtests_local.sh``` the one test that
+you put into meta_features will be converted into features, and then
+run in a Firefox that pops up on your screen. You can edit steps.py
+to change it's behavior, for example adding this to debug it:
+
+```
+	import pdb
+	pdb.set_trace()
+```
+
+It is easiest to work on one file at a time. On each run of runtests_local.sh,
+the features directory will be re-created according to what is in the
+meta_features directory.
+
 ## How do I install it? (for the geeks)
 
 testfield can be installed on your computer. The installation procedure is available below.

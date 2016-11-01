@@ -80,7 +80,7 @@ echo "date=${TEST_DATE--}" >> output/meta
 
 if [ $BROWSER = "firefox" ]; then
     v=`firefox --version | cut -d' ' -f 3 | sed 's/\..*$//'`
-    if [ "$v" == 48 ]; then
+    if [ "$v" != 46 ]; then
 	if [ ! -d $TESTFIELDDIR/firefox ]; then
 	    echo "Firefox $v is not usable."
 	    echo "Run $TESTFIELDDIR/get-firefox.sh to get Firefox 46 into $TESTFIELDDIR/firefox"
