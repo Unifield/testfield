@@ -67,7 +67,7 @@ Do these things to setup your environment:
 ```
 cd $HOME
 git clone https://github.com/Unifield/testfield.git
-virtualenv venv
+virtualenv -p python2.6 venv
 . venv/bin/activate
 pip install -r testfield/requirements.txt
 cd testfield
