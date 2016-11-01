@@ -71,7 +71,7 @@ virtualenv -p python2.6 venv
 . venv/bin/activate
 pip install -r testfield/requirements.txt
 cd testfield
-./generate_credentials sandbox ANDRES   <-- Choose one from: ANDRES, MARJUKKA, TEMPO, SARAH (agree with your colleagues first...)
+./generate_credentials.sh sandbox ANDRES   <-- Choose one from: ANDRES, MARJUKKA, TEMPO, SARAH (agree with your colleagues first...)
 ./get_firefox.sh
 fetch/owncloud/fetch.sh
 mv meta_features meta_features_owncloud
