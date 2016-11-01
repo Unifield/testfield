@@ -38,7 +38,7 @@ You can also declare variables when executing a scenario. It's especially useful
 
 Finally, you can also use functions to alter variables while executing a scenario. Two modifies have been created:
 * **INCR**: increment the last integer contained in the value. If the value of a variable called _ENTYNUMBER_ is _COR209_.  _{{ENTRYNUMBER}}_ is _COR209_ _{{**INCR**(ENTRYNUMBER)}}_ is _COR300_.
-* **NOW**: use the current date. the only parameter is a date format that will be used to express the current date.
+* **NOW**: use the current date. The only parameter is a date format that will be used to express the current date.
 
 ### Use steps
 
