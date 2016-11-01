@@ -63,7 +63,9 @@ against a stable, remote Unifield isntance. You will be able to run and
 debug one test at a time.
 
 Do these things to setup your environment:
-```cd $HOME
+
+```
+cd $HOME
 git clone https://github.com/Unifield/testfield.git
 virtualenv venv
 . venv/bin/activate
@@ -83,8 +85,8 @@ run in a Firefox that pops up on your screen. You can edit steps.py
 to change it's behavior, for example adding this to debug it:
 
 ```
-	import pdb
-	pdb.set_trace()
+import pdb
+pdb.set_trace()
 ```
 
 It is easiest to work on one file at a time. On each run of runtests_local.sh,
