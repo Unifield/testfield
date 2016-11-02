@@ -1,0 +1,17 @@
+#!/bin/sh
+
+set -e
+
+if [ ! -d .git ]; then
+	echo "Should be run from the top-level directory of testfield."
+	exit 1
+fi
+
+git checkout -- .
+git pull
+
+rm website/performances/.gitignore website/tests/.gitignore
+rmdir website/performances website/tests
+
+ln -s ../../precious-data/performances website
+ln -s ../../precious-data/tests website
