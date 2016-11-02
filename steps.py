@@ -1230,7 +1230,12 @@ def see_popup(step, message_to_see):
                     raise UniFieldElementException("No '%s' found in '%s'" % (message_to_see, elem.text))
 
                 # we cannot click on OK because the button might be hidden by another window
-                world.browser.execute_script('$("a#fancybox-close").click()')
+                # We are going to try to close the popup by the good way
+                world.browser.execute_script('$("a#fancybox-close").click();')
+                
+                # If the popup is not closed, we try the bad way
+                world.browser.execute_script('if($("div#fancybox-wrap").is(":visible")){$("div#fancybox-overlay, div#fancybox-wrap").hide();}')
+                
 
                 wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="td", class_attr="error_message_content"))
 
@@ -1244,6 +1249,59 @@ def see_popup(step, message_to_see):
         world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes-1, wait="I don't find the previous window"))
     else:
         world.browser.switch_to_default_content()
+
+
+@step('I should see a window with "([^"]*)"$')
+@handle_delayed_step
+@output.register_for_printscreen
+def see_window(step, message_to_see):
+    
+    import pdb
+    
+    tick = monitor(world.browser, "I don't find any window")
+
+    # Variables initialization
+    message_found = False
+    reg = create_regex(message_to_see)
+    
+    # We're going to check in browser and iFrames
+    for noframe in xrange(world.nbframes+1):
+        
+        # Check in browser
+        if noframe == 0:
+            world.browser.switch_to_default_content()
+        # Check in iFrame
+        else:
+            frame = get_element(world.browser, tag_name="iframe", position=noframe-1, wait="I don't find a window")
+            world.browser.switch_to_frame(frame)
+    
+        # We are looking for all textarea in the window
+        elements = world.browser.find_elements_by_css_selector("form#view_form table.fields textarea")
+        
+        # If at least one element has been found 
+        if elements:
+            
+            for element in elements:
+    
+                # Compare element text en text we are looking for
+                if re.match(reg, element.text, flags=re.DOTALL) is None:
+                    continue
+                else:
+                    message_found = True
+                    break
+        
+    # Not found, raise an error
+    if not message_found:
+        raise UniFieldElementException("No '%s' found" % (message_to_see))
+    
+    # Close the window
+    step.given('I close the window')
+
+    #if world.nbframes:
+    #    world.browser.switch_to_default_content()
+    #    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes-1, wait="I don't find the previous window"))
+    #else:
+    #    world.browser.switch_to_default_content()
 
 #WARNING: Undocumented!
 @step('I should see "([^"]*)" in the section "([^"]*)"$')
