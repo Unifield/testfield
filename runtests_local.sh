@@ -82,7 +82,7 @@ if [ $BROWSER = "firefox" ]; then
     (cd $TESTFIELDDIR && ./get_firefox.sh)
     export PATH=$TESTFIELDDIR/firefox:$PATH
     v=`firefox --version | cut -d' ' -f 3 | sed 's/\..*$//'`
-    if [ "$v" != 46 ]; then
+    if [ "$v" != 45 -a "$v" != 46 ]; then
 	if [ ! -d $TESTFIELDDIR/firefox ]; then
 	    echo "Firefox $v is not usable."
 	    exit 1
