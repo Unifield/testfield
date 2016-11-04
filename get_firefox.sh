@@ -2,9 +2,12 @@
 
 r=`lsb_release -r -s`
 if [ "$r" == "10.04" ]; then
+	echo "Ubuntu $r only runs Firefox 45, but FF 45 hangs when driven by Selenium. Use the system Firefox instead."
+	exit 1
+
 	# https://support.mozilla.org/en-US/questions/1121133
-	v=45.4.0esr
-	dl=https://download-installer.cdn.mozilla.net/pub/firefox/releases/45.4.0esr/linux-x86_64/en-US/firefox-45.4.0esr.tar.bz2
+	#v=45.4.0esr
+	#dl=https://download-installer.cdn.mozilla.net/pub/firefox/releases/45.4.0esr/linux-x86_64/en-US/firefox-45.4.0esr.tar.bz2
 else
 	# v46 is the last version that selenium 2 works with
 	v=46.0.1
