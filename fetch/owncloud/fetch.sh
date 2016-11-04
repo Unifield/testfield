@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ "$1" = "-h" ]; then
+	echo "KEY_FETCH=<the key> ./fetch.sh"
+	exit 1
+fi
+
 set -e
 
 [[ -e .tmp ]] && rm -rf .tmp
