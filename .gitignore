@@ -1,17 +1,20 @@
 *.pyc
-results/*
-*.feature
-run
-output/*.png
-output/*.html
-files/*
-*.html
-*.png
 \.DS_Store
-bin/*
+
+# Files create by generate_credentials.sh
 *.bat
-ghostdriver.log
+credentials.py
+
+# File create by fetch/owncloud/fetch.sh
+files
+instances
+meta_features
+
+# Files created at runtime
 waiting_too_long.*
-website/performances/*
-website/tests/*
 firefox
+features
+run_feature
+run_scenario
+output
+results

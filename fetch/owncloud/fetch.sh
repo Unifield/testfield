@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ "$1" = "-h" ]; then
+	echo "KEY_FETCH=<the key> ./fetch.sh"
+	exit 1
+fi
+
 set -e
 
 [[ -e .tmp ]] && rm -rf .tmp
@@ -25,4 +30,17 @@ cp -R $DIRNAME/* ../
 
 cd ..
 rm -rf .tmp
+
+# Save them into a Git repo so that we know what changed and when.
+if [ `hostname` = "uf5.unifield.org" -a -d $HOME/precious-data/testfield-input ]; then
+	rm -rf testfield-input
+	git clone $HOME/precious-data/testfield-input
+	cp -r meta_features/ files/ instances/ testfield-input/
+	cd testfield-input
+	git add --all
+	git commit -m `date +%Y%m%d-%H%M`
+	git push origin master
+	cd ..
+	rm -rf testfield-input
+fi
 

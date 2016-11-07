@@ -72,17 +72,17 @@ virtualenv -p python2.6 venv
 pip install -r testfield/requirements.txt
 cd testfield
 ./generate_credentials.sh sandbox ANDRES   <-- Choose one from: ANDRES, MARJUKKA, TEMPO, SARAH (agree with your colleagues first...)
-./get_firefox.sh
 fetch/owncloud/fetch.sh
-mv meta_features meta_features_owncloud
-mkdir meta_features
-cp meta_features_owncloud/IT/sync_article.meta_feature meta_features   <-- for example, you could choose another one
 ```
 
-At this point, if you run ```./runtests_local.sh``` the one test that
-you put into meta_features will be converted into features, and then
-run in a Firefox that pops up on your screen. You can edit steps.py
-to change it's behavior, for example adding this to debug it:
+Open the one test you want to work on in your editor, and add a tag
+to it like "@fix_me".
+
+At this point, if you run ```./runtests_local.sh -t fix_me``` all
+the tests in meta_features will be converted into features, and then
+the one feature you marked with @fix_me will run in a Firefox that pops
+up on your screen. You can edit steps.py to change it's behavior, for
+example adding this to debug it:
 
 ```
 import pdb

@@ -1098,14 +1098,13 @@ def click_on_button_and_close(step, button):
     #wait_until_not_loading(world.browser)
     wait_until_no_ajax(world)
 
-def click_if_toggle_button_is(btn_name, from_class_name):
+def toggle_button_to(btn_name, check):
     btn_name = to_camel_case(btn_name)
-
-    btn_toggle = get_element_from_text(world.browser, tag_name="button", text=btn_name, class_attr=from_class_name, wait="Cannot find toggle button %s" % btn_name)
-    elem = btn_toggle.get_attribute("class")
-    classes = map(lambda x : x.strip(), elem.split())
-
-    btn_toggle.click()
+    btn_toggle = get_element_from_text(world.browser, tag_name="button", text=btn_name, wait="Cannot find toggle button %s" % btn_name)
+    
+    if check not in btn_toggle.get_attribute("class"):
+        btn_toggle.click()
+        
     wait_until_not_loading(world.browser)
     wait_until_no_ajax(world)
 
@@ -1113,13 +1112,13 @@ def click_if_toggle_button_is(btn_name, from_class_name):
 @handle_delayed_step
 @output.register_for_printscreen
 def toggle_on(step, button):
-    click_if_toggle_button_is(button, "filter_with_icon inactive")
+    toggle_button_to(button, "active")
 
 @step('I toggle off "([^"]*)"$')
 @handle_delayed_step
 @output.register_for_printscreen
 def toggle_off(step, button):
-    click_if_toggle_button_is(button, "filter_with_icon active")
+    toggle_button_to(button, "inactive")
 
 #}%}
 

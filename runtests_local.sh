@@ -79,14 +79,12 @@ echo "description=${TEST_DESCRIPTION-Unknown}" >> output/meta
 echo "date=${TEST_DATE--}" >> output/meta
 
 if [ $BROWSER = "firefox" ]; then
-    (cd $TESTFIELDDIR && ./get_firefox.sh)
-    export PATH=$TESTFIELDDIR/firefox:$PATH
+    # Check the system Firefox first
     v=`firefox --version | cut -d' ' -f 3 | sed 's/\..*$//'`
-    if [ "$v" != 46 ]; then
-	if [ ! -d $TESTFIELDDIR/firefox ]; then
-	    echo "Firefox $v is not usable."
-	    exit 1
-	fi
+    if [ "$v" != 20 -a "$v" != 46 ]; then
+        # Get the proper version of Firefox
+    	(cd $TESTFIELDDIR && ./get_firefox.sh)
+    	export PATH=$TESTFIELDDIR/firefox:$PATH
     fi
 fi
 
