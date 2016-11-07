@@ -71,7 +71,6 @@ do
     fi
 done
 
-
 checkout_revision_in()
 {
     REVISION=`python -c "import sys; print '' if '|' not in sys.argv[1] else sys.argv[1][sys.argv[1].index('|')+1:]" "$1"`
@@ -87,8 +86,6 @@ checkout_revision_in()
 }
 
 # (1) fetch the source code
-rm -rf $MYTMPDIR/server $MYTMPDIR/web || true
-
 checkout_revision_in "$BSERVER" "$SERVERDIR"
 checkout_revision_in "$BWEB" "$WEBDIR"
 

@@ -7,8 +7,8 @@ set -o pipefail
 if [[ $# -lt 2 || ( "$1" != benchmark && "$1" != "test" && "$1" != "setup" ) ]];
 then
     echo "Usage: "
-    echo "  $0 benchmark name [server_branch[|rev_number]] [web_branch[|rev_number]] [-t tag]"
-    echo "  $0 test name [server_branch[|rev_number]] [web_branch[|rev_number]] [-t tag]"
+    echo "  $0 benchmark output-name [server_branch[|rev_number]] [web_branch[|rev_number]] [-t tag]"
+    echo "  $0 test output-name [server_branch[|rev_number]] [web_branch[|rev_number]] [-t tag]"
     exit 1
 fi
 
@@ -78,7 +78,7 @@ run_tests()
         then
             rm -rf "$DIREXPORT" || true
         fi
-        mkdir "$DIREXPORT"
+        mkdir -p "$DIREXPORT"
 
         ./scripts/start_unifield.sh -d $SERVER_TMPDIR version $NAME > output/version
 
@@ -91,6 +91,12 @@ run_tests()
     benchmark)
         rm -rf results/* 2> /dev/null || true
         export TIME_BEFORE_FAILURE=
+
+        # If they did not tell us what tags to use, then
+        # default to testing @testperf features.
+        if [ -z "$LETTUCE_PARAMS" ]; then
+            LETTUCE_PARAMS="-t testperf"
+        fi
 
         for count in 5 15 25 35 45
         do
@@ -108,7 +114,7 @@ run_tests()
         then
             rm -rf "$DIREXPORT" || true
         fi
-        mkdir "$DIREXPORT"
+        mkdir -p "$DIREXPORT"
 
         cp -R results/* "$DIREXPORT/"
 
@@ -143,7 +149,9 @@ export DATABASES=$DATABASES
 
 ./generate_credentials.sh
 
-./scripts/fetch_unifield.sh -W "$WEBBRANCH" -S "$SERVERBRANCH" -d $SERVER_TMPDIR -r $NAME
+mkdir -p $SERVER_TMPDIR
+./scripts/fetch_unifield.sh -W "$WEBBRANCH" -S "$SERVERBRANCH" \
+    -d $SERVER_TMPDIR -r $NAME
 
 # we have to setup a database if required
 if [[ ${DBPATH} && ${FORCED_DATE} == yes ]];
@@ -153,11 +161,13 @@ else
     FORCED_DATE=no
 fi
 
-if [[ ${FORCED_DATE} == yes ]]
-then
-    python restore.py --reset-sync --reset-versions $ENVNAME
-else
-    python restore.py --reset-versions $ENVNAME
+if [ -z "$NORESTORE" ]; then
+    if [[ ${FORCED_DATE} == yes ]]
+    then
+        python restore.py --reset-sync --reset-versions $ENVNAME
+    else
+        python restore.py --reset-versions $ENVNAME
+    fi
 fi
 
 ./scripts/upgrade_unifield.sh -s $MINUS_IN_SECOND -d $SERVER_TMPDIR $NAME $ENVNAME
