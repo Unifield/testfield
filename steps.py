@@ -1084,15 +1084,17 @@ def click_on_button_and_close(step, button):
     refresh_window(world)
 
     msg = "Cannot find the button to close the window"
-    click_on(world,  lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg), msg)
+    click_on(world, lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg), msg)
     world.nbframes -= 1
 
     world.browser.switch_to_default_content()
+    
     if world.nbframes > 0:
         world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait="I don't find the previous window"))
     else:
-        wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe", position=world.nbframes))
-
+        #wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe", position=world.nbframes))
+        wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="div", class_attr="ui-dialog", position=world.nbframes))
+    
     #wait_until_not_loading(world.browser)
     wait_until_no_ajax(world)
 
@@ -1255,9 +1257,7 @@ def see_popup(step, message_to_see):
 @handle_delayed_step
 @output.register_for_printscreen
 def see_window(step, message_to_see):
-    
-    import pdb
-    
+       
     tick = monitor(world.browser, "I don't find any window")
 
     # Variables initialization
