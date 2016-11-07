@@ -63,7 +63,7 @@ run_tests()
 
     test|setup)
         export TIME_BEFORE_FAILURE=${TIME_BEFORE_FAILURE:-40}
-        export COUNT=2;
+        export COUNT=2
 
         export TEST_DESCRIPTION=${TEST_DESCRIPTION:-$NAME}
         export TEST_NAME=${TEST_NAME:-$NAME}
@@ -156,7 +156,7 @@ mkdir -p $SERVER_TMPDIR
 # we have to setup a database if required
 if [[ ${DBPATH} && ${FORCED_DATE} == yes ]];
 then
-    launch_database;
+    launch_database
 else
     FORCED_DATE=no
 fi
