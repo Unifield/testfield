@@ -296,12 +296,12 @@ case $ACTION in
         tmux new -d -s $SESSION_NAME -n server "
 
             tmux new-window -n web \"
-            $FAKED_CMD python $WEBDIR/openerp-web.py -c $CFG_WEB > $WEBDIR/web.logs 2>&1 & PID="'\$!'" ;
+            $FAKED_COMMAND python $WEBDIR/openerp-web.py -c $CFG_WEB > $WEBDIR/web.logs 2>&1 & PID="'\$!'" ;
             echo \\\$PID > $PID_WEB_FILE;
             wait \\\$PID;
             \";
 
-            $FAKED_CMD python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER > $SERVERDIR/server.logs 2>&1 & PID="'$!'" ;
+            $FAKED_COMMAND python $SERVERDIR/bin/openerp-server.py $PARAM_UNIFIELD_SERVER > $SERVERDIR/server.logs 2>&1 & PID="'$!'" ;
             echo \$PID > $PID_SERVER_FILE;
             wait \$PID;
             \""

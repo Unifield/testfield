@@ -38,7 +38,7 @@ if [ `hostname` = "uf5.unifield.org" -a -d $HOME/precious-data/testfield-input ]
 	cp -r meta_features/ files/ instances/ testfield-input/
 	cd testfield-input
 	git add --all
-	git commit -m `date +%Y%m%d-%H%M`
+	git commit -m `date +%Y%m%d-%H%M` || true
 	git push origin master
 	cd ..
 	rm -rf testfield-input
