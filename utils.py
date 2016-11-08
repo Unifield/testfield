@@ -152,6 +152,11 @@ def get_input(browser, fieldname, position=0):
             #  follow each other
             label = labels[position]
             idattr = label.get_attribute("for")
+            
+            #if id ends with _text, we need to substract it
+            if idattr.endswith("_text"):
+                idattr = idattr[:-5]
+            
             my_input = get_element(browser, id_attr=idattr.replace('/', '\\/'), wait=True)
             break
 
@@ -167,12 +172,14 @@ def get_input(browser, fieldname, position=0):
         table_header = table_header[0]
 
         table_node = table_header.find_elements_by_xpath("ancestor::tr[1]")
+        
         if not table_node:
             tick()
             time.sleep(TIME_TO_SLEEP)
             continue
 
         element = table_node[0].find_elements_by_xpath("following-sibling::*[1]")
+        
         if not element:
             tick()
             time.sleep(TIME_TO_SLEEP)
@@ -185,6 +192,7 @@ def get_input(browser, fieldname, position=0):
                 break
 
         inputnodes = get_elements(element[0], tag_name="p", class_attr="raw-text")
+        
         if inputnodes:
             tick()
             my_input = inputnodes[0]
