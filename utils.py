@@ -153,10 +153,16 @@ def get_input(browser, fieldname, position=0):
             label = labels[position]
             idattr = label.get_attribute("for")
             
-            #if id ends with _text, we need to substract it
+            #Sometimes, when the for attribute ends with a _text, we need to do some tests
             if idattr.endswith("_text"):
-                idattr = idattr[:-5]
+                #First, check if at least one element exists with _text
+                my_elements = get_elements(browser, tag_name="input", id_attr=idattr)
             
+                #If not, we continue without the _text
+                if len(my_elements) == 0:
+                    if idattr.endswith("_text"):
+                        idattr = idattr[:-5]
+                        
             my_input = get_element(browser, id_attr=idattr.replace('/', '\\/'), wait=True)
             break
 
@@ -718,7 +724,7 @@ def select_in_field_an_option(world, fieldelement, content):
     action(txtinput, content)
 
     # We have to wait until the information is completed
-    wait_until_no_ajax(world)
+    wait_until_no_ajax(world)   
 
 #}%}
 
