@@ -7,7 +7,6 @@ import sys
 import shutil
 import os, os.path
 import utils
-from oerplib import OERP
 import credentials
 
 FEATURE_DIR = "features"
@@ -39,13 +38,14 @@ def get_sql_query(database, sqlquery):
         raise DBException("Cannot reach the database (reason: %s)" % e)
 
 def get_articles(database, count):
+    from oerplib import OERP
     oerp = OERP(server=credentials.SRV_ADDRESS, database=database, protocol='xmlrpc', port=credentials.XMLRPC_PORT)
     u = oerp.login(credentials.UNIFIELD_ADMIN, credentials.UNIFIELD_PASSWORD)
     prod_obj = oerp.get('product.product')
     ids = prod_obj.search([('batch_management', '=', False), ('perishable', '=', False),
         ('active', '=', True), '|', ('state', '!=', 'archived'), ('state', '=', False)], 0, count)
 
-    return [{'code': x['default_code'], 'name': x['name']} for x in prod_obj.read(ids, ['default_code', 'name'])]
+    return [{'code': x['default_code'], 'name': x['name']} for x in prod_obj.read(ids, ['default_code', 'name'], { 'lang': 'en_MF' })]
 
 def inject_variable(line, **variables):
 
@@ -191,9 +191,8 @@ if __name__ == '__main__':
                         print "Converting %s" % new_file_name
 
                         content = run_preprocessor(from_path)
-                        f = open(to_path, 'w')
-                        f.write(content.encode('utf-8'))
-                        f.close()
+                        with open(to_path, 'w') as f:
+                            f.write(content.encode('utf-8'))
 
                     except SyntaxException as e:
                         sys.stderr.write('SYNTAX FAILURE:%s: %s\n\n' % (filename, e))
