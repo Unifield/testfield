@@ -1081,6 +1081,7 @@ def close_the_window(step):
 @handle_delayed_step
 @output.add_printscreen
 def click_on_button_and_close(step, button):
+    '''
     refresh_window(world)
 
     msg = "Cannot find the button to close the window"
@@ -1097,6 +1098,22 @@ def click_on_button_and_close(step, button):
     
     #wait_until_not_loading(world.browser)
     wait_until_no_ajax(world)
+    '''
+    
+    refresh_nbframes(world)
+    refresh_window(world)
+    
+    msg = "Cannot find the button to close the window"
+    button_element = get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg)
+    click_on(world, lambda : button_element, msg)
+    
+    world.browser.switch_to_default_content()
+    
+    wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe", position=world.nbframes-1))
+    
+    refresh_nbframes(world)
+    refresh_window(world)
+        
 
 def toggle_button_to(btn_name, check):
     
@@ -1131,6 +1148,7 @@ def toggle_off(step, button):
 # Check messages (error, warning, ...) {%{
 
 def get_values(fieldname):
+    
     _, txtinput = get_input(world.browser, fieldname)
 
     # if it's a text that is not changable
@@ -1161,6 +1179,7 @@ def should_see(step, content, fieldname):
     tick = monitor(world.browser)
 
     while True:
+        
         content_found = get_values(fieldname)
         error = None
 

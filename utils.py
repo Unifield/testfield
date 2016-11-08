@@ -672,6 +672,14 @@ def refresh_window(world):
 
     if world.nbframes != 0:
         world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe"))
+        
+def refresh_nbframes(world):
+
+    world.browser.switch_to_default_content()
+
+    my_frames = world.browser.find_elements_by_css_selector("div.ui-dialog iframe")
+
+    world.nbframes = len(my_frames)
 
 # Do something {%{
 def click_on(world, elem_fetcher, msg):
