@@ -20,7 +20,9 @@ NAME_RUN=autotest
 ./scripts/stop_unifield.sh -d $TMPPATH $NAME_RUN || true
 ./scripts/kill_db.sh -D $TMPPATH $NAME_RUN || true
 
-./fetch/owncloud/fetch.sh
+# If it fails, allow this script to keep going anyway.
+# We will use the files fetched yesterday.
+./fetch/owncloud/fetch.sh || true
 
 function generate_config()
 {

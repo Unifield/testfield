@@ -10,8 +10,10 @@ fi
 git checkout -- .
 git pull
 
-rm website/performances/.gitignore website/tests/.gitignore
-rmdir website/performances website/tests
+if [ ! -L website/performances ]; then
+	ln -s ../../precious-data/performances website
+fi
 
-ln -s ../../precious-data/performances website
-ln -s ../../precious-data/tests website
+if [ ! -L website/tests ]; then
+	ln -s ../../precious-data/tests website
+fi
