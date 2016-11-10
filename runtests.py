@@ -8,6 +8,7 @@ import shutil
 import os, os.path
 import utils
 import credentials
+import subprocess
 
 FEATURE_DIR = "features"
 META_FEATURE_DIR = "meta_features"
@@ -192,7 +193,7 @@ if __name__ == '__main__':
 
                         content = run_preprocessor(from_path)
                         with open(to_path, 'w') as f:
-                            f.write(content.encode('utf-8'))
+                            f.write(content.decode('utf-8').encode('utf-8'))
 
                     except SyntaxException as e:
                         sys.stderr.write('SYNTAX FAILURE:%s: %s\n\n' % (filename, e))
@@ -206,10 +207,11 @@ if __name__ == '__main__':
 
         if args.files:
             args_found += args.files
-
+        
         # we can run lettuce now
-        import subprocess
-        ret = subprocess.call(["lettuce"] + args_found)
+        lettuce_cmd = ["lettuce", "--verbosity=3"] + args_found
+        print "runtests.py calling lettuce: ", lettuce_cmd
+        ret = subprocess.call(lettuce_cmd)
 
         sys.exit(ret)
 

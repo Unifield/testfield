@@ -35,6 +35,7 @@ rm -rf .tmp
 if [ `hostname` = "uf5.unifield.org" -a -d $HOME/precious-data/testfield-input ]; then
 	rm -rf testfield-input
 	git clone $HOME/precious-data/testfield-input
+	rm -rf testfield-input/*
 	cp -r meta_features/ files/ instances/ testfield-input/
 	cd testfield-input
 	git add --all
