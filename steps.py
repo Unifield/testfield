@@ -1113,6 +1113,8 @@ def click_on_button_and_close(step, button):
     
     refresh_nbframes(world)
     refresh_window(world)
+    
+    wait_until_not_loading(world.browser, wait=False)
         
 
 def toggle_button_to(btn_name, check):
