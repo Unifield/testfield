@@ -156,7 +156,7 @@ def get_input(browser, fieldname, position=0):
             #Sometimes, when the for attribute ends with a _text, we need to do some tests
             if idattr.endswith("_text"):
                 #First, check if at least one element exists with _text
-                my_elements = get_elements(browser, tag_name="input", id_attr=idattr)
+                my_elements = get_elements(browser, tag_name="input", id_attr=idattr.replace('/', '\\/'))
             
                 #If not, we continue without the _text
                 if len(my_elements) == 0:
