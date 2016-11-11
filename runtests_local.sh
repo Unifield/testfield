@@ -49,7 +49,7 @@ fi
 
 if [[ "$COUNT" == "" ]];
 then
-    COUNT=2
+    COUNT=5
 fi
 export COUNT=$COUNT
 

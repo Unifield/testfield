@@ -63,7 +63,7 @@ run_tests()
 
     test|setup)
         export TIME_BEFORE_FAILURE=${TIME_BEFORE_FAILURE:-40}
-        export COUNT=2
+        export COUNT=5
 
         export TEST_DESCRIPTION=${TEST_DESCRIPTION:-$NAME}
         export TEST_NAME=${TEST_NAME:-$NAME}

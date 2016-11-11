@@ -1,5 +1,6 @@
 #encoding=utf-8
 
+from __future__ import print_function
 from credentials import *
 
 import re
@@ -9,6 +10,10 @@ import os, os.path
 import utils
 import credentials
 import subprocess
+
+# http://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 FEATURE_DIR = "features"
 META_FEATURE_DIR = "meta_features"
@@ -189,16 +194,16 @@ if __name__ == '__main__':
                     to_path = os.path.join(FEATURE_DIR, relative_path_in_meta, new_file_name)
 
                     try:
-                        print "Converting %s" % new_file_name
+                        eprint("Converting %s" % new_file_name)
 
                         content = run_preprocessor(from_path)
                         with open(to_path, 'w') as f:
                             f.write(content.decode('utf-8').encode('utf-8'))
 
                     except SyntaxException as e:
-                        sys.stderr.write('SYNTAX FAILURE:%s: %s\n\n' % (filename, e))
+                        eprint('SYNTAX FAILURE:%s: %s\n\n' % (filename, e))
                     except DBException as e:
-                        sys.stderr.write('DB FAILURE:%s: %s\n\n' % (filename, e))
+                        eprint('DB FAILURE:%s: %s\n\n' % (filename, e))
 
         args_found = []
 
@@ -209,17 +214,16 @@ if __name__ == '__main__':
             args_found += args.files
         
         # we can run lettuce now
-        lettuce_cmd = ["lettuce", "--verbosity=3"] + args_found
-        print "runtests.py calling lettuce: ", lettuce_cmd
+        lettuce_cmd = ["lettuce", "--verbosity=3", "--no-color" ] + args_found
+        eprint("runtests.py calling lettuce: ", lettuce_cmd)
         ret = subprocess.call(lettuce_cmd)
-
         sys.exit(ret)
 
     except shutil.Error as e:
-        sys.stderr.write(e)
+        eprint(e)
         sys.exit(-1)
     except (OSError, IOError) as e:
-        sys.stderr.write(str(e))
+        eprint(e)
         sys.exit(-1)
 
 
