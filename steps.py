@@ -127,7 +127,10 @@ def connect_to_db():
         # caps = DesiredCapabilities.FIREFOX
         # caps["marionette"] = True
         # world.browser = webdriver.Firefox(firefox_profile=profile, capabilities=caps)
+        
         world.browser = webdriver.Firefox(firefox_profile=profile)
+
+        
     elif os.environ['BROWSER'] == "chrome":
         world.browser = webdriver.Chrome()
         #FIXME: PhantomJS doesn't like testfield. It seems that keeps on loading pages...
@@ -153,6 +156,7 @@ def connect_to_db():
     world.durations = {}
 
     mkp = get_absolute_path("monkeypatch.js")
+    
     with open(mkp) as f:
         world.monkeypatch = '\r\n'.join(f.readlines())
 
@@ -1109,8 +1113,15 @@ def click_on_button_and_close(step, button):
     
     world.browser.switch_to_default_content()
     
-    wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe", position=world.nbframes-1))
-    
+    try:
+        wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe", position=world.nbframes-1))
+    except (TimeoutException) as e:
+        
+        # in case of TimeoutException, let's try one another time.
+        button_element = get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg)
+        click_on(world, lambda : button_element, msg)
+        wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe", position=world.nbframes-1))
+        
     refresh_nbframes(world)
     refresh_window(world)
     
