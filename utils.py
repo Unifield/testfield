@@ -12,7 +12,7 @@ import os
 
 # The time (in seconds) that we wait when we know that an action has still to be performed
 TIME_TO_SLEEP = 0.3
-# The time that we wait when we now that a change is almost immediate
+# The time that we wait when we know that a change is almost immediate
 TIME_TO_WAIT = 1.5
 
 def prefix_db_name(db_name):

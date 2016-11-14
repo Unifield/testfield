@@ -587,7 +587,7 @@ def open_tab(step, menu_to_click_on):
     open_menu(menu_to_click_on)
 
     # we have to open the window!
-    world.browser.switch_to_default_content()
+    world.browser.switch_to.default_content()
     world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait="Cannot find the window"))
     world.nbframes += 1
     wait_until_no_ajax(world)
@@ -739,7 +739,7 @@ def fill_field_and_open(step, fieldname, content):
     refresh_window(world)
     internal_fill_field(fieldname, content, position=0)
 
-    world.browser.switch_to_default_content()
+    world.browser.switch_to.default_content()
     world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes, tag_name="iframe", wait="I don't find the new window"))
     world.nbframes += 1
 
@@ -897,6 +897,10 @@ def remember_step(step, fieldname, variable):
 @step('I click on "([^"]*)" until not available$')
 @handle_delayed_step
 def click_until_not_available2(step, button):
+    ct = int(os.environ.get('COUNT', 2))
+    if ct < 5:
+        raise RuntimeError("\"I click until not available\" requires a count >= 5")
+    
     refresh_window(world)
     wait_until_not_loading(world.browser, wait=world.nbframes == 0)
 
@@ -924,7 +928,7 @@ def click_until_not_available1(step, button, value, fieldname):
     while True:
         tick()
         try:
-            world.browser.switch_to_default_content()
+            world.browser.switch_to.default_content()
             if world.nbframes != 0:
                 world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait="Cannot find the frame in which the button is located"))
 
@@ -968,7 +972,7 @@ def close_window_if_necessary(step, button):
     wait_until_not_loading(world.browser, wait=world.nbframes == 0)
 
     # what's the URL of the current frame?
-    world.browser.switch_to_default_content()
+    world.browser.switch_to.default_content()
     # We have to wait here because we sometimes the new iframe is not visible straight away
     previous_iframes = get_elements(world.browser, tag_name="iframe", wait=True)
     last_frame = previous_iframes[-1]
@@ -978,7 +982,7 @@ def close_window_if_necessary(step, button):
     msg = "Cannot find button %s" % button
     click_on(world, lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg), msg)
 
-    world.browser.switch_to_default_content()
+    world.browser.switch_to.default_content()
     tick = monitor(world.browser)
     while True:
         tick()
@@ -988,7 +992,7 @@ def close_window_if_necessary(step, button):
             if len(current_iframes) != len(previous_iframes):
                 # we close the window => we have to remove the window
                 world.nbframes -= 1
-                world.browser.switch_to_default_content()
+                world.browser.switch_to.default_content()
                 if world.nbframes != 0:
                     world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait="Cannot find the previous frame"))
                 return
@@ -1032,7 +1036,7 @@ def click_on_button(step, button):
     if world.nbframes != 0:
         wait_until_not_loading(world.browser, wait=False)
 
-        world.browser.switch_to_default_content()
+        world.browser.switch_to.default_content()
         world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", wait="I cannot select the current window", position=world.nbframes-1))
 
         wait_until_not_loading(world.browser, wait=False)
@@ -1056,7 +1060,7 @@ def click_on_button_and_open(step, button):
 
     wait_until_not_loading(world.browser, wait=False)
 
-    world.browser.switch_to_default_content()
+    world.browser.switch_to.default_content()
     world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes, tag_name="iframe", wait="I don't find the new window"))
     world.nbframes += 1
     
@@ -1068,7 +1072,7 @@ def click_on_button_and_open(step, button):
 def close_the_window(step):
     refresh_window(world)
 
-    world.browser.switch_to_default_content()
+    world.browser.switch_to.default_content()
 
     elem = get_element_from_text(world.browser, tag_name="span", text="close", wait="Cannot find the button to close the window")
     elem.click()
@@ -1092,7 +1096,7 @@ def click_on_button_and_close(step, button):
     click_on(world, lambda : get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg), msg)
     world.nbframes -= 1
 
-    world.browser.switch_to_default_content()
+    world.browser.switch_to.default_content()
     
     if world.nbframes > 0:
         world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes-1, tag_name="iframe", wait="I don't find the previous window"))
@@ -1111,7 +1115,7 @@ def click_on_button_and_close(step, button):
     button_element = get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg)
     click_on(world, lambda : button_element, msg)
     
-    world.browser.switch_to_default_content()
+    world.browser.switch_to.default_content()
     
     try:
         wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe", position=world.nbframes-1))
@@ -1251,7 +1255,7 @@ def see_popup(step, message_to_see):
 
         for noframe in xrange(world.nbframes+1):
             if noframe == 0:
-                world.browser.switch_to_default_content()
+                world.browser.switch_to.default_content()
             else:
                 frame = get_element(world.browser, tag_name="iframe", position=noframe-1, wait="I don't find a window")
                 world.browser.switch_to_frame(frame)
@@ -1284,10 +1288,10 @@ def see_popup(step, message_to_see):
                 tick()
 
     if world.nbframes:
-        world.browser.switch_to_default_content()
+        world.browser.switch_to.default_content()
         world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes-1, wait="I don't find the previous window"))
     else:
-        world.browser.switch_to_default_content()
+        world.browser.switch_to.default_content()
 
 
 @step('I should see a window with "([^"]*)"$')
@@ -1306,7 +1310,7 @@ def see_window(step, message_to_see):
         
         # Check in browser
         if noframe == 0:
-            world.browser.switch_to_default_content()
+            world.browser.switch_to.default_content()
         # Check in iFrame
         else:
             frame = get_element(world.browser, tag_name="iframe", position=noframe-1, wait="I don't find a window")
@@ -1335,10 +1339,10 @@ def see_window(step, message_to_see):
     step.given('I close the window')
 
     #if world.nbframes:
-    #    world.browser.switch_to_default_content()
+    #    world.browser.switch_to.default_content()
     #    world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes-1, wait="I don't find the previous window"))
     #else:
-    #    world.browser.switch_to_default_content()
+    #    world.browser.switch_to.default_content()
 
 #WARNING: Undocumented!
 @step('I should see "([^"]*)" in the section "([^"]*)"$')
@@ -1454,7 +1458,7 @@ def fill_column_with_window(step, content, fieldname):
     wait_until_no_ajax(world)
     wait_until_not_loading(world.browser, wait=False)
 
-    world.browser.switch_to_default_content()
+    world.browser.switch_to.default_content()
     world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait="I don't find the new window"))
     world.nbframes += 1
 
@@ -1547,7 +1551,7 @@ def click_on_line(step, action, window_will_exist=True):
             wait_until_not_loading(world.browser, wait=False)
             wait_until_no_ajax(world)
 
-            world.browser.switch_to_default_content()
+            world.browser.switch_to.default_content()
             wait_until_not_loading(world.browser, wait=False)
             # We cannot use wait_until_no_ajax because the elements
             #wait_until_no_ajax(world)
@@ -1588,7 +1592,7 @@ def click_on_line_and_open_the_window(step, action):
 
     world.nbframes -= 1
 
-    world.browser.switch_to_default_content()
+    world.browser.switch_to.default_content()
 
     wait_until_no_ajax(world)
 
@@ -1607,7 +1611,7 @@ def click_on_line_and_open_the_window(step, action):
     refresh_window(world)
     click_on_line(step, action)
 
-    world.browser.switch_to_default_content()
+    world.browser.switch_to.default_content()
     world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait="I don't find the new window"))
     world.nbframes += 1
 
@@ -1792,7 +1796,7 @@ def open_side_panel_and_open(step, menuname):
 
     open_side_panel_internal(step, menuname)
 
-    world.browser.switch_to_default_content()
+    world.browser.switch_to.default_content()
     world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait="I don't find the new window"))
     world.nbframes += 1
 
@@ -1869,7 +1873,7 @@ def choose_field(step):
     wait_until_not_loading(world.browser)
 
     click_on(world, lambda : get_element(world.browser, tag_name="img", attrs={'title': 'Update'}, wait=True), "Cannot find the button to validate the line")
-
+    time.sleep(TIME_TO_WAIT)
     wait_until_no_ajax(world)
     wait_until_not_loading(world.browser)
 
@@ -1970,7 +1974,7 @@ def open_translation_window(step, fieldname):
         tick()
 
     # we have to open the window!
-    world.browser.switch_to_default_content()
+    world.browser.switch_to.default_content()
     world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes, wait="Cannot find the window"))
     world.nbframes += 1
     wait_until_no_ajax(world)
