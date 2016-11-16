@@ -56,7 +56,7 @@ def get_TIME_BEFORE_FAILURE():
         else:
             return None
     else:
-        return 50
+        return 20
 TIME_BEFORE_FAILURE_SYNCHRONIZATION = 1000.0 if get_TIME_BEFORE_FAILURE() is not None else (3600*24*7)
 
 def timedelta_total_seconds(timedelta):
@@ -100,10 +100,12 @@ def monitor(browser, explanation=''):
 
         now = datetime.datetime.now()
         time_spent_waiting = timedelta_total_seconds(now - here['start_datetime'])
-
+        
         TIME_BEFORE_FAILURE = get_TIME_BEFORE_FAILURE()
-
+        
         timeout_detected = TIME_BEFORE_FAILURE is not None and time_spent_waiting > (TIME_BEFORE_FAILURE * factor)
+        
+        print "time_spent_waiting="+str(time_spent_waiting)
 
         if here['val'] > LIMIT_COUNTER or timeout_detected:
             browser = here['browser']

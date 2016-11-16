@@ -1120,8 +1120,8 @@ def click_on_button_and_close(step, button):
     try:
         wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe", position=world.nbframes-1))
     except (TimeoutException) as e:
-        
         # in case of TimeoutException, let's try one another time.
+        print "--> We have waited for a while, try again " + button
         button_element = get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg)
         click_on(world, lambda : button_element, msg)
         wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe", position=world.nbframes-1))
