@@ -102,11 +102,11 @@ fi
 
 if [[ -z "$DISPLAY" ]];
 then
-    echo BROWSER="$BROWSER" xvfb-run -s '-screen 1 1024x768x16' -a python $TESTFIELDDIR/runtests.py "$@"
-    BROWSER="$BROWSER" xvfb-run -s '-screen 1 1024x768x16' -a python $TESTFIELDDIR/runtests.py "$@"
+    echo BROWSER="$BROWSER" xvfb-run -s '-screen 1 1024x768x16' -a python -u $TESTFIELDDIR/runtests.py "$@"
+    BROWSER="$BROWSER" xvfb-run -s '-screen 1 1024x768x16' -a python -u $TESTFIELDDIR/runtests.py "$@"
 else
-    echo BROWSER="$BROWSER" python $TESTFIELDDIR/runtests.py "$@"
-    BROWSER="$BROWSER" python $TESTFIELDDIR/runtests.py "$@"
+    echo BROWSER="$BROWSER" python -u $TESTFIELDDIR/runtests.py "$@"
+    BROWSER="$BROWSER" python -u $TESTFIELDDIR/runtests.py "$@"
 fi
 
 RETVAR=$?
