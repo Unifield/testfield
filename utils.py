@@ -9,6 +9,7 @@ import datetime
 import time
 import re
 import os
+import pdb
 
 # The time (in seconds) that we wait when we know that an action has still to be performed
 TIME_TO_SLEEP = 0.3
@@ -56,7 +57,7 @@ def get_TIME_BEFORE_FAILURE():
         else:
             return None
     else:
-        return 50
+        return 60
 TIME_BEFORE_FAILURE_SYNCHRONIZATION = 1000.0 if get_TIME_BEFORE_FAILURE() is not None else (3600*24*7)
 
 def timedelta_total_seconds(timedelta):
@@ -102,7 +103,7 @@ def monitor(browser, explanation=''):
         time_spent_waiting = timedelta_total_seconds(now - here['start_datetime'])
         
         TIME_BEFORE_FAILURE = get_TIME_BEFORE_FAILURE()
-        
+
         timeout_detected = TIME_BEFORE_FAILURE is not None and time_spent_waiting > (TIME_BEFORE_FAILURE * factor)
         
         if here['val'] > LIMIT_COUNTER or timeout_detected:

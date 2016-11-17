@@ -1120,10 +1120,18 @@ def click_on_button_and_close(step, button):
     try:
         wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe", position=world.nbframes-1))
     except (TimeoutException) as e:
-        # in case of TimeoutException, let's try one another time.
-        button_element = get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg)
-        click_on(world, lambda : button_element, msg)
-        wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe", position=world.nbframes-1))
+        # in case of TimeoutException, let's try one another time by executing Js code directly
+        if button == 'Save & source':
+            
+            elems = world.browser.find_elements_by_css_selector("button#save_source_lines")
+            
+            print "Nb buttons = " + str(len(elems))
+            
+            if len(elems) == 1:
+                print elems[0].get_attribute("outerHTML")
+                        
+            print "---> Let's try JS method"
+            world.browser.execute_script("buttonClicked('save_source_lines', 'object', 'multiple.sourcing.wizard', '', getNodeAttribute(this, 'confirm'), '', getNodeAttribute(this, 'context'));")
         
     refresh_nbframes(world)
     refresh_window(world)
