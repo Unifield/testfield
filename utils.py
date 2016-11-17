@@ -1,4 +1,4 @@
-
+from credentials import *
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.remote.webelement import WebElement
@@ -105,6 +105,23 @@ def monitor(browser, explanation=''):
         TIME_BEFORE_FAILURE = get_TIME_BEFORE_FAILURE()
 
         timeout_detected = TIME_BEFORE_FAILURE is not None and time_spent_waiting > (TIME_BEFORE_FAILURE * factor)
+        
+        
+        # START DEBUG
+        if here['browser'] is not None:
+            
+            if here['browser'].get_cookie("session_id") is not None:
+            
+                myCookie = here['browser'].get_cookie("session_id")
+            
+                if myCookie['value'] is not None:
+                    f = open("session.txt", 'a')
+                    print myCookie['value']
+                    strdate = datetime.datetime.strftime(datetime.datetime.now(), '%Y/%m/%d %H:%M:%S')
+                    f.write(strdate + ": " + myCookie['value'] + '\r\n')
+                    f.close()
+        # END DEBUG            
+                    
         
         if here['val'] > LIMIT_COUNTER or timeout_detected:
             browser = here['browser']
