@@ -13,7 +13,7 @@ then
     EXTRA_PARAM=\"-e KEY_FETCH=\$TESTFIELD_TEST_KEY\"
 fi
 
-sudo docker run \$EXTRA_PARAM --rm --privileged -it -P -p 8080:8080 -v `pwd`/output:/output hectord/autotestfield \$@
+sudo docker run \$EXTRA_PARAM --rm --privileged -it -P -p 8080:8080 -v `pwd`/output:/output unifield/autotestfield \$@
 " > run.sh
 
 sudo chmod +x run.sh
