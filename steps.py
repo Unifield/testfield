@@ -7,6 +7,8 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.common.exceptions import StaleElementReferenceException, ElementNotVisibleException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions
 from utils import *
 import datetime
 import os
@@ -211,6 +213,7 @@ def fail_if_background(step):
 
 @before.each_step
 def apply_monkey_patch(step):
+    
     world.browser.execute_script(world.monkeypatch)
 
 @after.each_scenario
@@ -1016,6 +1019,13 @@ def close_window_if_necessary(step, button):
 @output.add_printscreen
 def click_on_button(step, button):
     refresh_window(world)
+    
+    '''
+    elem = WebDriverWait(world.browser, 10).until(
+        expected_conditions.presence_of_element_located( world.browser.find_elements_by_css_selector("div#ajax_loading") )
+    )
+    '''
+    
     # It seems that some action could still be launched when clicking on a button,
     #  we have to wait on them for completion
     # But we cannot do that for frames because the "loading" menu item doesn't exist
@@ -1132,6 +1142,8 @@ def click_on_button_and_close(step, button):
                         
             print "---> Let's try JS method"
             world.browser.execute_script("buttonClicked('save_source_lines', 'object', 'multiple.sourcing.wizard', '', getNodeAttribute(this, 'confirm'), '', getNodeAttribute(this, 'context'));")
+            
+            wait_until_element_does_not_exist(world.browser, lambda : get_element(world.browser, tag_name="iframe", position=world.nbframes-1))
         
     refresh_nbframes(world)
     refresh_window(world)
