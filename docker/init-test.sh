@@ -5,7 +5,7 @@ mkdir -p output/benchmarks
 
 echo "#!/bin/bash
 
-sudo docker pull hectord/autotestfield
+sudo docker pull unifield/autotestfield
 
 EXTRA_PARAM=
 if [[ \$TESTFIELD_TEST_KEY ]]

@@ -26,7 +26,9 @@ cd .tmp
 echo "Unzip"
 unzip tests.zip
 
-cp -R $DIRNAME/* ../
+cp -R $DIRNAME/instances ../
+cp -R $DIRNAME/meta_features ../
+cp -R $DIRNAME/files ../
 
 cd ..
 rm -rf .tmp
