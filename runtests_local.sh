@@ -80,7 +80,7 @@ echo "date=${TEST_DATE--}" >> output/meta
 
 if [ $BROWSER = "firefox" ]; then
     # Check the system Firefox first
-    v=`firefox --version | cut -d' ' -f 3 | sed 's/\..*$//'`
+    v=`firefox --version 2>/dev/null | cut -d' ' -f 3 | sed 's/\..*$//'`
     if [ "$v" != 20 -a "$v" != 46 ]; then
         # Get the proper version of Firefox
     	(cd $TESTFIELDDIR && ./get_firefox.sh)
@@ -88,17 +88,18 @@ if [ $BROWSER = "firefox" ]; then
     fi
 fi
 
-if [[ $FORCED_DATE == yes ]]
-then
-    if [[ $(uname) == Darwin ]]
-    then
-        export DYLD_INSERT_LIBRARIES=/usr/local/lib/faketime/libfaketime.1.dylib
-    else
-        export LD_PRELOAD=/usr/local/lib/faketime/libfaketime.so.1
-    fi
-    export DYLD_FORCE_FLAT_NAMESPACE=1
-    export FAKETIME="-${TIME_BEFORE}s"
-fi
+# Fake Time is not working yet with containers
+#if [[ $FORCED_DATE == yes ]]
+#then
+#    if [[ $(uname) == Darwin ]]
+#    then
+#        export DYLD_INSERT_LIBRARIES=/usr/local/lib/faketime/libfaketime.1.dylib
+#    else
+#        export LD_PRELOAD=/usr/local/lib/faketime/libfaketime.so.1
+#    fi
+#    export DYLD_FORCE_FLAT_NAMESPACE=1
+#    export FAKETIME="-${TIME_BEFORE}s"
+#fi
 
 if [[ -z "$DISPLAY" ]];
 then

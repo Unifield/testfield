@@ -46,7 +46,7 @@ function cleanup()
 {
     if [[ $VERB != setup ]];
     then
-	docker-compose down
+        docker-compose stop
     fi
 }
 trap "cleanup;" EXIT
