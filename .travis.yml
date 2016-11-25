@@ -12,5 +12,5 @@ install:
   - pip install -r requirements.txt
 
 script:
-  - docker ps
+  - ./fetch/owncloud/fetch.sh
   - ./runtests_server.sh test travis 2.1-3p1 -t travis

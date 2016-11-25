@@ -24,7 +24,7 @@ fi
 
 echo """#encoding=utf-8
 
-SRV_ADDRESS = '$SERVER_HOST'
+SRV_ADDRESS = '${SERVER_HOST:-127.0.0.1}'
 
 # Configuration variables 
 XMLRPC_PORT = $XMLRPC_PORT
