@@ -6,10 +6,6 @@ python:
 install:
   - pip install -r requirements.txt
 
-sudo: required
-
-services:
-  - docker
-
 script:
-  - ./runtests_server test travis 2.1-3p1 -t travis
+  - docker ps
+  - ./runtests_server.sh test travis 2.1-3p1 -t travis
