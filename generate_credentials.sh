@@ -15,12 +15,18 @@ if [ "$1" = sandbox ]; then
 	DBPREFIX=$2
 fi
 
+docker=False
+if [ "$1" = ports ]; then
+	WEB_PORT=$2
+	XMLRPC_PORT=$3
+	docker=True
+fi
+
 echo """#encoding=utf-8
 
 SRV_ADDRESS = '$SERVER_HOST'
 
 # Configuration variables 
-NETRPC_PORT = $NETRPC_PORT
 XMLRPC_PORT = $XMLRPC_PORT
 HTTP_PORT = $WEB_PORT
 HTTP_URL_SERVER = 'http://%s:%d' % (SRV_ADDRESS, HTTP_PORT)
@@ -36,13 +42,8 @@ UNIFIELD_ADMIN = '$UNIFIELDADMIN'
 UNIFIELD_PASSWORD = '$UNIFIELDPASSWORD'
 
 SERVER_HWID = '$SERVER_HWID'
-
+USING_DOCKER = $docker
 """ > credentials.py
-
-
-echo """set PGPASSWORD=$DBPASSWORD
-python restore.py
-""" > restore.bat
 
 echo """set COUNT=2
 python runtests.py %*

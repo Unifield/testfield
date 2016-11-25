@@ -7,8 +7,8 @@ set -o pipefail
 if [[ $# -lt 2 || ( "$1" != benchmark && "$1" != "test" && "$1" != "setup" ) ]];
 then
     echo "Usage: "
-    echo "  $0 benchmark output-name [server_branch[|rev_number]] [web_branch[|rev_number]] [-t tag]"
-    echo "  $0 test output-name [server_branch[|rev_number]] [web_branch[|rev_number]] [-t tag]"
+    echo "  $0 benchmark output-name [docker-hub-tag] [-t tag]"
+    echo "  $0 test output-name [docker-hub-tag] [-t tag]"
     exit 1
 fi
 
@@ -36,24 +36,20 @@ fi
 VERB=${1:-test}
 ENVNAME=$SERVER_ENVNAME
 
-NAME=${2:-unkown}
+NAME=${2:-unknown}
 
-SERVERBRANCH=${3:-lp:unifield-server}
-WEBBRANCH=${4:-lp:unifield-web}
-LETTUCE_PARAMS="${*:5}"
+DOCKER_TAG=${3:-2.1-3p1}
+export DOCKER_TAG
+LETTUCE_PARAMS="${*:4}"
 
 function cleanup()
 {
     if [[ $VERB != setup ]];
     then
-        ./scripts/kill_db.sh -D $SERVER_TMPDIR $NAME || true
-        ./scripts/stop_unifield.sh -d $SERVER_TMPDIR $NAME || true
+	docker-compose down
     fi
 }
 trap "cleanup;" EXIT
-
-
-export PGPASSWORD=$DBPASSWORD
 
 run_tests()
 {
@@ -80,9 +76,9 @@ run_tests()
         fi
         mkdir -p "$DIREXPORT"
 
-        ./scripts/start_unifield.sh -d $SERVER_TMPDIR version $NAME > output/version
+#        ./scripts/start_unifield.sh -d $SERVER_TMPDIR version $NAME > output/version
 
-        ./scripts/start_unifield.sh -d $SERVER_TMPDIR logs $NAME > output/server.log
+        docker-compose logs > output/server.log
 
         cp -R output/* $DIREXPORT/ || true
 
@@ -125,57 +121,10 @@ run_tests()
     return $RET
 }
 
-launch_database()
-{
-    if [[ $DBUSERNAME != $DBPASSWORD ]]
-    then
-        echo Username and password must be the same if you want to set a fixed date
-        exit 1
-    fi
+./start-containers.sh
+run_tests
+rc=$?
+echo "run_tests returns rc $rc"
 
-    ./scripts/create_db.sh -P ${DBPATH} -D $SERVER_TMPDIR -s $MINUS_IN_SECOND -p $DBPORT -c $DBUSERNAME $NAME
-}
-
-DATABASES=
-for FILENAME in `find instances/$ENVNAME -name *.dump | sort`;
-do
-    F_WITHOUT_EXTENSION=${FILENAME%.dump}
-    DBNAME=${F_WITHOUT_EXTENSION##*/}
-
-    DATABASES="$DATABASES $DBNAME"
-done
-
-export DATABASES=$DATABASES
-
-./generate_credentials.sh
-
-mkdir -p $SERVER_TMPDIR
-./scripts/fetch_unifield.sh -W "$WEBBRANCH" -S "$SERVERBRANCH" \
-    -d $SERVER_TMPDIR -r $NAME
-
-# we have to setup a database if required
-if [[ ${DBPATH} && ${FORCED_DATE} == yes ]];
-then
-    launch_database
-else
-    FORCED_DATE=no
-fi
-
-if [ -z "$NORESTORE" ]; then
-    if [[ ${FORCED_DATE} == yes ]]
-    then
-        python restore.py --reset-sync --reset-versions $ENVNAME
-    else
-        python restore.py --reset-versions $ENVNAME
-    fi
-fi
-
-./scripts/upgrade_unifield.sh -s $MINUS_IN_SECOND -d $SERVER_TMPDIR $NAME $ENVNAME
-
-./scripts/start_unifield.sh -s $MINUS_IN_SECOND -d $SERVER_TMPDIR run $NAME
-
-RET=0
-run_tests || RET=$?
-
-exit $RET
+exit $rc
 

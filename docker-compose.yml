@@ -1,0 +1,27 @@
+version: '2.1'
+
+services:
+  uf-web:
+    image: "unifield/web:${DOCKER_TAG:-2.1-3p1}"
+    ports:
+     - "8061"
+    depends_on:
+     - uf-server
+  uf-server:
+    image: "unifield/server:${DOCKER_TAG:-2.1-3p1}"
+    mac_address: 02:42:ac:11:00:01
+    ports:
+     - "8069"
+     - "8070"
+    depends_on:
+     - db
+    links:
+     - "db:database"
+  db:
+    image: "unifield/postgres:8.4_${DOCKER_TAG:-2.1-3p1}"
+    ports:
+     - "5432"
+    environment:
+     - "POSTGRESQL_USER=unifield"
+     - "POSTGRESQL_TRUST=YES"
+     - "POSTGRESQL_DATA=/internal"
