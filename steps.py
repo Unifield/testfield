@@ -600,8 +600,9 @@ def open_tab(step, menu_to_click_on):
 @output.register_for_printscreen
 def open_tab(step, menu_to_click_on):
     world.full_printscreen = True
-
     open_menu(menu_to_click_on)
+    if (menu_to_click_on == "Purchase Orders"):
+        toggle_button_to("CONFIRMED", "inactive")
 
 @step('I open tab "([^"]*)"')
 @handle_delayed_step
