@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 docker-compose up -d
 
 # Find the ephemeral ports the containers use, and put them

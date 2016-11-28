@@ -17,6 +17,14 @@ fi
 
 docker=False
 if [ "$1" = ports ]; then
+	if [ -z "$2" ]; then
+		echo "Missing WEB_PORT."
+		exit 1
+	fi
+	if [ -z "$3" ]; then
+		echo "Missing XMLRPC_PORT."
+		exit 1
+	fi
 	WEB_PORT=$2
 	XMLRPC_PORT=$3
 	docker=True
