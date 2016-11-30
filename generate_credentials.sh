@@ -41,6 +41,7 @@ HTTP_URL_SERVER = 'http://%s:%d' % (SRV_ADDRESS, HTTP_PORT)
 
 # Configuration variable to generate input files / Restore dumps
 DB_ADDRESS = '$DBADDR'
+DB_PORT = $DBPORT
 DB_USERNAME = '$DBUSERNAME'
 DB_PASSWORD = '$DBPASSWORD'
 DB_PREFIX = '$DBPREFIX'
