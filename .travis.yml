@@ -1,14 +1,15 @@
 sudo: required
 
 services:
-    - docker
+  - docker
 
-before_install:
-    - travis_wait 50 docker build -t testfield .
-    - docker build -t testfield_test -f DockerfileTests  .
-    - docker ps -a
+language: python
+
+python:
+  - "2.7"
+
+install:
+  - pip install -r requirements.txt
 
 script:
-    - docker run -it testfield_test test FUNCTEST lp:unifield-server lp:unifield-web
-
-
+  - ./runtests_cont.sh test travis 3.0rc2 .travis.meta_feature 

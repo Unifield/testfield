@@ -1,0 +1,6 @@
+Feature: Login (smoke-test for Travis)
+
+@it @user @travis
+Scenario: Login
+    Given I log into instance "HQ1"
+

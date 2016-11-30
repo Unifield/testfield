@@ -15,19 +15,32 @@ if [ "$1" = sandbox ]; then
 	DBPREFIX=$2
 fi
 
+docker=False
+if [ "$1" = ports ]; then
+	if [ -z "$2" ]; then
+		echo "Missing WEB_PORT."
+		exit 1
+	fi
+	if [ -z "$3" ]; then
+		echo "Missing XMLRPC_PORT."
+		exit 1
+	fi
+	WEB_PORT=$2
+	XMLRPC_PORT=$3
+	docker=True
+fi
+
 echo """#encoding=utf-8
 
-SRV_ADDRESS = '$SERVER_HOST'
+SRV_ADDRESS = '${SERVER_HOST:-127.0.0.1}'
 
 # Configuration variables 
-NETRPC_PORT = $NETRPC_PORT
 XMLRPC_PORT = $XMLRPC_PORT
 HTTP_PORT = $WEB_PORT
 HTTP_URL_SERVER = 'http://%s:%d' % (SRV_ADDRESS, HTTP_PORT)
 
 # Configuration variable to generate input files / Restore dumps
 DB_ADDRESS = '$DBADDR'
-DB_PORT = $DBPORT
 DB_USERNAME = '$DBUSERNAME'
 DB_PASSWORD = '$DBPASSWORD'
 DB_PREFIX = '$DBPREFIX'
@@ -36,13 +49,8 @@ UNIFIELD_ADMIN = '$UNIFIELDADMIN'
 UNIFIELD_PASSWORD = '$UNIFIELDPASSWORD'
 
 SERVER_HWID = '$SERVER_HWID'
-
+USING_DOCKER = $docker
 """ > credentials.py
-
-
-echo """set PGPASSWORD=$DBPASSWORD
-python restore.py
-""" > restore.bat
 
 echo """set COUNT=2
 python runtests.py %*
