@@ -7,7 +7,7 @@ import re
 import sys
 import shutil
 import os, os.path
-import utils
+import utils, codecs
 import credentials
 import subprocess
 
@@ -80,7 +80,10 @@ def run_preprocessor(path):
                 varname = values['varname']
 
                 try:
-                    number = int(os.environ[varname])
+                    if re.match(r'^[0-9]+$', varname):
+                        number = int(varname)
+                    else:
+                        number = int(os.environ[varname])
                 except ValueError as e:
                     raise SyntaxException("Invalid variable value: %s (value= '%s')" % (varname, os.environ[varname]))
                 kindof = values['kindof'].upper()
@@ -198,7 +201,12 @@ if __name__ == '__main__':
 
                         content = run_preprocessor(from_path)
                         with open(to_path, 'w') as f:
-                            f.write(content.decode('utf-8').encode('utf-8'))
+                            # remove invalid characters due to bad unifield encodings in test instances
+                            out = []
+                            for a in list(content):
+                                if ord(a) in range(128):
+                                    out.append(a)
+                            f.write(''.join(out))
 
                     except SyntaxException as e:
                         eprint('SYNTAX FAILURE:%s: %s\n\n' % (filename, e))

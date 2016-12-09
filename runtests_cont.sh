@@ -94,7 +94,7 @@ run_tests()
             LETTUCE_PARAMS="-t testperf"
         fi
 
-        for count in 5 15 25 35 45
+        for count in 5 15 25 35 45 200 400
         do
             export COUNT=$count
 
