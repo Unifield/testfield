@@ -20,6 +20,17 @@ NAME_RUN=autotest
 ./scripts/stop_unifield.sh -d $TMPPATH $NAME_RUN || true
 ./scripts/kill_db.sh -D $TMPPATH $NAME_RUN || true
 
+if [[ -e $TMPPATH/data-autotest ]]
+then
+    rm -rf $TMPPATH/data-autotest
+fi
+
+if [[ -e $TMPPATH/run-autotest ]]
+then
+    rm -rf $TMPPATH/run-autotest
+fi
+
+
 # If it fails, allow this script to keep going anyway.
 # We will use the files fetched yesterday.
 ./fetch/owncloud/fetch.sh || true
@@ -60,7 +71,6 @@ NAME="TRUNK`date +'%d%m%Y'`"
 generate_config "TESTS"
 
 export TEST_DESCRIPTION="Automated tests - Trunk"
-export TEST_NAME="Trunk `date +'%d-%m-%Y'`"
+export TEST_NAME="Trunk `date +'%d-%m-%Y' -d '+1 day'`"
 
 ./runtests_server.sh setup $NAME_RUN
-

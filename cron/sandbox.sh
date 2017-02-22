@@ -24,6 +24,17 @@ FORCED_DATE=yes
 ./scripts/stop_unifield.sh -d $TMPPATH $NAME_RUN || true
 ./scripts/kill_db.sh -D $TMPPATH $NAME_RUN || true
 
+if [[ -e $TMPPATH/data-sandbox ]]
+then
+    rm -rf $TMPPATH/data-sandbox
+fi
+
+if [[ -e $TMPPATH/run-sandbox ]]
+then
+    rm -rf $TMPPATH/run-sandbox
+fi
+
+
 ./fetch/owncloud/fetch.sh
 
 function generate_config()

@@ -132,7 +132,6 @@ launch_database()
         echo Username and password must be the same if you want to set a fixed date
         exit 1
     fi
-
     ./scripts/create_db.sh -P ${DBPATH} -D $SERVER_TMPDIR -s $MINUS_IN_SECOND -p $DBPORT -c $DBUSERNAME $NAME
 }
 
@@ -146,12 +145,11 @@ do
 done
 
 export DATABASES=$DATABASES
-
 ./generate_credentials.sh
-
 mkdir -p $SERVER_TMPDIR
 ./scripts/fetch_unifield.sh -W "$WEBBRANCH" -S "$SERVERBRANCH" \
     -d $SERVER_TMPDIR -r $NAME
+
 
 # we have to setup a database if required
 if [[ ${DBPATH} && ${FORCED_DATE} == yes ]];
@@ -160,7 +158,6 @@ then
 else
     FORCED_DATE=no
 fi
-
 if [ -z "$NORESTORE" ]; then
     if [[ ${FORCED_DATE} == yes ]]
     then
@@ -170,12 +167,15 @@ if [ -z "$NORESTORE" ]; then
     fi
 fi
 
+
 ./scripts/upgrade_unifield.sh -s $MINUS_IN_SECOND -d $SERVER_TMPDIR $NAME $ENVNAME
 
+
 ./scripts/start_unifield.sh -s $MINUS_IN_SECOND -d $SERVER_TMPDIR run $NAME
+
 
 RET=0
 run_tests || RET=$?
 
-exit $RET
+#exit $RET
 

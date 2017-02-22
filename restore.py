@@ -48,7 +48,6 @@ if __name__ == '__main__':
     environment_dir = os.path.join(ENV_DIR, env_name)
 
     dumps_to_restore = arguments[2:] if len(arguments) > 2 else []
-
     if not os.path.isdir(environment_dir):
         print "Invalid environment"
         sys.exit(1)

@@ -93,7 +93,7 @@ class UniFieldElementException(UnifieldException):
 def monitor(browser, explanation=''):
     start_datetime = datetime.datetime.now()
     here = {'val': 0, 'start_datetime': start_datetime, 'browser': browser}
-    LIMIT_COUNTER = 30
+    LIMIT_COUNTER = 60
     found_message = set([])
 
     def counter(message_if_error=None, factor=1.0):
