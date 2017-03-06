@@ -7,6 +7,8 @@ services:
      - "8061"
     depends_on:
      - uf-server
+    environment:
+     - "FAKETIME=@2016-05-25 00:00:00"
   uf-server:
     image: "unifield/server:${DOCKER_TAG:-2.1-3p1}"
     mac_address: 02:42:ac:11:00:01
@@ -17,6 +19,8 @@ services:
      - db
     links:
      - "db:database"
+    environment:
+     - "FAKETIME=@2016-05-25 00:00:00"
   db:
     image: "unifield/postgres:8.4_${DOCKER_TAG:-2.1-3p1}"
     ports:

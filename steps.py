@@ -411,60 +411,9 @@ def log_out(step):
 @step('I synchronize "([^"]*)"')
 @handle_delayed_step
 @output.register_for_printscreen
-def synchronize_instance(step, instance_name):
-    instance_name = prefix_db_name(convert_input(world, instance_name))
+def synchronize_instance_step(step, instance_name):
+    return synchronize_instance(convert_input(world, instance_name))
 
-    from oerplib.oerp import OERP
-    from oerplib.error import RPCError
-
-    class XMLRPCConnection(OERP):
-        '''
-        XML-RPC connection class to connect with OERP
-        '''
-
-        def __init__(self, db_name):
-            '''
-            Constructor
-            '''
-            # Prepare some values
-            server_port = XMLRPC_PORT
-            server_url = SRV_ADDRESS
-            uid = UNIFIELD_ADMIN
-            pwd = UNIFIELD_PASSWORD
-            # OpenERP connection
-            super(XMLRPCConnection, self).__init__(
-                server=server_url,
-                protocol='xmlrpc',
-                port=server_port,
-                timeout=TIME_BEFORE_FAILURE_SYNCHRONIZATION
-            )
-            # Login initialization
-            self.login(uid, pwd, db_name)
-
-    try:
-        connection = XMLRPCConnection(instance_name)
-
-        conn_obj = connection.get('sync.client.sync_server_connection')
-        sync_obj = connection.get('sync.client.sync_manager')
-
-        conn_ids = conn_obj.search([])
-        # When using the canned DBs inside of the container, they are already
-        # configured for synching, so do not meddle with it.
-        if not USING_DOCKER:
-            conn_obj.write(conn_ids, {'login': UNIFIELD_ADMIN, 'password': UNIFIELD_PASSWORD, 'port': XMLRPC_PORT, 'protocol': 'xmlrpc'})
-        conn_obj.connect(conn_ids)
-        sync_ids = sync_obj.search([])
-        sync_obj.sync(sync_ids)
-    except RPCError as e:
-        message = str(e).encode('utf-8', 'ignore')
-
-        #FIXME: This is a dirty hack. We don't want to fail if there is a revision
-        #  available. That's part of a normal scenario. As a result, the code
-        #  shouldn't raise an exception.
-        if 'revision(s) available' in message:
-            return
-
-        raise
 #}%}
 
 # Open a menu/tab {%{

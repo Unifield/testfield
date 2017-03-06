@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# A script to load the databases into a Docker image and
+# freeze it, leaving them ready to use (uupgraded and configured
+# for sync).
+
+if [ -z "$DOCKER_TAG" ]; then
+	echo "Expected DOCKER_TAG to be set."
+	exit 1
+fi
+
+if [ ! -d instances/lightweight ]; then
+	echo instances/lightweight is missing!
+	exit 1
+fi
+
+set -e
+
+docker run -d -p 127.0.0.1:15432:5432 \
+       -e POSTGRESQL_USER=unifield -e POSTGRESQL_TRUST=YES \
+       -e POSTGRESQL_DATA=/internal \
+       --name fz unifield/postgres:8.4
+
+echo "Sleeping while db starts."
+sleep 20
+
+for i in SYNC_SERVER HQ1C1 HQ1C1P2 HQ2C1 HQ1C1P1 HQ1 HQ2
+do
+	(
+	echo "restore $i"
+	psql -p 15432 -U unifield -h localhost -d postgres -q -c "CREATE DATABASE \"$i\""
+	pg_restore -p 15432 -n public -U unifield --no-acl --no-owner -h localhost -d $i instances/lightweight/$i.dump
+	)&
+done
+wait
+
+echo "freeze container"
+docker stop fz
+docker commit fz unifield/postgres:8.4_${DOCKER_TAG}
+docker rm fz
+
+# Use the new frozen db to bring up Unifield
+./start-containers.sh
+
+# Upgrade all the databases.
+(
+echo LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
+for i in SYNC_SERVER HQ1C1 HQ1C1P2 HQ2C1 HQ1C1P1 HQ1 HQ2
+do
+	echo /opt/unifield/server/bin/openerp-server.py --db_host=db --stop-after-init -u all -d $i \&
+done
+echo wait
+) | docker-compose run uf-server bash
+
+
+# Connect them into a sync network
+./container-sync-setup
+
+# freeze it again
+docker-compose stop db
+docker commit testfield_db_1 unifield/postgres:8.4_${DOCKER_TAG}
+
+# cleanup
+docket-compose down

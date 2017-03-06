@@ -11,3 +11,6 @@ docker-compose up -d
         `docker-compose port uf-server 8069 | awk -F: '{print $2}'`
 
 docker-compose run uf-server /opt/unifield/server/bin/wait-postgres-start db
+
+echo "containers started"
+exit 0

@@ -737,3 +737,73 @@ def select_in_field_an_option(world, fieldelement, content):
 
 #}%}
 
+from oerplib.oerp import OERP
+from oerplib.error import RPCError
+
+class XMLRPCConnection(OERP):
+    '''
+    XML-RPC connection class to connect with OERP
+    '''
+    def __init__(self, db_name):
+        '''
+        Constructor
+        '''
+        # Prepare some values
+        server_port = XMLRPC_PORT
+        server_url = SRV_ADDRESS
+        uid = UNIFIELD_ADMIN
+        pwd = UNIFIELD_PASSWORD
+        # OpenERP connection
+        super(XMLRPCConnection, self).__init__(
+            server=server_url,
+            protocol='xmlrpc',
+            port=server_port,
+            timeout=TIME_BEFORE_FAILURE_SYNCHRONIZATION
+        )
+        # Login initialization
+        self.login(uid, pwd, db_name)
+
+def set_docker_hwid(instance_name):
+    instance_name = prefix_db_name(instance_name)
+    sync_db = prefix_db_name('SYNC_SERVER')
+    connection = XMLRPCConnection(sync_db)
+    ent_obj = connection.get('sync.server.entity')
+    ids = ent_obj.search([ ('name', '=', instance_name) ])
+    if len(ids) != 1:
+        raise RuntimeError("Could not find entity to edit.")
+    ent_obj.write(ids, { 'hardware_id': 'ca7fc27358d6e1d2ff3cdac797e98c2f' })
+
+def synchronize_instance(instance_name):
+    instance_name = prefix_db_name(instance_name)
+    sync_db = prefix_db_name('SYNC_SERVER')
+
+    try:
+        connection = XMLRPCConnection(instance_name)
+        conn_obj = connection.get('sync.client.sync_server_connection')
+        sync_obj = connection.get('sync.client.sync_manager')
+        conn_ids = conn_obj.search([])
+
+        if USING_DOCKER:
+            # When using the canned DBs inside of the container
+            # sync via the normal port, not the externally visible one.
+            port = 8069
+        else:
+            port = XMLRPC_PORT
+        conn_obj.write(conn_ids, {
+            'login': UNIFIELD_ADMIN,
+            'password': UNIFIELD_PASSWORD,
+            'database': sync_db,
+            'port': port,
+            'protocol': 'xmlrpc' })
+        conn_obj.connect(conn_ids)
+        sync_ids = sync_obj.search([])
+        sync_obj.sync(sync_ids)
+    except RPCError as e:
+        message = str(e).encode('utf-8', 'ignore')
+        #FIXME: This is a dirty hack. We don't want to fail if there is a revision
+        #  available. That's part of a normal scenario. As a result, the code
+        #  shouldn't raise an exception.
+        if 'revision(s) available' in message:
+            return
+        raise
+    return
