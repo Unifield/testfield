@@ -1504,10 +1504,14 @@ def click_on_line(step, action, window_will_exist=True):
                     action_to_click = actions_to_click[0]
                     if not action_to_click.is_displayed():
                         continue
-                    action_to_click.click()
+                    # If this is a checkbox and it's already checked, don't
+                    # click it.
+                    if action_to_click.get_attribute('name') == '_terp_list' and action_to_click.is_selected():
+                        pass
+                    else:
+                        action_to_click.click()
                     no_by_fingerprint[hash_key_value] += 1
-                    # we have found the line, the action has already been found.
-                    #  everything is great
+                    # we have found the line, the action has already been found
                     return
                 else:
                     no_matched_row += 1
