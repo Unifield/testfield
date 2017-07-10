@@ -8,11 +8,12 @@ then
     exit 1
 fi
 
-source /home/testing/myenv2/bin/activate
+# source /home/testing/venv/bin/activate
+[ -f ~/unifield-venv/bin/activate ] && . ~/unifield-venv/bin/activate
 cd /home/testing/testfield/
 
 TMPPATH=/home/testing/repo
-DBDIR=/usr/lib/postgresql/8.4/bin/
+DBDIR=/usr/lib/postgresql/9.6/bin/
 ENVNAME=lightweight
 NAME_RUN=autotest
 

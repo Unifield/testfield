@@ -34,7 +34,7 @@ cd ..
 rm -rf .tmp
 
 # Save them into a Git repo so that we know what changed and when.
-if [ `hostname` = "uf5.unifield.org" -a -d $HOME/precious-data/testfield-input ]; then
+if [ `hostname` = "uf5-hw.unifield.org" -a -d $HOME/precious-data/testfield-input ]; then
 	rm -rf testfield-input
 	git clone $HOME/precious-data/testfield-input
 	rm -rf testfield-input/*

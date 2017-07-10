@@ -11,7 +11,7 @@ if [ "$1" = sandbox ]; then
 	fi
 	WEB_PORT=8004
 	XMLRPC_PORT=8005
-	SERVER_HOST=uf5.unifield.org
+	SERVER_HOST=rb.unifield.org
 	DBPREFIX=$2
 fi
 

@@ -121,9 +121,11 @@ $DBDIR/initdb --username=$USER $DATADIR
 
 echo "port = $DBPORT" >> $DATADIR/postgresql.conf
 
-if [[ $(/usr/lib/postgresql/8.4/bin/postgres --version | egrep -o '[0-9]{1,}\.[0-9]{1,}') == "8.4" ]]
+if [[ $($DBDIR/postgres --version | egrep -o '[0-9]{1,}\.[0-9]{1,}') == "8.4" ]]
 then
     echo "unix_socket_directory = '$RUNDIR'" >> $DATADIR/postgresql.conf
+else
+    echo "unix_socket_directories = '$RUNDIR'" >> $DATADIR/postgresql.conf
 fi
 
 tmux new -d -s PostGre_$NAME_KILL "$FAKED_COMMAND $DBDIR/postgres -D $DATADIR"
