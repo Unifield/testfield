@@ -1030,6 +1030,28 @@ def click_on_button_and_open(step, button):
     
     wait_until_no_ajax(world)
 
+@step('I click on button_id "([^"]*)" and open the window$')
+@handle_delayed_step
+@output.add_printscreen
+def click_on_button_id_and_open(step, button):
+    refresh_window(world)
+
+    wait_until_not_loading(world.browser, wait=False)
+    wait_until_no_ajax(world)
+    msg = "Cannot find button id %s" % button
+
+    elem = world.browser.find_element_by_id(button)
+
+    click_on(world, lambda: elem, msg)
+
+    wait_until_not_loading(world.browser, wait=False)
+
+    world.browser.switch_to.default_content()
+    world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes, tag_name="iframe", wait="I don't find the new window"))
+    world.nbframes += 1
+    
+    wait_until_no_ajax(world)
+
 @step('I close the window$')
 @handle_delayed_step
 @output.add_printscreen
