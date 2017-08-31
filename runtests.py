@@ -45,7 +45,7 @@ def get_sql_query(database, sqlquery):
 
 def get_articles(database, count):
     from oerplib import OERP
-    oerp = OERP(server=credentials.SRV_ADDRESS, database=database, protocol='xmlrpc', port=credentials.XMLRPC_PORT)
+    oerp = OERP(server=credentials.SRV_ADDRESS, database=database, protocol='xmlrpc', port=credentials.XMLRPC_PORT, version='6.0')
     u = oerp.login(credentials.UNIFIELD_ADMIN, credentials.UNIFIELD_PASSWORD)
     prod_obj = oerp.get('product.product')
     ids = prod_obj.search([('batch_management', '=', False), ('perishable', '=', False),
