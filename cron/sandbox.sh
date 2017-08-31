@@ -8,12 +8,13 @@ then
     exit 1
 fi
 
-source /home/testing/myenv2/bin/activate
+[ -f ~/unifield-venv/bin/activate ] && . ~/unifield-venv/bin/activate
+
 
 cd /home/testing/testfield_sandbox
 
 TMPPATH=/home/testing/repo
-DBDIR=/usr/lib/postgresql/8.4/bin/
+DBDIR=/usr/lib/postgresql/9.6/bin/
 ENVNAME=lightweight
 NAME_RUN=sandbox
 DBPORT=8014
@@ -34,8 +35,8 @@ then
     rm -rf $TMPPATH/run-sandbox
 fi
 
-
-./fetch/owncloud/fetch.sh
+# OwnCloud won't be used anymore. Tests, instances and files will be moved directly on uf5-hw and backed up on the backup server.
+#./fetch/owncloud/fetch.sh
 
 function generate_config()
 {

@@ -82,10 +82,10 @@ if [ $BROWSER = "firefox" ]; then
     # Check the system Firefox first
     v=`firefox --version | cut -d' ' -f 3 | sed 's/\..*$//'`
     echo "Firefox version $v"
-    if [ "$v" != 33 ]; then
+    if [ "$v" != 20 -a "$v" != 46 ]; then
         echo "  -> getting proper version"
         # Get the proper version of Firefox
-        (cd $TESTFIELDDIR && ./get_firefox.sh 33.1.1)
+        (cd $TESTFIELDDIR && ./get_firefox.sh 46.0.1)
         export PATH=$TESTFIELDDIR/firefox:$PATH
     fi
 fi

@@ -32,9 +32,8 @@ then
 fi
 
 
-# If it fails, allow this script to keep going anyway.
-# We will use the files fetched yesterday.
-./fetch/owncloud/fetch.sh || true
+# OwnCloud won't be used anymore. Tests, instances and files will be moved directly on uf5-hw and backed up on the backup server.
+#./fetch/owncloud/fetch.sh || true
 
 function generate_config()
 {
