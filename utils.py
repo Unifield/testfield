@@ -758,7 +758,8 @@ class XMLRPCConnection(OERP):
             server=server_url,
             protocol='xmlrpc',
             port=server_port,
-            timeout=TIME_BEFORE_FAILURE_SYNCHRONIZATION
+            timeout=TIME_BEFORE_FAILURE_SYNCHRONIZATION,
+            version='6.0'
         )
         # Login initialization
         self.login(uid, pwd, db_name)
