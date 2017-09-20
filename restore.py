@@ -181,7 +181,7 @@ if __name__ == '__main__':
                         pointed_dbname = line.strip()
                         sync_server_db = utils.prefix_db_name(pointed_dbname)
 
-                run_script(dbname, "UPDATE sync_client_sync_server_connection SET database = '%s', host = 'localhost', protocol = 'netrpc_gzip', port = %d" % (sync_server_db, c.NETRPC_PORT))
+                run_script(dbname, "UPDATE sync_client_sync_server_connection SET database = '%s', host = 'localhost', protocol = 'xmlrpc', port = %d" % (sync_server_db, c.XMLRPC_PORT))
                 if reset_versions:
                     run_script(dbname, "DELETE FROM sync_client_version WHERE sum NOT IN ('88888888888888888888888888888888', '66f490e4359128c556be7ea2d152e03b')")
 
