@@ -1571,6 +1571,22 @@ def click_on_line_line(step):
     refresh_window(world)
     click_on_line(step, "line")
 
+@step('I set "([^"]*)" on lines filter')
+@handle_delayed_step
+def set_filter_on_line(step, value):
+    refresh_window(world)
+    o2m_tables = get_elements(world.browser, tag_name="table", class_attr="one2many")
+    found = False
+    for o2m_table in o2m_tables:
+        id_name = o2m_table.get_attribute("id").replace('_o2m_', '')
+        select = o2m_table.find_elements_by_xpath(".//select[@id='%s_filter']/option" % id_name)
+        for option in select:
+            if option.text.lower() == value.lower():
+                option.click()
+                return True
+    raise UniFieldElementException("Option %s not found on line" % (value, ))
+
+
 @step('I click "([^"]*)" on line:')
 @handle_delayed_step
 @output.register_for_printscreen
