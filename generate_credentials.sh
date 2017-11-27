@@ -54,7 +54,7 @@ SERVER_HWID = '$SERVER_HWID'
 USING_DOCKER = $docker
 """ > credentials.py
 
-echo """set COUNT=2
+echo """set COUNT=5
 python runtests.py %*
 pause
 """ > runtests.bat
