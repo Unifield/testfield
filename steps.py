@@ -1586,6 +1586,51 @@ def set_filter_on_line(step, value):
                 return True
     raise UniFieldElementException("Option %s not found on line" % (value, ))
 
+@step('I set new filter "([^"]*)" "([^"]*)" "([^"]*)"')
+@handle_delayed_step
+def set_filter(step, filter_name, filter_expr, filter_value):
+
+    refresh_window(world)
+    
+    ok_and = False
+    ok_expr = False
+    
+    # Add new filter
+    select_element = get_element(world.browser, tag_name="select", id_attr="filter_list")
+    
+    for option in get_elements(select_element, tag_name="option"):
+        if option.text == "New Filter":
+            option.click()
+            break
+            
+    # Select AND
+    and_element = get_element(world.browser, tag_name="select", class_attr="filter_fields_and")
+    
+    for option in get_elements(and_element, tag_name="option"):
+        if option.text == filter_name:
+            option.click()
+            ok_and = True
+            break
+    
+    # Select EXPRESSION
+    expr_element = get_element(world.browser, tag_name="select", class_attr="expr")
+    
+    for option in get_elements(expr_element, tag_name="option"):
+        if option.text == filter_expr:
+            option.click()
+            ok_expr = True
+            break
+            
+    # Set value
+    value_element = get_element(world.browser, tag_name="input", class_attr="qstring", attrs={'type': 'text'})
+    
+    value_element.clear()
+    value_element.send_keys(filter_value)
+    
+    if ok_and and ok_expr and value_element.get_attribute('value') == filter_value:
+        return True
+      
+    raise UniFieldElementException("Filter has not been set correctly")
 
 @step('I click "([^"]*)" on line:')
 @handle_delayed_step
