@@ -1625,6 +1625,7 @@ def set_filter(step, filter_name, filter_expr, filter_value):
     value_element = get_element(world.browser, tag_name="input", class_attr="qstring", attrs={'type': 'text'})
     
     value_element.clear()
+    filter_value = convert_input(world, filter_value)
     value_element.send_keys(filter_value)
     
     if ok_and and ok_expr and value_element.get_attribute('value') == filter_value:
