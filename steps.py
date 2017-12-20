@@ -286,7 +286,9 @@ def debug_scenarios(feature):
         except OSError as e:
             pass
 
+
 @after.all
+
 def debug_scenarios(total):
     for scenario_result in total.scenario_results:
         scenario = scenario_result.scenario
@@ -295,7 +297,28 @@ def debug_scenarios(total):
         else:
             print scenario.name, ": FAILED"
             print "  steps:", str(scenario_result.steps_failed)
+'''
+@after.all
+def debug_scenarios(total):
+    failed = False
+    for scenario_result in total.scenario_results:
+        scenario = scenario_result.scenario
+        if scenario_result.passed:
+            print scenario.name, ": OK"
+        else:
+            failed = True
+            print scenario.name, ": FAILED"
+            print "  steps:", str(scenario_result.steps_failed)
 
+    if failed:
+        f = open("copy_me_in_your_test.txt", 'w')
+        for x in sorted(world.SCENARIO_VARIABLE.keys()):
+            if x not in ['ID', 'IDFILE', 'FILES']:
+                #print 'I save value "%s" in "%s"' % (world.SCENARIO_VARIABLE[x], x)
+                f.write('I save value "%s" in "%s"' % (world.SCENARIO_VARIABLE[x], x))
+                
+        f.close()
+'''
 #}%}
 
 # Log into/out of/restore an instance{%{
@@ -2081,6 +2104,11 @@ def save_time_difference(step, counter):
 def save_time(step):
     step.need_printscreen = False
     world.last_measure = datetime.datetime.now()
+
+@step('I save value "([^"]*)" in "([^"]*)"')
+@handle_delayed_step
+def save_value_in_variable(self, value, variable):
+    world.SCENARIO_VARIABLE[variable.strip()] =  value.strip()
 
 @step('I store the values for "([^"]*)" in "([^"]*)"')
 @handle_delayed_step
