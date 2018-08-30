@@ -687,7 +687,15 @@ def internal_fill_field(fieldname, content, position=0):
 @output.register_for_printscreen
 def fill_field(step, fieldname, content):
     refresh_window(world)
-    repeat_until_no_exception(world, internal_fill_field, StaleElementReferenceException, fieldname, content, position=0)
+    if fieldname.startswith("id="): 
+        myId = fieldname.split("=")[1]
+        #myElement = get_element(world.browser, tag_name="input", id_attr=myId)
+        myElement = world.browser.find_element_by_id(myId)
+        
+        if myId is not None and myElement is not None and myElement.tag_name == "input":
+            myElement.send_keys((100*Keys.BACKSPACE) + content + Keys.TAB)
+    else:
+        repeat_until_no_exception(world, internal_fill_field, StaleElementReferenceException, fieldname, content, position=0)
 
 @step('I fill:$')
 @handle_delayed_step
