@@ -216,7 +216,9 @@ if __name__ == '__main__':
         args_found = []
 
         if args.tags:
-            args_found = ['-t'] + args.tags
+            for tt in args.tags:
+                for splittt in tt.split(','):
+                    args_found += ['-t'] + [splittt]
 
         if args.files:
             args_found += args.files
