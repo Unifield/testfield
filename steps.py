@@ -856,6 +856,19 @@ def remember_step_in_table(step, column_name, variable):
 
     raise UnifieldException("No line with column %s has been found" % column_name)
 
+
+@step('I store value "([^"]*)" in "([^"]*)"$')
+@handle_delayed_step
+def remember_value_step(step, value, variable):
+
+    if 'COUNT' in os.environ:
+        value = unicode(value.replace('{{COUNT}}', os.environ['COUNT']))
+
+    validate_variable(variable.strip())
+    world.SCENARIO_VARIABLE[variable.strip()] = value.strip()
+
+
+
 @step('I store "([^"]*)" in "([^"]*)"$')
 @handle_delayed_step
 def remember_step(step, fieldname, variable):
@@ -871,6 +884,8 @@ def remember_step(step, fieldname, variable):
     world.SCENARIO_VARIABLE[variable.strip()] = values[0].strip()
 
 #}%}
+
+
 
 # Active waiting {%{
 
@@ -1498,6 +1513,121 @@ def click_on_all_line(step):
 
     wait_until_not_loading(world.browser, wait=False)
     wait_until_no_ajax(world)
+
+
+
+@step('I tick the ([0-9]+) first lines')
+@handle_delayed_step
+@output.register_for_printscreen
+def click_on_first_lines(step, number):
+    refresh_window(world)
+
+    wait_until_not_loading(world.browser, wait=False)
+    wait_until_no_ajax(world)
+
+    number = int(number)
+
+    #20 50 100 500
+    #if number > 100:
+    open_all_the_tables(world)
+    #elif number > 50:
+        #change_pager(world, 100)
+    #elif number > 20:
+        #change_pager(world, 50)
+    #else:
+        #change_pager(world, 20)
+
+    for elem in get_elements(world.browser, class_attr='grid-header', tag_name="tr"):
+        if number > 0:
+            get_element(elem, tag_name="input", attrs={'type': 'checkbox'}).click()
+            number = number - 1
+        else:
+            break
+
+    wait_until_not_loading(world.browser, wait=False)
+    wait_until_no_ajax(world)
+
+
+@step('I dispatch ([0-9]+|\{\{[A-Z]+\}\}) lines into ([0-9]+) parcels')
+@handle_delayed_step
+@output.register_for_printscreen
+def dispatch_lines_into_parcels(step, lines, parcels):
+    refresh_window(world)
+
+    wait_until_not_loading(world.browser, wait=False)
+    wait_until_no_ajax(world)
+
+    if lines == '{{COUNT}}':
+        lines = os.environ['COUNT']
+
+    lines = int(lines)
+    parcels = int(parcels)
+    linespp = int(lines / parcels)
+
+    total = 1
+
+    for i in range(1, 1+parcels):
+        iint = i
+        iint = unicode(iint)
+
+        nbpp = 1
+
+        for j in range(total, 1+lines):
+
+            jint = j
+            jint = unicode(jint)
+
+            if nbpp > linespp:
+                break   #All lines are already dispatched
+            #I click "Edit" on line | Line | | j |
+            del step.hashes[:]
+            step.hashes.append({unicode('LINE'): jint})
+            print 'linespp=',unicode(linespp),' - Colis ',iint,' - Ligne ',jint
+            #click_on_line(step, "Edit")
+            repeat_until_no_exception(world, click_on_line, StaleElementReferenceException, step, "Edit")
+            #I fill i within column "FROM P."
+            fill_column(step, iint, "FROM P.")
+            #I fill i within column "TO P."
+            fill_column(step, iint, "TO P.")
+            #I validate the line
+            choose_field(step)
+
+            total = total + 1
+            nbpp = nbpp + 1
+
+
+    wait_until_not_loading(world.browser, wait=False)
+    wait_until_no_ajax(world)
+
+
+@step('I display ([0-9]+) lines')
+@handle_delayed_step
+@output.register_for_printscreen
+def display_lines(step, lines):
+
+    wait_until_not_loading(world.browser, wait=False)
+
+    def _change_pager(number):
+        pagers = get_elements(world.browser, class_attr="gridview", tag_name="table")
+        pagers = filter(lambda x : x.is_displayed(), pagers)
+        for pager in pagers:
+            elem = get_element(pager, class_attr="pager_info", tag_name="span")
+
+            elem.click()
+
+            # we cannot select an unlimited number of items. So we stick to 500
+            #  even if we know that the row we are looking for is in the next page... (comes from US-1207)
+            element = get_element(pager, tag_name="select", attrs=dict(action="filter"))
+            select = Select(element)
+            select.select_by_visible_text(number)
+
+            wait_until_not_loading(world.browser, wait="I cannot load the whole table")
+
+    repeat_until_no_exception(world, _change_pager, StaleElementReferenceException, lines)
+
+    wait_until_not_loading(world.browser, wait=False)
+    wait_until_no_ajax(world)
+
 
 def get_action_element_in_line(row_node, action):
     # we have to look for this action the user wants to execute
