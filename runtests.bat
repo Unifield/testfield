@@ -1,3 +1,3 @@
-set COUNT=2
+set COUNT=5
 python runtests.py %*
 pause

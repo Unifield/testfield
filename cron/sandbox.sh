@@ -101,7 +101,7 @@ export PGPASSWORD=$DBPASSWORD
 
 ./scripts/create_db.sh -P ${DBDIR} -D $TMPPATH -s $MINUS_IN_SECOND -p $DBPORT -c $DBUSERNAME $NAME_RUN
 
-for name in MARJUKKA SARAH TEMPO ANDRES
+for name in NOUR SARAH TEMPO ANDRES
 do
 	generate_config $name
 
@@ -109,7 +109,7 @@ do
 
 	./generate_credentials.sh HQ1
 
-	python restore.py --bak --reset-sync --reset-versions $ENVNAME
+	python restore.py --reset-sync --reset-versions $ENVNAME
 
 	./scripts/upgrade_unifield.sh -s $MINUS_IN_SECOND -d $TMPPATH $NAME_RUN $ENVNAME
 done
