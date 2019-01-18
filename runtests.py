@@ -24,25 +24,6 @@ class SyntaxException(Exception):
 class DBException(Exception):
     pass
 
-def get_sql_query(database, sqlquery):
-    import psycopg2
-    import psycopg2.extras
-
-    try:
-        conn = psycopg2.connect(
-            database=database,
-            user=DB_USERNAME,
-            password=DB_PASSWORD,
-            port=DB_PORT,
-            host=DB_ADDRESS
-        )
-        cr = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-
-        cr.execute(sqlquery)
-        return cr.fetchall()
-    except psycopg2.OperationalError as e:
-        raise DBException("Cannot reach the database (reason: %s)" % e)
-
 def get_articles(database, count):
     from oerplib import OERP
     oerp = OERP(server=credentials.SRV_ADDRESS, database=database, protocol='xmlrpc', port=credentials.XMLRPC_PORT, version='6.0')

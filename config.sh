@@ -1,25 +1,56 @@
 #!/bin/bash
 
-NETRPC_PORT=7006
-WEB_PORT=7004
-XMLRPC_PORT=7005
-XMLRPCS_PORT=7007
+####################################################################
+## UNIFIELD (LOCAL CONFIG)
+####################################################################
 
+# The HTTP port of Unifield
+WEB_PORT=8061
+# The XMLRPC port of Unifield (used to synchronize and to build tests)
+XMLRPC_PORT=8069
+
+# The credentials used to log into Unifield as administrator
 UNIFIELDADMIN=admin
 UNIFIELDPASSWORD=admin
 
-DBPASSWORD=selenium_testing
-DBADDR=127.0.0.1
-DBUSERNAME=selenium_testing
-DBPORT=7014
-DBPREFIX='TESTS'
-
+# Unifield's address
 SERVER_HOST=127.0.0.1
-SERVER_TMPDIR=/home/testing/repo
+
+# The hardware ID that will be used to link the databases with the
+#  sync server. If it's not available, the current computer's hardware
+#  ID will be computed automatically.
+SERVER_HWID=
+
+####################################################################
+## UNIFIELD (OPTIONAL CONFIG)
+####################################################################
+
+# directory name in directory instances/ where the databases are stored
+#  they will be restored before each run.
 SERVER_ENVNAME=lightweight
 
-DBPATH=/usr/lib/postgresql/9.6/bin/
-FORCED_DATE=yes
+# the prefix used to name the databases. If DBPREFIX=YYY, the databases' name
+#  will all start with YYY_.
+DBPREFIX=''
 
-HOMEREDB=$'ZXBpc2FnYQ==\naG9tZXJlN3pFcGljb25jZXB0MTIz'
+####################################################################
+## UNIFIELD CONFIG (IN DOCKER CONTAINERS ONLY)
+####################################################################
+
+## DATABASE credentials/port
+DBADDR=$SERVER_HOST
+DBPASSWORD=unifield_dev
+DBUSERNAME=unifield_dev
+DBPORT=5432
+
+# directory where we store Unifield and its database
+SERVER_TMPDIR=/tmp/repo
+
+# the database's path to launch it in the container with faketime
+DBPATH=
+FORCED_DATE=
+
+# HOMERE password (if available, otherwise, the tests related to Homere will
+#  fail everytime)
+HOMEREDB=$''
 
