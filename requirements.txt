@@ -7,3 +7,4 @@ selenium==2.53.1
 python-Levenshtein==0.10.2
 Pillow==3.2.0
 docker-compose==1.9.0
+credentials
