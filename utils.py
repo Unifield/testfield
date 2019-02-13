@@ -355,7 +355,7 @@ def get_elements_from_text(element, tag_name, text, class_attr='', wait=''):
             tick()
 
 
-def get_element_from_text(browser, tag_name, text, class_attr='', wait=False):
+def get_element_from_text(browser, tag_name, text, class_attr='', wait=False, pos=0):
     '''
     This method fetch a node among the DOM based on its text.
 
@@ -365,7 +365,7 @@ def get_element_from_text(browser, tag_name, text, class_attr='', wait=False):
 
     If it doesn't wait and the element doesn't exist, an IndexError is raised.
     '''
-    return get_elements_from_text(browser, tag_name, text, class_attr, wait)[0]
+    return get_elements_from_text(browser, tag_name, text, class_attr, wait)[pos]
 
 
 def get_column_position_in_table(maintable, columnname):

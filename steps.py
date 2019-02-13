@@ -1126,7 +1126,14 @@ def click_on_button_and_open(step, button):
     wait_until_no_ajax(world)
     msg = "Cannot find button %s" % button
 
-    click_on(world, lambda: get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg), msg)
+    pos = 0
+    button = button
+    exp = re.match('^(.*)@([0-9]+)$', button)
+    if exp:
+        button = exp.group(1)
+        pos = int(exp.group(2)) - 1
+
+    click_on(world, lambda: get_element_from_text(world.browser, tag_name=["button", "a"], text=button, wait=msg, pos=pos), msg)
 
     wait_until_not_loading(world.browser, wait=False)
 
