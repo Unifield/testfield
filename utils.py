@@ -286,6 +286,11 @@ def get_element(browser, tag_name=None, id_attr=None, class_attr=None, attrs=dic
 
         return only_visible[0] if only_visible else elements[0]
     else:
+        x = 0
+        while x < position:
+            if elements[x].get_attribute('colspan'):
+                position -= int(elements[x].get_attribute('colspan'))-1
+            x += 1
         return elements[position]
 
 
@@ -749,7 +754,6 @@ def action_write_in_element(txtinput, content):
             if txtinput.is_selected():
                 txtinput.click()
     else:
-        txtinput.clear()
         txtinput.send_keys((100 * Keys.BACKSPACE) + content + Keys.TAB)
 
 
