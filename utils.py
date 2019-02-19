@@ -12,11 +12,9 @@ import os
 import pdb
 
 # The time (in seconds) that we wait when we know that an action has still to be performed
-# TIME_TO_SLEEP = 0.3
-TIME_TO_SLEEP = 2
+TIME_TO_SLEEP = 0.3
 # The time that we wait when we know that a change is almost immediate
-# TIME_TO_WAIT = 1.5
-TIME_TO_WAIT = 6
+TIME_TO_WAIT = 1.5
 
 
 def prefix_db_name(db_name):
