@@ -74,7 +74,7 @@ run_tests()
 
         ./runtests_local.sh -s $MINUS_IN_SECOND $LETTUCE_PARAMS || RET=1
 
-        DIREXPORT=website/tests/$($DATEUTILS '+%Y%m%d')_$NAME
+        DIREXPORT=website/tests/$($DATEUTILS '+%Y%m%d%H%M')_$NAME
         if [[ -e "$DIREXPORT" ]]
         then
             rm -rf "$DIREXPORT" || true
