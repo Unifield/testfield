@@ -55,7 +55,7 @@
 
     <tbody>
         %for valid, scenario, ratio, time, url, tags in scenarios:
-            <tr data-tags="{{' '.join(tags)}}{{' danger' if not valid}}" class="line {{'danger' if not valid else ''}}">
+            <tr data-tags="{{' '.join(tags)}}{{' danger' if not valid else ''}}" class="line {{'danger' if not valid else ''}}">
 
                 <td>
                     <div class="text-center">
