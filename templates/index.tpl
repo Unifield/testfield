@@ -48,7 +48,7 @@
             <th>Type</th>
             <th>Scenario</th>
             <th>Percentage</th>
-            <th>Time [s]</th>
+            <th>Time [h:m:s]</th>
             <th>Result</th>
         </tr>
     </thead>
@@ -91,7 +91,7 @@
 
                 <td>{{ '%.2f' % (ratio) }}</td>
 
-                <td>{{ '%.2f' % time if time is not None else '' }}</td>
+		<td>{{  ('%s' % datetime.timedelta(seconds=time)).split('.')[0] if time else '' }}</td>
 
                 <td>
                     <div class="text-center">
@@ -122,7 +122,7 @@
             </th>
             <th>
                 <div class="text-left">
-                    {{ '%.2f' % total_time }}
+		    {{  ('%s' % datetime.timedelta(seconds=total_time)).split('.')[0]  }}
                 </div>
             </th>
             <th>

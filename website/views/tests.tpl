@@ -39,6 +39,7 @@
             <th>Version</th>
             <th>Count</th>
             <th>Date</th>
+            <th>Time [h:m:s]</th>
         </tr>
     </thead>
 
@@ -104,6 +105,9 @@
                 <td>
                     {{test['date']}}
                 </td>
+		<td>
+                    {{ ('%s' % datetime.timedelta(seconds=float(test['exec_time']))).split('.')[0] if test.get('exec_time') else '' }}
+		</td>
             </tr>
 
         %end

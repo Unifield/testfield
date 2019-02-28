@@ -41,7 +41,8 @@ def tests():
                                             path_dir=PATH_TESTS),
                 first_page=first_page,
                 last_page=last_page,
-                pages=pages)
+                pages=pages,
+                datetime=datetime)
 
 class SyntaxError(Exception):
     pass

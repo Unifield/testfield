@@ -172,7 +172,8 @@ def create_real_repport(total):
         mytemplate = SimpleTemplate(content)
         content = mytemplate.render(scenarios=world.scenarios, alltags=alltags,
                                     total_scenarios=total_scenarios, total_time=total_time,
-                                    total_percentage=total_percentage, total_passed=total_passed)
+                                    total_percentage=total_percentage, total_passed=total_passed,
+                                    datetime=datetime)
 
         path_html = os.path.join(OUTPUT_DIR, "index.html")
         output_index_file = open(path_html, 'w')
@@ -335,5 +336,6 @@ def save_meta(total):
     f.write('scenario_passed=%s\n' % str(world.scenarios_passed))
 
     f.write('result=%s\n' % ('ok' if not world.failure_found else 'ko'))
+    f.write('exec_time=%s\n' % (sum([x[3] for x in world.scenarios if x[3]])))
     f.close()
 
