@@ -76,12 +76,15 @@ checkout_revision_in()
     REVISION=`python -c "import sys; print '' if '|' not in sys.argv[1] else sys.argv[1][sys.argv[1].index('|')+1:]" "$1"`
     BRANCH=`python -c "import sys; print sys.argv[1] if '|' not in sys.argv[1] else sys.argv[1][:sys.argv[1].index('|'):]" "$1"`
 
+    if [[ ! -d .bzr ]]; then
+        bzr init-repo .
+    fi
 
     if [[ ! ( -z "$REVISION" ) ]];
     then
-        bzr checkout --lightweight -r "$REVISION" "$BRANCH" "$2" || { echo Cannot checkout $BRANCH; exit 1; }
+        bzr branch -r "$REVISION" "$BRANCH" "$2" || { echo Cannot checkout $BRANCH; exit 1; }
     else
-        bzr checkout --lightweight "$BRANCH" "$2" || { echo Cannot checkout $BRANCH; exit 1; }
+        bzr branch "$BRANCH" "$2" || { echo Cannot checkout $BRANCH; exit 1; }
     fi
 }
 
