@@ -375,7 +375,7 @@ def test(name, filename):
     with open(path_index, 'r') as f:
         fichier = ''.join(f.readlines())
 
-    return dict(error=None, fichier=fichier)
+    return dict(error=None, fichier=fichier, title=name)
 
 @route(r'/test/<name>/<filename:re:.*(\.png|\.log)>')
 def test(name, filename):
