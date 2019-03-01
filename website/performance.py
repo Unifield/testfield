@@ -369,13 +369,18 @@ def test(name, filename):
     path_dir = os.path.join(PATH_TESTS, name)
     path_index = os.path.join(path_dir, filename)
 
+    meta_file = os.path.join(path_dir, "meta")
+    meta_data = {}
+    if os.path.isfile(meta_file):
+        meta_data = load_meta_file(meta_file)
+
     if not os.path.isdir(path_dir) or not os.path.isfile(path_index):
         return dict(error="Unknown test: %s" % name, fichier=None)
 
     with open(path_index, 'r') as f:
         fichier = ''.join(f.readlines())
 
-    return dict(error=None, fichier=fichier, title=name)
+    return dict(error=None, fichier=fichier, title=meta_data.get('name', name))
 
 @route(r'/test/<name>/<filename:re:.*(\.png|\.log)>')
 def test(name, filename):
