@@ -8,7 +8,13 @@
 
         <link rel="stylesheet" href="/static/css/bootstrap.min.css">
         <script src="/static/js/bootstrap.min.js"></script>
-
+        <style>
+        @media (min-width: 1200px) {
+           .container {
+              width: 1200px;
+           }
+        }
+        </style>
     </head>
 
     <body>

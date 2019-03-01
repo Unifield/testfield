@@ -76,8 +76,8 @@ checkout_revision_in()
     REVISION=`python -c "import sys; print '' if '|' not in sys.argv[1] else sys.argv[1][sys.argv[1].index('|')+1:]" "$1"`
     BRANCH=`python -c "import sys; print sys.argv[1] if '|' not in sys.argv[1] else sys.argv[1][:sys.argv[1].index('|'):]" "$1"`
 
-    if [[ ! -d .bzr ]]; then
-        bzr init-repo .
+    if [[ ! -d ../.bzr ]]; then
+        bzr init-repo ../
     fi
 
     if [[ ! ( -z "$REVISION" ) ]];
