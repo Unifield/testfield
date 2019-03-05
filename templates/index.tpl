@@ -3,6 +3,10 @@
 %end
     <span data-classon="label label-primary" data-classoff="label label-default" class="label label-default" style="color:red">danger</span>
 
+<p>
+   <button class="label label-default" type="button" data-toggle="collapse" data-target=".multi-collapse" aria-expanded="false">Show filename</button>
+</p>
+
 <script>
     $(document).ready(function(){
 
@@ -54,7 +58,8 @@
     </thead>
 
     <tbody>
-        %for valid, scenario, ratio, time, url, tags in scenarios:
+        % nb = 0
+        %for valid, scenario, ratio, time, url, tags, filename in scenarios:
             <tr data-tags="{{' '.join(tags)}}{{' danger' if not valid else ''}}" class="line {{'danger' if not valid else ''}}">
 
                 <td>
@@ -85,10 +90,11 @@
 
                 <td>
                     <a href="{{ url }}">
-                        {{ scenario }}
+                       {{nb}}. {{ scenario }}
                     </a>
+                    <p class="small text-muted collapse multi-collapse">{{filename}}</p>
                 </td>
-
+                % nb += 1
                 <td>{{ '%.2f' % (ratio) }}</td>
 
 		<td>{{  ('%s' % datetime.timedelta(seconds=time)).split('.')[0] if time else '' }}</td>
