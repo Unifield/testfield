@@ -103,6 +103,8 @@ then
     mv $SERVERDIR/bin/openerp-server.py.bak $SERVERDIR/bin/openerp-server.py
 
     sed -i.bak "s/FOR UPDATE NOWAIT//g" $SERVERDIR/bin/addons/base/ir/ir_sequence.py
+    # random behavior: remove PPS popup
+    sed -i.bak "s/th.join(3)/th.join()/g" $SERVERDIR/bin/addons/msf_tools/msf_tools.py
 fi
 
 echo "[UniField setup] Done!"
