@@ -231,6 +231,11 @@ if(!window.MONKEY_PATCHING){
                                 fld_val = '['+ value.join(',') + ']';
                             }
                             var fld_name = jQuery(fld).attr('name');
+                            if (!jQuery(fld).attr('name')) {
+                                // guess we are in editable tree view
+                                jQuery(idSelector(prefix + k)).val(fld_val);
+                                break;
+                            }
                             var old_m2m = jQuery(idSelector(fld_name)).closest('.list-a');
                             $(idSelector(fld_name+'/_terp_id')).val('');
                             $(idSelector(fld_name+'/_terp_ids')).val('[]');
