@@ -133,15 +133,18 @@ def connect_to_db():
         profile.set_preference('browser.download.manager.showWhenStarting', False)
         profile.set_preference('browser.download.dir', file_path)
         profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'application/vnd.ms-excel')
-        #### If you want to use the gecko driver (the new tool by the Mozilla fundation to
-        ####  run interface Selenium with Firefox) you should uncomment these three lines
-        ####  and comment the line below. It cannot be used with Firefox 47.
-        # caps = DesiredCapabilities.FIREFOX
-        # caps["marionette"] = True
-        # world.browser = webdriver.Firefox(firefox_profile=profile, capabilities=caps)
 
-        world.browser = webdriver.Firefox(firefox_profile=profile)
-
+        """
+        Instead of changing binary path manually, path to firefox binary is now a part of 
+        config file. 
+        TODO: Delete if branch 
+        """
+        binary = FirefoxBinary(PATH_TO_FIREFOX)
+        if '46' not in PATH_TO_FIREFOX:
+            world.browser = webdriver.Firefox(executable_path="geckodriver.exe",
+                                          firefox_binary=binary, firefox_profile=profile)
+        else:
+            world.browser = webdriver.Firefox(firefox_binary=binary, firefox_profile=profile)
 
     elif os.environ['BROWSER'] == "chrome":
         world.browser = webdriver.Chrome()
@@ -359,7 +362,7 @@ def log_into(database_name, username, password):
     password = convert_input(world, password)
 
     # load modules on 1st connection to prevent timeout
-    XMLRPCConnection(database_name)
+    #XMLRPCConnection(database_name)
     tick = monitor(world.browser, "I cannot login with %s/%s" % (username, password))
 
     while True:
@@ -439,6 +442,10 @@ def log_into(database_name, username, password):
 def connect_on_database(step, database_name, username, password):
     log_into(database_name, username, password)
     world.current_instance = database_name
+
+@step('I sleep')
+def sleep(step):
+    time.sleep(3600)
 
 
 @step('I log into instance "([^"]*)"')
@@ -1790,13 +1797,24 @@ def click_on_line(step, action, window_will_exist=True):
                     continue
 
                 if no_matched_row == matched_row_to_click_on:
+
                     action_to_click = actions_to_click[0]
                     if not action_to_click.is_displayed():
                         continue
+
                     # If this is a checkbox and it's already checked, don't
                     # click it.
                     if action_to_click.get_attribute('name') == '_terp_list' and action_to_click.is_selected():
                         pass
+
+                    # New version of Selenium doesn't support click on tr.
+                    # To keep whole compatibility, clicking with JS used.
+                    # https://bugzilla.mozilla.org/show_bug.cgi?id=1448825
+                    elif action_to_click.tag_name == 'tr':
+                        world.browser.execute_script(
+                            'let x = arguments[0]; x.scrollIntoView(); x.click();',
+                            action_to_click
+                        )
                     else:
                         action_to_click.click()
                     no_by_fingerprint[hash_key_value] += 1
@@ -1823,7 +1841,7 @@ def click_on_line(step, action, window_will_exist=True):
             # We cannot use wait_until_no_ajax because the elements
             # wait_until_no_ajax(world)
 
-            world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes - 1,
+            world.browser.switch_to.frame(get_element(world.browser, tag_name="iframe", position=world.nbframes - 1,
                                                       wait="I don't find the new window"))
             wait_until_not_loading(world.browser, wait=False)
             wait_until_no_ajax(world)
@@ -2353,6 +2371,24 @@ def selenium_sleeps(step):
     import time
     time.sleep(30000)
 
+d = dict()
+
+"""
+Step useful during debugging
+"""
+@step('I set global ([^ ]*) ([^ ]*)')
+@handle_delayed_step
+def set_global(step, key, val):
+    global d
+    d[key] = val
+
+
+"""
+Debugging step - quit test
+"""
+@step('I quit')
+def quit(step):
+    exit(1)
 
 @step('I wait$')
 @handle_delayed_step
