@@ -2,13 +2,14 @@ from credentials import *
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.remote.webelement import WebElement
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import WebDriverException, StaleElementReferenceException
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchFrameException, NoSuchElementException, StaleElementReferenceException
 import datetime
 import time
 import re
 import os
+from lxml import html
 import pdb
 
 # The time (in seconds) that we wait when we know that an action has still to be performed
@@ -97,6 +98,11 @@ class TimeoutException(UnifieldException):
 
 
 class UniFieldElementException(UnifieldException):
+    pass
+
+
+class TooManyRetriesException(UnifieldException):
+    """ Raised when we try too many times """
     pass
 
 
@@ -596,7 +602,10 @@ def repeat_until_no_exception(world, action, exceptions, *params, **vparams):
     # We use a monitor only after the first exception because we don't know
     tick = monitor(world.browser, "We have waited for too long")
 
-    while True:
+    # Limiting times to try
+    count = 0
+    while True and count <= 10:
+        count += 1
         try:
             return action(*params, **vparams)
         except exceptions as e:
@@ -605,6 +614,8 @@ def repeat_until_no_exception(world, action, exceptions, *params, **vparams):
             time.sleep(TIME_TO_SLEEP)
 
             refresh_window(world)
+    else:
+        raise TooManyRetriesException("\n We tried too many times \n")
 
 
 def wait_until_element_does_not_exist(browser, get_elem, message=''):
@@ -848,3 +859,190 @@ def synchronize_instance(instance_name):
             return
         raise
     return
+
+
+def normalize_text(text, simple_strip=False, str_strip=None):
+    """ Returns text in UTF-8 and lower cases and stripped
+
+    Parameters:
+    text (str): Text to convert
+    simple_strip (bool): whether to apply .strip()
+    str_strip (list or str): default None, accepts list of str or str
+
+    Returns:
+    str
+
+    """
+    text = text.lower().encode('utf-8')
+
+    if simple_strip:
+        text = text.strip()
+
+    if str_strip is not None:
+        if isinstance(str_strip, list):
+            for to_strip in str_strip:
+                text = text.strip(normalize_text(to_strip))
+        elif isinstance(str_strip, str):
+            text = text.strip(str_strip)
+
+    return text
+
+
+def normalize_values(values, simple_strip=False, str_strip=None):
+    """ Returns new object based on input type with normalized values
+
+    Parameters:
+    values (dict, list, tuple, str, int, float): Values object to convert
+    strip (tuple):
+        strip[0]: default False, use True for using strip func
+        strip[1]: what to strip, accepts list or str
+
+    Returns:
+    dict, list, tuple
+
+    """
+    if isinstance(values, dict):
+        new_values = dict()
+        for key, value in values.items():
+            new_values[normalize_text(key, simple_strip, str_strip)] = \
+                normalize_values(value, simple_strip, str_strip)
+        return new_values
+
+    elif isinstance(values, tuple):
+        new_values = list()
+        for value in values:
+            new_values.append(normalize_values(value, simple_strip, str_strip))
+        return tuple(new_values)
+
+    elif isinstance(values, list):
+        new_values = list()
+        for value in values:
+            new_values.append(normalize_values(value, simple_strip, str_strip))
+        return new_values
+
+    elif isinstance(values, str) or isinstance(values, unicode):
+        return normalize_text(values, simple_strip, str_strip)
+
+    elif isinstance(values, int) or isinstance(values, float):
+        return values
+    else:
+        # Rather than raise TypeError, just return value without conversion
+        return values
+
+
+def get_page_tree(world):
+    refresh_window(world)
+    page_source = world.browser.page_source
+    tree = html.fromstring(page_source)
+    return tree
+
+
+class Table(object):
+    def __init__(self, table_source, wildcards):
+        self.wildcards = wildcards
+        self.table_source = table_source
+        self.headers = self.get_headers()
+        self.rows = self.get_rows()
+
+    def get_headers(self):
+        headers = self.table_source.xpath("//th")
+        for header_id, header in enumerate(headers):
+            headers[header_id] = normalize_text(header.text_content().strip())
+        return headers
+
+    def get_rows(self):
+        data_rows_tr = self.table_source.xpath("//tbody/tr[contains(@class, 'grid-row')]")
+
+        rows = list()
+        for row in data_rows_tr:
+            rows.append(row.xpath("td"))
+
+        for row_id, row in enumerate(rows):
+            for td_id, td in enumerate(row):
+                text = normalize_text(td.text_content(), simple_strip=True)
+                rows[row_id][td_id] = text
+
+        for _id, data in enumerate(rows):
+            if self.wildcards:
+                for item, value in self.wildcards:
+                    value = normalize_text(value, str_strip='*')
+                    item = normalize_values(item)
+                    headers_th_pos = next((index for index, value in enumerate(self.headers) if value == item),
+                                          None)
+
+                    if value in data[headers_th_pos]:
+                        data[headers_th_pos] = value
+            rows[_id] = zip(self.headers, data)
+        return rows
+
+
+def get_tables_from_tree(tree, wildcards=None):
+    """ Returns all main tables from tree element
+
+    Parameters:
+    tree (class 'lxml.html.HtmlElement'): HtmlElement from page source
+
+    Returns:
+    tables (list)
+
+    """
+    tables = tree.xpath("//table[@class='grid']")
+    if not tables:
+        raise StaleElementReferenceException
+    else:
+        table_objs = list()
+        for table in tables:
+            table_objs.append(Table(table, wildcards))
+        return table_objs
+
+
+def get_rows_from_test_data(world, test_data):
+    expected = list()
+    for line_id, line in enumerate(test_data):
+        for item in test_data[line_id]:
+            test_data[line_id][item] = convert_input(world, test_data[line_id][item])
+        expected.append(zip([normalize_text(item, str_strip='*') for item in line.keys()],
+                            [normalize_text(item, str_strip='*') for item in line.values()]))
+    return expected
+
+
+def compare_table_values(expected, rows):
+    """
+    Returns:
+    bool - status of check
+    ex (str) - row that was/was not found
+    This is not the most pythonic way, however this needs to be done this way because of:
+        repeat_until_no_exception() function
+    """
+    for ex in expected:
+        for data in rows:
+            res = set(ex).issubset(set(data))
+            if res:
+                break
+        else:
+            ex = ' | '.join('%s | %s' % tup for tup in ex)
+            return False, ex
+
+    else:
+        return True, ''
+
+
+def wild_card_to_regex(text):
+    """ Convert input with wildcard char = '*' into regex
+
+    Parameters:
+    text (string)
+
+    Returns:
+    regex
+
+    """
+    if text.startswith('*') and text.endswith('*'):
+        pass
+    elif text.startswith('*'):
+        pass
+    elif text.endswith('*'):
+        pass
+    else:
+        raise UnifieldException("Bad usage of wildcards, please review where you put your '*'. Could be"
+                                "at the start, at the end or on both sides of string.")

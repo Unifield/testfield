@@ -142,7 +142,7 @@ def connect_to_db():
         binary = FirefoxBinary(PATH_TO_FIREFOX)
         if '46' not in PATH_TO_FIREFOX:
             world.browser = webdriver.Firefox(executable_path="geckodriver.exe",
-                                          firefox_binary=binary, firefox_profile=profile)
+                                              firefox_binary=binary, firefox_profile=profile)
         else:
             world.browser = webdriver.Firefox(firefox_binary=binary, firefox_profile=profile)
 
@@ -1976,13 +1976,35 @@ def click_on_line_and_open_the_window(step, action):
     wait_until_no_ajax(world)
 
 
+def check_that_lines(step, should_see_lines, action=None):
+    wait_until_no_ajax(world)
+    open_all_the_tables(world)
+
+    wild_cards = list()
+    for line in step.hashes:
+        for key, value in line.items():
+            if '*' in value:
+                wild_cards.append((key, value))
+
+    def try_check_lines(step):
+        tree = get_page_tree(world)
+        table_objs = get_tables_from_tree(tree, wildcards=wild_cards)
+        expected = get_rows_from_test_data(world, step.hashes)
+        for table in table_objs:
+            res, ex = compare_table_values(expected, table.rows)
+            if not res:
+                raise UniFieldElementException("I don't find:\n {}".format(ex))
+
+    repeat_until_no_exception(world, try_check_lines, (StaleElementReferenceException, UniFieldElementException),
+                              step)
+
+
 def check_that_line(step, should_see_lines, action=None):
     values = step.hashes
 
     open_all_the_tables(world)
 
     def try_to_check_line(step):
-
         refresh_window(world)
 
         for hashes in values:
