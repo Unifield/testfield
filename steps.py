@@ -2032,7 +2032,7 @@ def check_that_line(step, should_see_lines, action=None):
 @output.register_for_printscreen
 def check_line(step):
     refresh_window(world)
-    check_that_line(step, True)
+    check_that_lines(step, True)
 
 
 @step("I shouldn't be able to click \"([^\"]*)\"")
