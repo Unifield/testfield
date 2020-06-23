@@ -969,9 +969,11 @@ class Table(object):
                     item = normalize_values(item)
                     headers_th_pos = next((index for index, value in enumerate(self.headers) if value == item),
                                           None)
-
-                    if value in data[headers_th_pos]:
-                        data[headers_th_pos] = value
+                    try:
+                        if value in data[headers_th_pos]:
+                            data[headers_th_pos] = value
+                    except IndexError:
+                        continue
             rows[_id] = zip(self.headers, data)
         return rows
 
@@ -986,7 +988,8 @@ def get_tables_from_tree(tree, wildcards=None):
     tables (list)
 
     """
-    tables = tree.xpath("//table[@class='grid']")
+    # Sometimes there are hidden tables in DOM inside div with class=notebook-page
+    tables = tree.xpath("//table[@class='grid' and not(ancestor::div[@class='notebook-page'])]")
     if not tables:
         raise StaleElementReferenceException
     else:
