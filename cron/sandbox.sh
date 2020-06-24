@@ -8,7 +8,13 @@ then
     exit 1
 fi
 
-[ -f ~/unifield-venv/bin/activate ] && . ~/unifield-venv/bin/activate
+if [ ! -f ~/unifield-venv/bin/activate ]; then
+  echo >&2 'venv does not exit'
+  exit 1
+fi
+
+# shellcheck source=null
+. ~/unifield-venv/bin/activate
 
 
 cd /home/testing/testfield_sandbox
