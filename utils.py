@@ -17,11 +17,16 @@ TIME_TO_SLEEP = 0.3
 TIME_TO_WAIT = 1.5
 
 
-def prefix_db_name(db_name):
-    from credentials import DB_PREFIX
-    if DB_PREFIX and not db_name.startswith(DB_PREFIX):
-        return '%s_%s' % (DB_PREFIX, db_name)
-    return db_name
+def prefix_db_name(db_name, prefix=None):
+    if prefix is None:
+        from credentials import DB_PREFIX
+        if DB_PREFIX and not db_name.startswith(DB_PREFIX):
+            return '%s_%s' % (DB_PREFIX, db_name)
+        return db_name
+    else:
+        if not db_name.startswith(prefix):
+            return '%s_%s' % (prefix, db_name)
+        return db_name
 
 
 def get_new_id(filename):
