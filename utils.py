@@ -602,10 +602,7 @@ def repeat_until_no_exception(world, action, exceptions, *params, **vparams):
     # We use a monitor only after the first exception because we don't know
     tick = monitor(world.browser, "We have waited for too long")
 
-    # Limiting times to try
-    count = 0
-    while True and count <= 10:
-        count += 1
+    while True:
         try:
             return action(*params, **vparams)
         except exceptions as e:
@@ -614,8 +611,6 @@ def repeat_until_no_exception(world, action, exceptions, *params, **vparams):
             time.sleep(TIME_TO_SLEEP)
 
             refresh_window(world)
-    else:
-        raise TooManyRetriesException("\n We tried too many times \n")
 
 
 def wait_until_element_does_not_exist(browser, get_elem, message=''):
