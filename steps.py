@@ -112,8 +112,8 @@ def check_that_no_loop_is_open(scenario):
 # }%}
 
 # Selenium management {%{
-@before.all
-def connect_to_db():
+@before.each_feature
+def connect_to_db(feature):
     # WARNING: we need firefox at least Firefox 43. Otherwise, AJAX call seem to be asynchronous
     from selenium.webdriver.firefox.options import Options
     from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
@@ -140,11 +140,7 @@ def connect_to_db():
         TODO: Delete if branch 
         """
         binary = FirefoxBinary(PATH_TO_FIREFOX)
-        if '46' not in PATH_TO_FIREFOX:
-            world.browser = webdriver.Firefox(executable_path="geckodriver.exe",
-                                          firefox_binary=binary, firefox_profile=profile)
-        else:
-            world.browser = webdriver.Firefox(firefox_binary=binary, firefox_profile=profile)
+        world.browser = webdriver.Firefox(firefox_binary=binary, firefox_profile=profile)
 
     elif os.environ['BROWSER'] == "chrome":
         world.browser = webdriver.Chrome()
@@ -264,8 +260,8 @@ def remove_iframes(scenario):
     world.nbframes = 0
 
 
-@after.all
-def disconnect_to_db(total):
+@after.each_feature
+def disconnect_to_db(feature):
     if not os.path.isdir(RESULTS_DIR):
         os.mkdir(RESULTS_DIR)
 
@@ -280,7 +276,7 @@ def disconnect_to_db(total):
     f.close()
 
     # we close the current window, but other windows might be open
-    world.browser.close()
+    #world.browser.close()
     world.browser.quit()
 
 
