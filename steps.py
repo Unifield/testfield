@@ -751,6 +751,7 @@ def fill_field(step, fieldname, content):
             tick = monitor(world.browser, "Element not filled")
             while True:
                 tick()
+                wait_until_no_ajax(world)
                 myElement.send_keys((100*Keys.BACKSPACE) + content + Keys.TAB)
                 if myElement.get_attribute('value') == content:
                     return
@@ -974,6 +975,21 @@ def click_until_not_available2(step, button):
     wait_until_not_loading(world.browser, wait=world.nbframes == 0)
 
     tick = monitor(world.browser)
+
+    # For some reason the current switching logic is not working in FF 77 and above, implemented new one
+    if world.nbframes != 0:
+        switch_to_iframe(world)
+
+    # We want to find element at least once before we start clicking and don't wait for it forever
+    elem = []
+    count = 0
+    while not elem or count == MAX_RETRY:
+        count += 1
+        elem = get_elements_from_text(world.browser, tag_name=["button", "a"], text=button)
+
+    if not elem:
+        raise UniFieldElementException("Couldn't find {} at least once".format(button))
+
     while True:
         tick()
         try:
@@ -1448,31 +1464,24 @@ def see_window(step, message_to_see):
     message_found = False
     reg = create_regex(message_to_see)
 
-    # We're going to check in browser and iFrames
-    for noframe in xrange(world.nbframes + 1):
+    if world.nbframes == 0:
+        world.browser.switch_to.default_content()
+    if world.nbframes == 1:
+        switch_to_iframe(world)
 
-        # Check in browser
-        if noframe == 0:
-            world.browser.switch_to.default_content()
-        # Check in iFrame
-        else:
-            frame = get_element(world.browser, tag_name="iframe", position=noframe - 1, wait="I don't find a window")
-            world.browser.switch_to_frame(frame)
+    wait_until_no_ajax(world)
+    # We are looking for all textarea in the window
+    elements = world.browser.find_elements_by_css_selector("form#view_form table.fields textarea")
+    # If at least one element has been found
+    if elements:
+        for element in elements:
 
-        # We are looking for all textarea in the window
-        elements = world.browser.find_elements_by_css_selector("form#view_form table.fields textarea")
-
-        # If at least one element has been found
-        if elements:
-
-            for element in elements:
-
-                # Compare element text en text we are looking for
-                if re.match(reg, element.text, flags=re.DOTALL) is None:
-                    continue
-                else:
-                    message_found = True
-                    break
+            # Compare element text en text we are looking for
+            if re.match(reg, element.text, flags=re.DOTALL) is None:
+                continue
+            else:
+                message_found = True
+                break
 
     # Not found, raise an error
     if not message_found:
@@ -1625,8 +1634,17 @@ def click_on_all_line(step):
 
     open_all_the_tables(world)
 
-    for elem in get_elements(world.browser, class_attr='grid-header', tag_name="tr"):
-        get_element(elem, tag_name="input", attrs={'type': 'checkbox'}).click()
+    if world.nbframes == 1:
+        switch_to_iframe(world)
+
+    elements = []
+    count = 0
+    while not elements or count == MAX_RETRY:
+        elements = world.browser.find_elements_by_xpath("//tr[@class='grid-header']//input[@type='checkbox']")
+        count += 1
+
+    for elem in elements:
+        elem.click()
 
     wait_until_not_loading(world.browser, wait=False)
     wait_until_no_ajax(world)
@@ -2365,7 +2383,7 @@ def open_translation_window(step, fieldname):
 @handle_delayed_step
 def selenium_sleeps(step):
     import time
-    time.sleep(30000)
+    time.sleep(5)
 
 d = dict()
 
