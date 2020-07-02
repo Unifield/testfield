@@ -53,7 +53,7 @@ def get_template_lines(template_path):
     """
     if not os.path.isfile(template_path):
         #  Python 2.7 doesn't have FileNotFoundError as built-in, used IOError instead
-        raise IOError("{} is not a valid file.".format(template_path))
+        raise IOError("{} is not a valid file or is not in the location you gave.".format(template_path))
 
     file_name, ext = os.path.splitext(template_path)
     if not ext == ".template":
