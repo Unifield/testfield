@@ -141,7 +141,6 @@ def connect_to_db(feature):
         """
         binary = FirefoxBinary(PATH_TO_FIREFOX)
         world.browser = webdriver.Firefox(firefox_binary=binary, firefox_profile=profile)
-
     elif os.environ['BROWSER'] == "chrome":
         world.browser = webdriver.Chrome()
         # FIXME: PhantomJS doesn't like testfield. It seems that keeps on loading pages...
@@ -161,7 +160,8 @@ def connect_to_db(feature):
         world.browser.set_page_load_timeout(TIME_BEFORE_FAILURE)
         world.browser.set_script_timeout(TIME_BEFORE_FAILURE)
 
-    world.browser.set_window_size(1600, 1200)
+    world.browser.set_window_size(1920, 1080)
+    #world.browser.maximize_window()
     world.nbframes = 0
 
     world.durations = {}
