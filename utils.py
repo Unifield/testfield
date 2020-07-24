@@ -15,7 +15,8 @@ import pdb
 TIME_TO_SLEEP = 0.3
 # The time that we wait when we know that a change is almost immediate
 TIME_TO_WAIT = 1.5
-
+# The max retry count
+MAX_RETRY = 20
 
 def prefix_db_name(db_name, prefix=None):
     if prefix is None:
@@ -521,16 +522,14 @@ def wait_until_no_ajax(world, message="A javascript operation is still ongoing")
             try:
                 world.browser.find_element_by_tag_name("html")
                 world.browser.find_element_by_tag_name("html").is_displayed()
-            except (NoSuchElementException, NoSuchFrameException) as e:
+            except (NoSuchElementException, NoSuchFrameException, WebDriverException) as e:
                 # we have to reload the new frame
-                world.browser.switch_to_default_content()
+                world.browser.switch_to.default_content()
                 if world.nbframes != 0:
-                    world.browser.switch_to_frame(
+                    world.browser.switch_to.frame(
                         get_element(world.browser, position=world.nbframes - 1, tag_name="iframe",
                                     wait="Cannot find the frame in which the button is located"))
-
             ret = world.browser.execute_script('''
-
                 function checkTabAjax(tab){
                     for(i in tab){
                         if(tab[i]){
@@ -546,6 +545,7 @@ def wait_until_no_ajax(world, message="A javascript operation is still ongoing")
                 if(!checkTabAjax(window.TOT2)){
                     return "BLOCKED 2 IN WINDOW";
                 }
+                
 
                 elemAjax = window.document.getElementsByTagName('iframe');
 
@@ -584,14 +584,9 @@ def wait_until_no_ajax(world, message="A javascript operation is still ongoing")
 
                 return totcountAjax;
             ''')
+
         except WebDriverException as e:
-            print e
-            print e
-            print e
-            print e
-            print e
-            print e
-            print e
+            print(e)
             ret = "fail"
 
         tick(message_if_error="A javascript operation is still ongoing (last: %s)" % str(ret))
@@ -713,14 +708,14 @@ def convert_input(world, content, localdict=dict()):
 
 
 def refresh_window(world):
-    world.browser.switch_to_default_content()
+    world.browser.switch_to.default_content()
 
     if world.nbframes != 0:
-        world.browser.switch_to_frame(get_element(world.browser, position=world.nbframes - 1, tag_name="iframe"))
+        world.browser.switch_to.frame(get_element(world.browser, position=world.nbframes - 1, tag_name="iframe"))
 
 
 def refresh_nbframes(world):
-    world.browser.switch_to_default_content()
+    world.browser.switch_to.default_content()
 
     my_frames = world.browser.find_elements_by_css_selector("div.ui-dialog iframe")
 
@@ -859,3 +854,22 @@ def synchronize_instance(instance_name):
             return
         raise
     return
+
+
+def switch_to_iframe(world):
+    # For some reason the current switching logic is not working in FF 77 and above, implemented new one
+    count = 0
+    while True or count == MAX_RETRY:
+        count += 1
+        try:
+            world.browser.switch_to.default_content()
+            iframe = world.browser.find_element_by_xpath("//iframe")
+            world.browser.switch_to.frame(iframe)
+            return
+        except NoSuchElementException:
+            time.sleep(TIME_TO_SLEEP)
+            continue
+
+    raise UniFieldElementException("Couldn't switch to iframe!")
+
+

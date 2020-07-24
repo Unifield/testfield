@@ -19,3 +19,4 @@ run_scenario
 output
 results
 website/tests
+geckodriver.log

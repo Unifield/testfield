@@ -392,7 +392,7 @@ def callback(path):
     return static_file(path, root='static/')
 
 if __name__ == '__main__':
-    run(host='0.0.0.0', port=8080)
+    run(host='127.0.0.1', port=8080)
 
 
 

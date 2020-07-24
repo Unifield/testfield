@@ -112,8 +112,8 @@ def check_that_no_loop_is_open(scenario):
 # }%}
 
 # Selenium management {%{
-@before.all
-def connect_to_db():
+@before.each_feature
+def connect_to_db(feature):
     # WARNING: we need firefox at least Firefox 43. Otherwise, AJAX call seem to be asynchronous
     from selenium.webdriver.firefox.options import Options
     from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
@@ -133,16 +133,14 @@ def connect_to_db():
         profile.set_preference('browser.download.manager.showWhenStarting', False)
         profile.set_preference('browser.download.dir', file_path)
         profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'application/vnd.ms-excel')
-        #### If you want to use the gecko driver (the new tool by the Mozilla fundation to
-        ####  run interface Selenium with Firefox) you should uncomment these three lines
-        ####  and comment the line below. It cannot be used with Firefox 47.
-        # caps = DesiredCapabilities.FIREFOX
-        # caps["marionette"] = True
-        # world.browser = webdriver.Firefox(firefox_profile=profile, capabilities=caps)
 
-        world.browser = webdriver.Firefox(firefox_profile=profile)
-
-
+        """
+        Instead of changing binary path manually, path to firefox binary is now a part of 
+        config file. 
+        TODO: Delete if branch 
+        """
+        binary = FirefoxBinary(PATH_TO_FIREFOX)
+        world.browser = webdriver.Firefox(firefox_binary=binary, firefox_profile=profile)
     elif os.environ['BROWSER'] == "chrome":
         world.browser = webdriver.Chrome()
         # FIXME: PhantomJS doesn't like testfield. It seems that keeps on loading pages...
@@ -162,7 +160,8 @@ def connect_to_db():
         world.browser.set_page_load_timeout(TIME_BEFORE_FAILURE)
         world.browser.set_script_timeout(TIME_BEFORE_FAILURE)
 
-    world.browser.set_window_size(1600, 1200)
+    world.browser.set_window_size(1920, 1080)
+    #world.browser.maximize_window()
     world.nbframes = 0
 
     world.durations = {}
@@ -261,8 +260,8 @@ def remove_iframes(scenario):
     world.nbframes = 0
 
 
-@after.all
-def disconnect_to_db(total):
+@after.each_feature
+def disconnect_to_db(feature):
     if not os.path.isdir(RESULTS_DIR):
         os.mkdir(RESULTS_DIR)
 
@@ -277,7 +276,7 @@ def disconnect_to_db(total):
     f.close()
 
     # we close the current window, but other windows might be open
-    world.browser.close()
+    #world.browser.close()
     world.browser.quit()
 
 
@@ -359,7 +358,7 @@ def log_into(database_name, username, password):
     password = convert_input(world, password)
 
     # load modules on 1st connection to prevent timeout
-    XMLRPCConnection(database_name)
+    #XMLRPCConnection(database_name)
     tick = monitor(world.browser, "I cannot login with %s/%s" % (username, password))
 
     while True:
@@ -439,6 +438,10 @@ def log_into(database_name, username, password):
 def connect_on_database(step, database_name, username, password):
     log_into(database_name, username, password)
     world.current_instance = database_name
+
+@step('I sleep')
+def sleep(step):
+    time.sleep(3600)
 
 
 @step('I log into instance "([^"]*)"')
@@ -748,6 +751,7 @@ def fill_field(step, fieldname, content):
             tick = monitor(world.browser, "Element not filled")
             while True:
                 tick()
+                wait_until_no_ajax(world)
                 myElement.send_keys((100*Keys.BACKSPACE) + content + Keys.TAB)
                 if myElement.get_attribute('value') == content:
                     return
@@ -971,6 +975,21 @@ def click_until_not_available2(step, button):
     wait_until_not_loading(world.browser, wait=world.nbframes == 0)
 
     tick = monitor(world.browser)
+
+    # For some reason the current switching logic is not working in FF 77 and above, implemented new one
+    if world.nbframes != 0:
+        switch_to_iframe(world)
+
+    # We want to find element at least once before we start clicking and don't wait for it forever
+    elem = []
+    count = 0
+    while not elem or count == MAX_RETRY:
+        count += 1
+        elem = get_elements_from_text(world.browser, tag_name=["button", "a"], text=button)
+
+    if not elem:
+        raise UniFieldElementException("Couldn't find {} at least once".format(button))
+
     while True:
         tick()
         try:
@@ -1445,31 +1464,24 @@ def see_window(step, message_to_see):
     message_found = False
     reg = create_regex(message_to_see)
 
-    # We're going to check in browser and iFrames
-    for noframe in xrange(world.nbframes + 1):
+    if world.nbframes == 0:
+        world.browser.switch_to.default_content()
+    if world.nbframes == 1:
+        switch_to_iframe(world)
 
-        # Check in browser
-        if noframe == 0:
-            world.browser.switch_to.default_content()
-        # Check in iFrame
-        else:
-            frame = get_element(world.browser, tag_name="iframe", position=noframe - 1, wait="I don't find a window")
-            world.browser.switch_to_frame(frame)
+    wait_until_no_ajax(world)
+    # We are looking for all textarea in the window
+    elements = world.browser.find_elements_by_css_selector("form#view_form table.fields textarea")
+    # If at least one element has been found
+    if elements:
+        for element in elements:
 
-        # We are looking for all textarea in the window
-        elements = world.browser.find_elements_by_css_selector("form#view_form table.fields textarea")
-
-        # If at least one element has been found
-        if elements:
-
-            for element in elements:
-
-                # Compare element text en text we are looking for
-                if re.match(reg, element.text, flags=re.DOTALL) is None:
-                    continue
-                else:
-                    message_found = True
-                    break
+            # Compare element text en text we are looking for
+            if re.match(reg, element.text, flags=re.DOTALL) is None:
+                continue
+            else:
+                message_found = True
+                break
 
     # Not found, raise an error
     if not message_found:
@@ -1622,8 +1634,17 @@ def click_on_all_line(step):
 
     open_all_the_tables(world)
 
-    for elem in get_elements(world.browser, class_attr='grid-header', tag_name="tr"):
-        get_element(elem, tag_name="input", attrs={'type': 'checkbox'}).click()
+    if world.nbframes == 1:
+        switch_to_iframe(world)
+
+    elements = []
+    count = 0
+    while not elements or count == MAX_RETRY:
+        elements = world.browser.find_elements_by_xpath("//tr[@class='grid-header']//input[@type='checkbox']")
+        count += 1
+
+    for elem in elements:
+        elem.click()
 
     wait_until_not_loading(world.browser, wait=False)
     wait_until_no_ajax(world)
@@ -1790,13 +1811,24 @@ def click_on_line(step, action, window_will_exist=True):
                     continue
 
                 if no_matched_row == matched_row_to_click_on:
+
                     action_to_click = actions_to_click[0]
                     if not action_to_click.is_displayed():
                         continue
+
                     # If this is a checkbox and it's already checked, don't
                     # click it.
                     if action_to_click.get_attribute('name') == '_terp_list' and action_to_click.is_selected():
                         pass
+
+                    # New version of Selenium doesn't support click on tr.
+                    # To keep whole compatibility, clicking with JS used.
+                    # https://bugzilla.mozilla.org/show_bug.cgi?id=1448825
+                    elif action_to_click.tag_name == 'tr':
+                        world.browser.execute_script(
+                            'let x = arguments[0]; x.scrollIntoView(); x.click();',
+                            action_to_click
+                        )
                     else:
                         action_to_click.click()
                     no_by_fingerprint[hash_key_value] += 1
@@ -1823,7 +1855,7 @@ def click_on_line(step, action, window_will_exist=True):
             # We cannot use wait_until_no_ajax because the elements
             # wait_until_no_ajax(world)
 
-            world.browser.switch_to_frame(get_element(world.browser, tag_name="iframe", position=world.nbframes - 1,
+            world.browser.switch_to.frame(get_element(world.browser, tag_name="iframe", position=world.nbframes - 1,
                                                       wait="I don't find the new window"))
             wait_until_not_loading(world.browser, wait=False)
             wait_until_no_ajax(world)
@@ -2351,8 +2383,26 @@ def open_translation_window(step, fieldname):
 @handle_delayed_step
 def selenium_sleeps(step):
     import time
-    time.sleep(30000)
+    time.sleep(5)
 
+d = dict()
+
+"""
+Step useful during debugging
+"""
+@step('I set global ([^ ]*) ([^ ]*)')
+@handle_delayed_step
+def set_global(step, key, val):
+    global d
+    d[key] = val
+
+
+"""
+Debugging step - quit test
+"""
+@step('I quit')
+def quit(step):
+    exit(1)
 
 @step('I wait$')
 @handle_delayed_step
