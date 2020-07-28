@@ -10,6 +10,7 @@ import time
 import re
 import os
 from lxml import html
+import codecs
 import pdb
 
 # The time (in seconds) that we wait when we know that an action has still to be performed
@@ -1065,3 +1066,20 @@ def wild_card_to_regex(text):
     else:
         raise UnifieldException("Bad usage of wildcards, please review where you put your '*'. Could be"
                                 "at the start, at the end or on both sides of string.")
+
+
+def process_file(content_path, world):
+    """
+    Opens an original file and then injects variables into it,
+    if it is necessary.
+    Implemented line reading, should handle big files
+    """
+    dir_path, temp_filename = os.path.split(content_path)
+    temp_file_path = os.path.join(dir_path, 'temp-{}'.format(temp_filename))
+    with codecs.open(content_path, 'r', encoding='utf-8') as original_file:
+        with codecs.open(temp_file_path, 'w', encoding='utf-8') as temp_file:
+            for row_number, line in enumerate(original_file):
+                local_dict = dict(ROW=str(row_number))
+                new_line = convert_input(world, line, local_dict)
+                temp_file.write(new_line)
+    return temp_file_path

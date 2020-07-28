@@ -673,22 +673,10 @@ def internal_fill_field(fieldname, content, position=0):
 
         # we have to check if we have to inject the local variables in this file (only for text files)
         filename, ext = os.path.splitext(content)
-
+        import codecs
         if ext.lower() in ['.xml', '.xls', '.xlsx', '.csv']:
             try:
-                # FIXME: We hope that this file is not too big
-                lines = open(content_path, 'r').readlines()
-                new_content = ''
-                for row_number, line in enumerate(lines):
-                    localdict = dict(ROW=str(row_number))
-                    new_content += convert_input(world, line, localdict)
-
-                base_dir = os.path.dirname(__file__)
-                realfilename = '%s%s' % (TEMP_FILENAME, ext.lower())
-                content_path = os.path.join(base_dir, FILE_DIR, realfilename)
-                f = open(content_path, 'w')
-                f.write(new_content)
-                f.close()
+                content_path = process_file(content_path, world)
             except (OSError, IOError) as e:
                 raise Exception("Unable to inject local variables in %s (reason: %s)" % (content, str(e)))
 
