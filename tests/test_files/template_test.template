@@ -1,0 +1,22 @@
+    I log into instance "HQ1C1"
+    I open tab menu "ACCOUNTING"
+    I open accordion menu "Periodical Processing"
+    I click on menu "Accruals Management"
+
+    I click on "New"
+    I fill "Period" with "Mar 2016"
+    I fill "Description" with "Accrual{{ID}}"
+    I fill "Currency" with "CHF"
+    I fill "Third Party" with ""
+    I fill "Expense Account" with "65000"
+    I fill "Accrual Account" with "31300"
+
+    I shouldn't be able to edit "Journal"
+
+    I fill "Accrual Amount" with "1500.00"
+    I fill "Currency" with "USD"
+    I click on "Save"
+
+    I click on "Edit"
+    I fill "Period" with "Apr 2016"
+    I click on "Save"

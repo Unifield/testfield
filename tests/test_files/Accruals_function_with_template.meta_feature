@@ -1,0 +1,175 @@
+Feature: Accruals function
+
+@finance
+
+Scenario: Accruals function (incl. US-1178)
+
+    #############################################################
+    # Create an accrual
+    #############################################################
+
+    %%{TEMPLATE: tests\\test_files\\template_test.template}%%
+
+    #############################################################
+    # Validate accrual
+    #############################################################
+
+    I click on menu "Accruals Management"	
+    
+    I click "Analytical Distribution" on line and open the window:
+    | Description |
+    | Accrual{{ID}} |
+
+    I click on "New"
+    I fill "OPS" within column "Destination"
+    I fill "MW101" within column "Cost Center"
+    I fill "PF" within column "Funding Pool"
+
+    I validate the line
+    I click on "Save" and close the window
+
+    I click "checkbox" on line:
+    | Description |
+    | Accrual{{ID}} |
+   
+    I click "Validate Accrual Lines" in the side panel and open the window
+    I click on "Yes" and close the window 
+
+    I should see in the main table the following data:
+    | Description | Status |
+    | Accrual{{ID}} | Posted |
+  
+    #############################################################
+    # Verify accrual and reversal entries
+    #############################################################
+
+    I open accordion menu "Journal Entries"
+    I click on menu "Journal Items"
+    I fill "Journal Type" with "Accrual"
+    I click on "Search"
+   
+    I should see in the main table the following data:
+    | Journal Code | Description | Document Date | Posting Date | Period | Account                         | Book. Debit | Book. Credit | Func. Debit  | Func. Credit |
+    | ACC | REV - Accrual{{ID}} | 01/May/2016 | 01/May/2016 | May 2016 | 65000 - Premises and land rental  | 0.00        | 1,500.00     | 0.00         | 1,250.00 |
+    | ACC | REV - Accrual{{ID}} | 01/May/2016 | 01/May/2016 | May 2016 | 31300 - Other accrued liabilities | 1,500.00    | 0.00         | 1,250.00     | 0.00     |
+    | ACC | Accrual{{ID}}       | 30/Apr/2016 | 30/Apr/2016 | Apr 2016 | 65000 - Premises and land rental  | 1,500.00    | 0.00         | 1,250.00     | 0.00     |
+    | ACC | Accrual{{ID}}       | 30/Apr/2016 | 30/Apr/2016 | Apr 2016 | 31300 - Other accrued liabilities | 0.00        | 1,500.00     | 0.00         | 1,250.00 |
+
+    #############################################################
+    # Ensure cancelled accrual can't be reposted
+    #############################################################
+   
+    I open accordion menu "Periodical Processing"
+    I click on menu "Accruals Management"	
+
+    I click on line:
+    | Description |
+    | Accrual{{ID}} |
+     
+    I click on "Cancel"
+    I open accordion menu "Journal Entries"
+    
+    I click on menu "Journal Items"
+    I fill "Journal Type" with "Accrual"
+    I click on "Search"
+   
+    I should see in the main table the following data:
+    | Journal Code | Description | Document Date | Posting Date | Period | Account | Book. Debit | Book. Credit | Func. Debit | Func. Credit |
+    | ACC | CANCEL - REV - Accrual{{ID}} | 01/May/2016 | 01/May/2016 | May 2016 | 65000 - Premises and land rental | 1,500.00 | 0.00 | 1,250.00 | 0.00 |
+    | ACC | CANCEL - REV - Accrual{{ID}} | 01/May/2016 | 01/May/2016 | May 2016 | 31300 - Other accrued liabilities | 0.00 | 1,500.00 | 0.00 | 1,250.00 |
+    | ACC | CANCEL - Accrual{{ID}} | 30/Apr/2016 | 30/Apr/2016 | Apr 2016 | 65000 - Premises and land rental | 0.00 | 1,500.00 | 0.00 | 1,250.00 |
+    | ACC | CANCEL - Accrual{{ID}} | 30/Apr/2016 | 30/Apr/2016 | Apr 2016 | 31300 - Other accrued liabilities | 1,500.00 | 0.00 | 1,250.00 | 0.00 |
+
+    I open accordion menu "Periodical Processing"
+    I click on menu "Accruals Management"
+    
+    I should see in the main table the following data:
+    | Description | Status |
+    | Accrual{{ID}} | Cancelled | 
+
+    I click "checkbox" on line:
+    | Description |
+    | Accrual{{ID}} |
+   
+    I click "Validate Accrual Lines" in the side panel and open the window
+    I click on "Yes" 
+
+    I should see a popup with "The line 'Accrual*' is cancelled and can't be re-posted."
+    I close the window
+
+    #############################################################
+    # Duplicate the accrual 
+    #############################################################
+    
+    I click on line:
+    | Description |
+    | Accrual{{ID}} |
+
+    I click on "Duplicate"
+    I fill "Period" with "May 2016"
+    I fill "Description" with "Duplicate Accrual{{ID}}"
+    I fill "Accrual type" with "One Time accrual"
+    I click on "Save"
+    
+    I click on menu "Accruals Management"
+    I click "checkbox" on line:
+    | Description |
+    | Duplicate Accrual{{ID}} |
+     
+    I click "Validate Accrual Lines" in the side panel and open the window
+    I click on "Yes" and close the window
+   
+    I should see in the main table the following data:
+    | Description | Status |
+    | Duplicate Accrual{{ID}} | Partially posted |
+    
+    #############################################################
+    # Verify accrual entries
+    #############################################################
+
+    I open accordion menu "Journal Entries"
+    I click on menu "Journal Items"
+    I fill "Journal Type" with "Accrual"
+    I click on "Search"
+   
+    I should see in the main table the following data:
+    | Journal Code | Description | Document Date | Posting Date | Period | Account | Book. Debit | Book. Credit | Func. Debit | Func. Credit |
+    | ACC | Duplicate Accrual{{ID}} | 31/May/2016 | 31/May/2016 | May 2016 | 65000 - Premises and land rental | 1,500.00 | 0.00 | 1,250.00 | 0.00 |
+    | ACC | Duplicate Accrual{{ID}} | 31/May/2016 | 31/May/2016 | May 2016 | 31300 - Other accrued liabilities | 0.00 | 1,500.00 | 0.00 | 1,250.00 |
+    
+    #############################################################
+    # Post accrual reversal entry
+    ############################################################
+
+    I open accordion menu "Periodical Processing"
+    I click on menu "Accruals Management"
+
+    I click "checkbox" on line:
+    | Description |
+    | Duplicate Accrual{{ID}} |
+    
+    I click "Post Accrual Reversal" in the side panel and open the window
+    I fill "Document Date" with "15/Jun/2016"
+    I fill "Posting Date" with "15/Jun/2016"
+    I click on "Yes" and close the window
+
+    I should see in the main table the following data:
+    | Description | Status |
+    | Duplicate Accrual{{ID}} | Posted |
+    
+    #############################################################
+    # Verify reversal entries
+    #############################################################
+ 
+    I open accordion menu "Journal Entries"
+    I click on menu "Journal Items"
+    I fill "Journal Type" with "Accrual"
+    I click on "Search"
+   
+    I should see in the main table the following data:
+    | Journal Code | Description | Document Date | Posting Date | Period | Account | Book. Debit | Book. Credit | Func. Debit | Func. Credit |
+    | ACC | REV - Duplicate Accrual{{ID}} | 15/Jun/2016 | 15/Jun/2016 | Jun 2016 | 31300 - Other accrued liabilities | 1,500.00 | 0.00 | 1,250.00 | 0.00 |
+    | ACC | REV - Duplicate Accrual{{ID}} | 15/Jun/2016 | 15/Jun/2016 | Jun 2016 | 65000 - Premises and land rental | 0.00 | 1,500.00 | 0.00 | 1,250.00 |
+
+
+    

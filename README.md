@@ -197,4 +197,76 @@ cd website
 python performance.py
 ```
 
+### Windows 10 install 
+* First of all, you have to download or clone the repository.
+```
+git clone https://github.com/Unifield/testfield.git
+```
+* Download and install Python 2.7 (possible the newest release, but there shouldn't be newer that this):
+    
+    https://www.python.org/downloads/release/python-2718/
 
+* Install Microsoft Visual C++ Compiler for Python 2.7:
+    
+    https://www.microsoft.com/en-us/download/confirmation.aspx?id=44266
+
+* If you installed compiler and still occurring troubles, you can try one of these options:
+    * Install compiler for all user, you will probably need to run this in cmd.exe (Win + R => cmd.exe)
+        * ``` msiexec /i "C:\Path\to\installer\VCForPython27.msi" ALLUSERS=1```
+    * Move vcvarsall.bat into this location:
+        * ```o	C:\Program Files (x86)\Common Files\Microsoft\Visual C++ for Python\9.0```
+
+* Install these Python packages:
+    ```pip install ```
+ ```
+        bottle==0.12.9
+        lettuce==0.2.21
+        numpy==1.11.0
+        matplotlib==1.5.1
+        selenium==2.53.1
+        python-Levenshtein==0.10.2
+        Babel==2.1.1
+        FormEncode==1.2.2
+        CherryPy==3.1.2
+        Mako==0.2.5
+        OERPLib==0.8.4
+        openerp-client-lib==1.0.3
+        ordereddict==1.1
+        reportlab==2.4
+        simplejson==2.0.9
+        bzr==2.7.0
+        PyYAML==3.11
+        passlib==1.6.5
+        python-dateutil==2.5.3
+        pylzma==0.4.8
+        xlwt==1.1.2
+        bcrypt==3.1.1
+        cffi==1.8.3
+        six==1.10.0
+```
+
+* Install Firefox version to another folder than you would do usually
+```https://ftp.mozilla.org/pub/firefox/releases/46.0/win32/en-US/```
+* Disable auto update function of Firefox in the settings - Firefox will try to update to version 47 when
+it's launched for the first time. It's possible that you will need to disable auto update and then reinstall.
+Firefox will remember previous settings. 
+* Change PATH to your Firefox (will not be necessary soon) in the following file:
+
+    ```C:\Python27\Lib\site-packages\selenium\webdriver\firefox\firefox_binary.py```
+    * Insert following line into the `__init__` function, change value to be your PATH to Firefox 46 binary
+    
+    `firefox_path = "C:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe"`
+    
+* Ask colleagues for credential.py and edit following:
+    
+    `DB_PREFIX: Change to your DB prefix (KATERINA, SARAH etc.)`
+
+* In the file steps.py comment `XMLRPCConnection(database_name)` line in the function `log_into()`
+    * This is  temporary fix for a bug. As soon as the bug is fixed, this won't be necessary.
+    
+* Some of the possible problems:
+    * The code was developed under Linux environment, so it has Unix ends of lines. This won't work with 
+    Windows. Some of the packages cannot deal with it. If you're using Git Bash (or just setup your git config) you should choose option to 
+    convert lines' ends or using this option:
+        
+        `git config --global core.autocrlf true`

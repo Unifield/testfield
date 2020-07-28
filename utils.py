@@ -16,13 +16,19 @@ import pdb
 TIME_TO_SLEEP = 0.3
 # The time that we wait when we know that a change is almost immediate
 TIME_TO_WAIT = 1.5
+# The max retry count
+MAX_RETRY = 20
 
-
-def prefix_db_name(db_name):
-    from credentials import DB_PREFIX
-    if DB_PREFIX and not db_name.startswith(DB_PREFIX):
-        return '%s_%s' % (DB_PREFIX, db_name)
-    return db_name
+def prefix_db_name(db_name, prefix=None):
+    if prefix is None:
+        from credentials import DB_PREFIX
+        if DB_PREFIX and not db_name.startswith(DB_PREFIX):
+            return '%s_%s' % (DB_PREFIX, db_name)
+        return db_name
+    else:
+        if not db_name.startswith(prefix):
+            return '%s_%s' % (prefix, db_name)
+        return db_name
 
 
 def get_new_id(filename):
@@ -856,6 +862,22 @@ def synchronize_instance(instance_name):
     return
 
 
+def switch_to_iframe(world):
+    # For some reason the current switching logic is not working in FF 77 and above, implemented new one
+    count = 0
+    while True or count == MAX_RETRY:
+        count += 1
+        try:
+            world.browser.switch_to.default_content()
+            iframe = world.browser.find_element_by_xpath("//iframe")
+            world.browser.switch_to.frame(iframe)
+            return
+        except NoSuchElementException:
+            time.sleep(TIME_TO_SLEEP)
+            continue
+    raise UniFieldElementException("Couldn't switch to iframe!")
+
+
 def normalize_text(text, simple_strip=False, str_strip=None):
     """ Returns text in UTF-8 and lower cases and stripped
 
@@ -863,7 +885,6 @@ def normalize_text(text, simple_strip=False, str_strip=None):
     text (str): Text to convert
     simple_strip (bool): whether to apply .strip()
     str_strip (list or str): default None, accepts list of str or str
-
     Returns:
     str
 

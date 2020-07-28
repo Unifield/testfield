@@ -1,28 +1,33 @@
 #encoding=utf-8
 
 from __future__ import print_function
-from credentials import *
+import credentials
 
 import re
 import sys
 import shutil
-import os, os.path
-import utils, codecs
+import os
+import utils
 import credentials
 import subprocess
+
 
 # http://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
+
 FEATURE_DIR = "features"
 META_FEATURE_DIR = "meta_features"
+
 
 class SyntaxException(Exception):
     pass
 
+
 class DBException(Exception):
     pass
+
 
 def get_articles(database, count):
     from oerplib import OERP
@@ -34,11 +39,29 @@ def get_articles(database, count):
 
     return [{'code': x['default_code'], 'name': x['name']} for x in prod_obj.read(ids, ['default_code', 'name'], { 'lang': 'en_MF' })]
 
+
 def inject_variable(line, **variables):
 
     for key, value in variables.iteritems():
         line = line.replace('{{%s}}' % key, value)
     return line
+
+
+def get_template_lines(template_path):
+    """
+    Validate template_path and then returns file lines as a list
+    """
+    if not os.path.isfile(template_path):
+        #  Python 2.7 doesn't have FileNotFoundError as built-in, used IOError instead
+        raise IOError("{} is not a valid file or is not in the location you gave.".format(template_path))
+
+    file_name, ext = os.path.splitext(template_path)
+    if not ext == ".template":
+        raise IOError("{} has not proper extension, should be filename.template".format(template_path))
+
+    with open(template_path, 'r') as f:
+        return f.readlines()
+
 
 def run_preprocessor(path):
     with open(path, 'r') as f:
@@ -50,9 +73,12 @@ def run_preprocessor(path):
             # is it a macro line?
             cleaned_line = line.strip()
 
-            iterate_over_with_database = re.match('^\s*#loop{\s*(?P<database>[^} ),]+)\s*,\s*(?P<kindof>[^} ),]+)\s*,\s*(?P<varname>[^} ),]+)\s*}\s*$', cleaned_line)
+            iterate_over_with_database = re.match(
+                '^\s*#loop{\s*(?P<database>[^} ),]+)\s*,\s*(?P<kindof>[^} ),]+)\s*,\s*(?P<varname>[^} ),]+)\s*}\s*$',
+                cleaned_line)
             begin_block_count = re.match('^\s*#begin{\s*(?P<macro>[^}]+)\s*}\s*$', cleaned_line)
             end_block = re.match('\s*#end\s*', cleaned_line)
+            template_path = re.match('%%{TEMPLATE:(?P<template>\s*.*)}%%', cleaned_line)
 
             if iterate_over_with_database is not None:
                 values = iterate_over_with_database.groupdict()
@@ -116,7 +142,6 @@ def run_preprocessor(path):
 
                     to_add = to_add_converted
 
-
                 if variables is not None:
                     to_add_with_variables = []
                     for varset in variables:
@@ -126,6 +151,13 @@ def run_preprocessor(path):
 
                 waiting_lines[-1][2].extend(to_add_with_variables)
 
+            elif template_path:
+                # We get lines from template and add them to waiting lines
+                path = template_path.groupdict()['template'].strip()
+                template_lines = get_template_lines(path)
+                for template_line in template_lines:
+                    waiting_lines[-1][2].append(template_line)
+
             else:
                 waiting_lines[-1][2].append(line)
 
@@ -133,6 +165,7 @@ def run_preprocessor(path):
             raise SyntaxException("A block is not open or is not closed")
 
         return ''.join(waiting_lines[0][0] * waiting_lines[0][2])
+
 
 if __name__ == '__main__':
     try:
@@ -155,6 +188,9 @@ if __name__ == '__main__':
             filename, _ = os.path.splitext(filename)
             filename_only.append(filename)
 
+        # We should used processed file paths - ends with .feature for case that some processing in file is done
+        new_args_files_destination = list()
+
         for dirpath, dirnames, filenames in os.walk(META_FEATURE_DIR):
 
             # do we have to create the directory?
@@ -167,8 +203,9 @@ if __name__ == '__main__':
 
                 filename_without_ext, _ = os.path.splitext(filename)
 
-                if filename_without_ext.lower() not in filename_only and filename_only:
+                if filename_without_ext not in filename_only and filename_only:
                     continue
+
 
                 m = re.match('(?P<filename>.*)\.meta_feature$', filename, re.IGNORECASE)
                 if m:
@@ -176,6 +213,8 @@ if __name__ == '__main__':
                     new_file_name = '%s.feature' % m.groupdict()['filename']
 
                     to_path = os.path.join(FEATURE_DIR, relative_path_in_meta, new_file_name)
+                    if filename_without_ext in filename_only and filename_only:
+                        new_args_files_destination.append(to_path)
 
                     try:
                         eprint("Converting %s" % new_file_name)
@@ -202,10 +241,10 @@ if __name__ == '__main__':
                     args_found += ['-t'] + [splittt]
 
         if args.files:
-            args_found += args.files
+            args_found += new_args_files_destination
         
         # we can run lettuce now
-        lettuce_cmd = ["lettuce", "--verbosity=3", "--no-color" ] + args_found
+        lettuce_cmd = ["lettuce", "--verbosity=3", "--no-color"] + args_found
         eprint("runtests.py calling lettuce: ", lettuce_cmd)
         ret = subprocess.call(lettuce_cmd)
         sys.exit(ret)
