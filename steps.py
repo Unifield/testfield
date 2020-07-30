@@ -140,7 +140,17 @@ def connect_to_db(feature):
         TODO: Delete if branch 
         """
         binary = FirefoxBinary(PATH_TO_FIREFOX)
-        world.browser = webdriver.Firefox(firefox_binary=binary, firefox_profile=profile)
+        count = 0
+        while count < 5:
+            try:
+                world.browser = webdriver.Firefox(firefox_binary=binary, firefox_profile=profile)
+                break
+            except:
+                count += 1
+                time.sleep(5)
+                print("TIME OUT")
+                print("\n" * 5)
+
     elif os.environ['BROWSER'] == "chrome":
         world.browser = webdriver.Chrome()
         # FIXME: PhantomJS doesn't like testfield. It seems that keeps on loading pages...

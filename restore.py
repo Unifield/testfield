@@ -151,7 +151,7 @@ if __name__ == '__main__':
 
             path_dump = os.path.join(environment_dir, filename)
 
-            p1 = subprocess.Popen('pg_restore -p %d %s -U %s --no-acl --no-owner -n public -d %s %s' % (c.DB_PORT, db_address_with_flag, c.DB_USERNAME, dbname, path_dump),
+            p1 = subprocess.Popen('pg_restore -p %d %s -U %s --no-acl --no-owner -j 8 -n public -d %s %s' % (c.DB_PORT, db_address_with_flag, c.DB_USERNAME, dbname, path_dump),
                                   shell=True,
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)

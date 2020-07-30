@@ -128,6 +128,10 @@ else
     echo "unix_socket_directories = '$RUNDIR'" >> $DATADIR/postgresql.conf
 fi
 
+echo "fsync=off" >> $DATADIR/postgresql.conf
+echo "autovacuum=off" >> $DATADIR/postgresql.conf
+echo "synchronous_commit=off" >> $DATADIR/postgresql.conf
+
 tmux new -d -s PostGre_$NAME_KILL "$FAKED_COMMAND $DBDIR/postgres -D $DATADIR"
 
 #TODO: Fix that... we should wait until psql can connect
