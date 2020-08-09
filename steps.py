@@ -143,7 +143,7 @@ def connect_to_db(feature):
         count = 0
         while count < 5:
             try:
-                world.browser = webdriver.Firefox(firefox_binary=binary, firefox_profile=profile)
+                world.browser = webdriver.Firefox(firefox_binary="/usr/bin/firefox", firefox_profile=profile)
                 break
             except:
                 count += 1
