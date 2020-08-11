@@ -114,10 +114,11 @@ def check_that_no_loop_is_open(scenario):
 # Selenium management {%{
 @before.each_feature
 def connect_to_db(feature):
+    import tempfile
     # WARNING: we need firefox at least Firefox 43. Otherwise, AJAX call seem to be asynchronous
     from selenium.webdriver.firefox.options import Options
     from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
-
+    profile_path = tempfile.mkdtemp(".selenium")
     base_dir = os.path.dirname(__file__)
     file_path = os.path.join(base_dir, FILE_DIR)
 
@@ -127,11 +128,8 @@ def connect_to_db(feature):
         del os.environ['DYLD_FORCE_FLAT_NAMESPACE']
 
     if 'BROWSER' not in os.environ or os.environ['BROWSER'] == "firefox":
-        from selenium import webdriver
-        from selenium.webdriver.firefox.options import Options
-        import tempfile
         # we are going to download all the files in the file directory
-        profile = webdriver.FirefoxProfile()
+        profile = webdriver.FirefoxProfile(profile_directory=profile_path)
         profile.set_preference('browser.download.folderList', 2)
         profile.set_preference('browser.download.manager.showWhenStarting', False)
         profile.set_preference('browser.download.dir', file_path)
@@ -143,27 +141,17 @@ def connect_to_db(feature):
         profile.set_preference('browser.startup.page', 0)
         profile.set_preference('layers.acceleration.disabled', True)
 
-        # Custom profile folder to keep the minidump files
-        profile = tempfile.mkdtemp(".selenium")
-        print("*** Using profile: {}".format(profile))
-
-        # Use the above folder as custom profile
-        opts = Options()
-        opts.add_argument("-profile")
-        opts.add_argument(profile)
-        opts.binary = PATH_TO_FIREFOX
-
         """
         Instead of changing binary path manually, path to firefox binary is now a part of 
         config file. 
+        TODO: Delete if branch 
         """
         binary = FirefoxBinary(PATH_TO_FIREFOX)
         count = 0
         exception = None
         while count < 5:
             try:
-                world.browser = webdriver.Firefox(firefox_binary=binary, firefox_profile=profile, options=opts,
-                                                  service_args=["--marionette-port", "4444"])
+                world.browser = webdriver.Firefox(firefox_binary=binary, firefox_profile=profile)
                 break
             except Exception as e:
                 count += 1
