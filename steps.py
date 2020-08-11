@@ -133,6 +133,12 @@ def connect_to_db(feature):
         profile.set_preference('browser.download.manager.showWhenStarting', False)
         profile.set_preference('browser.download.dir', file_path)
         profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'application/vnd.ms-excel')
+        profile.set_preference('browser.tabs.remote.autostart', False)
+        profile.set_preference('browser.tabs.remote.autostart.2', False)
+        profile.set_preference('browser.sessionstore.resume_from_crash', False)
+        profile.set_preference('browser.sessionstore.resume_from_crash', False)
+        profile.set_preference('toolkit.startup.max_resumed_crashes', -1)
+        profile.set_preference('browser.startup.page', 0)
 
         """
         Instead of changing binary path manually, path to firefox binary is now a part of 
@@ -143,13 +149,14 @@ def connect_to_db(feature):
         count = 0
         while count < 5:
             try:
-                world.browser = webdriver.Firefox(firefox_binary="/usr/bin/firefox", firefox_profile=profile)
+                world.browser = webdriver.Firefox(firefox_binary=binary, firefox_profile=profile)
                 break
-            except:
+            except Exception as e:
                 count += 1
-                time.sleep(5)
-                print("TIME OUT")
-                print("\n" * 5)
+                time.sleep(10)
+                print(e)
+        else:
+            print("Could not connect to new Firefox session")
 
     elif os.environ['BROWSER'] == "chrome":
         world.browser = webdriver.Chrome()
