@@ -138,6 +138,7 @@ def connect_to_db(feature):
         profile.set_preference('browser.sessionstore.resume_from_crash', False)
         profile.set_preference('toolkit.startup.max_resumed_crashes', -1)
         profile.set_preference('browser.startup.page', 0)
+        profile.set_preference('layers.acceleration.disabled', True)
 
         """
         Instead of changing binary path manually, path to firefox binary is now a part of 
@@ -294,7 +295,7 @@ def disconnect_to_db(feature):
         f = open(content_path, 'w')
         f.write(content.encode('utf-8'))
         f.close()
-    
+
         # we close the current window, but other windows might be open
         #world.browser.close()
         world.browser.quit()
