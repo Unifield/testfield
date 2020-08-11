@@ -127,6 +127,9 @@ def connect_to_db(feature):
         del os.environ['DYLD_FORCE_FLAT_NAMESPACE']
 
     if 'BROWSER' not in os.environ or os.environ['BROWSER'] == "firefox":
+        from selenium import webdriver
+        from selenium.webdriver.firefox.options import Options
+        import tempfile
         # we are going to download all the files in the file directory
         profile = webdriver.FirefoxProfile()
         profile.set_preference('browser.download.folderList', 2)
@@ -139,11 +142,6 @@ def connect_to_db(feature):
         profile.set_preference('toolkit.startup.max_resumed_crashes', -1)
         profile.set_preference('browser.startup.page', 0)
         profile.set_preference('layers.acceleration.disabled', True)
-
-        import tempfile
-
-        from selenium import webdriver
-        from selenium.webdriver.firefox.options import Options
 
         # Custom profile folder to keep the minidump files
         profile = tempfile.mkdtemp(".selenium")
