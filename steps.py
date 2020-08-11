@@ -129,7 +129,9 @@ def connect_to_db(feature):
 
     if 'BROWSER' not in os.environ or os.environ['BROWSER'] == "firefox":
         # we are going to download all the files in the file directory
+        opts = Options()
         profile = webdriver.FirefoxProfile(profile_directory=profile_path)
+        opts.profile = profile
         profile.set_preference('browser.download.folderList', 2)
         profile.set_preference('browser.download.manager.showWhenStarting', False)
         profile.set_preference('browser.download.dir', file_path)
@@ -146,12 +148,14 @@ def connect_to_db(feature):
         config file. 
         TODO: Delete if branch 
         """
+
+
         binary = FirefoxBinary(PATH_TO_FIREFOX)
         count = 0
         exception = None
         while count < 5:
             try:
-                world.browser = webdriver.Firefox(firefox_binary=binary, firefox_profile=profile)
+                world.browser = webdriver.Firefox(firefox_binary=binary, firefox_profile=profile, options=opts)
                 break
             except Exception as e:
                 count += 1
