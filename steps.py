@@ -136,7 +136,6 @@ def connect_to_db(feature):
         profile.set_preference('browser.tabs.remote.autostart', False)
         profile.set_preference('browser.tabs.remote.autostart.2', False)
         profile.set_preference('browser.sessionstore.resume_from_crash', False)
-        profile.set_preference('browser.sessionstore.resume_from_crash', False)
         profile.set_preference('toolkit.startup.max_resumed_crashes', -1)
         profile.set_preference('browser.startup.page', 0)
 
@@ -147,6 +146,7 @@ def connect_to_db(feature):
         """
         binary = FirefoxBinary(PATH_TO_FIREFOX)
         count = 0
+        exception = None
         while count < 5:
             try:
                 world.browser = webdriver.Firefox(firefox_binary=binary, firefox_profile=profile)
@@ -154,9 +154,11 @@ def connect_to_db(feature):
             except Exception as e:
                 count += 1
                 time.sleep(10)
+                exception = e
                 print(e)
         else:
             print("Could not connect to new Firefox session")
+            raise exception
 
     elif os.environ['BROWSER'] == "chrome":
         world.browser = webdriver.Chrome()
