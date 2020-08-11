@@ -140,17 +140,31 @@ def connect_to_db(feature):
         profile.set_preference('browser.startup.page', 0)
         profile.set_preference('layers.acceleration.disabled', True)
 
+        import tempfile
+
+        from selenium import webdriver
+        from selenium.webdriver.firefox.options import Options
+
+        # Custom profile folder to keep the minidump files
+        profile = tempfile.mkdtemp(".selenium")
+        print("*** Using profile: {}".format(profile))
+
+        # Use the above folder as custom profile
+        opts = Options()
+        opts.add_argument("-profile")
+        opts.add_argument(profile)
+        opts.binary = PATH_TO_FIREFOX
+
         """
         Instead of changing binary path manually, path to firefox binary is now a part of 
         config file. 
-        TODO: Delete if branch 
         """
         binary = FirefoxBinary(PATH_TO_FIREFOX)
         count = 0
         exception = None
         while count < 5:
             try:
-                world.browser = webdriver.Firefox(firefox_binary=binary, firefox_profile=profile)
+                world.browser = webdriver.Firefox(firefox_binary=binary, firefox_profile=profile, options=opts)
                 break
             except Exception as e:
                 count += 1
