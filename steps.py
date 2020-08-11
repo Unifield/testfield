@@ -162,7 +162,8 @@ def connect_to_db(feature):
         exception = None
         while count < 5:
             try:
-                world.browser = webdriver.Firefox(firefox_binary=binary, firefox_profile=profile, options=opts)
+                world.browser = webdriver.Firefox(firefox_binary=binary, firefox_profile=profile, options=opts,
+                                                  service_args=["--marionette-port", "4444"])
                 break
             except Exception as e:
                 count += 1
