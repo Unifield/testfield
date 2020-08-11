@@ -287,16 +287,19 @@ def disconnect_to_db(feature):
     printscreen_path = os.path.join(RESULTS_DIR, "last_screen.png")
     content_path = os.path.join(RESULTS_DIR, "last_content.html")
 
-    world.browser.save_screenshot(printscreen_path)
+    try:
+        world.browser.save_screenshot(printscreen_path)
 
-    content = world.browser.page_source
-    f = open(content_path, 'w')
-    f.write(content.encode('utf-8'))
-    f.close()
-
-    # we close the current window, but other windows might be open
-    #world.browser.close()
-    world.browser.quit()
+        content = world.browser.page_source
+        f = open(content_path, 'w')
+        f.write(content.encode('utf-8'))
+        f.close()
+    
+        # we close the current window, but other windows might be open
+        #world.browser.close()
+        world.browser.quit()
+    except:
+        print("Cannot establish connection to Firefox")
 
 
 @before.each_feature
