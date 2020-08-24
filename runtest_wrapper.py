@@ -18,6 +18,7 @@ import re
 import json
 import numpy
 import sys
+from jinja2 import Template
 
 BASE_DIR = "meta_features"
 
@@ -50,10 +51,15 @@ def split_to_parts(files, workers):
     returns json with divided files
 
     """
-    json_dict = {"parts": []}
+    results = list()
     for i, file_list in enumerate(numpy.array_split(files, workers)):
-        json_dict["parts"].append({i+1: list(file_list)})
-    return json.dumps(json_dict)
+        results.append(','.join(list(file_list)))
+
+    template = """
+    ({% for result in results %} "{{ result }}" {% endfor %})
+    """
+    tmpl = Template(template)
+    return tmpl.render(results=results)
 
 
 if __name__ == "__main__":
