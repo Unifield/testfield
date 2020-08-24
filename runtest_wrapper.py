@@ -15,10 +15,10 @@ Divided files are printed on stdout
 import argparse
 import os.path
 import re
-import json
 import numpy
 import sys
 from jinja2 import Template
+from pipes import quote
 
 BASE_DIR = "meta_features"
 
@@ -56,7 +56,7 @@ def split_to_parts(files, workers):
         results.append(','.join(list(file_list)))
 
     template = """
-    ({% for result in results %} "{{ result }}" {% endfor %})
+    {% for result in results %} "{{ result }}" {% endfor %}
     """
     tmpl = Template(template)
     return tmpl.render(results=results)
@@ -85,7 +85,7 @@ if __name__ == "__main__":
                     continue
                 file_path = os.path.abspath(os.path.join(path, file))
                 if has_tags(file_path, args.tags):
-                    files_to_run.append(file_path)
+                    files_to_run.append(quote(file_path))
 
     if args.directories:
         for directory in args.directories:
@@ -98,14 +98,14 @@ if __name__ == "__main__":
                     if file_ext != ".meta_feature":
                         continue
                     file_path = os.path.abspath(os.path.join(path, file))
-                    files_to_run.append(file_path)
+                    files_to_run.append(quote(file_path))
 
     if args.files:
         for file in args.files:
             if not os.path.isfile(file):
                 print("{} is not a valid file".format(file))
                 continue
-            files_to_run.append(os.path.abspath(file))
+            files_to_run.append(os.path.abspath(quote(file)))
 
     if not files_to_run:
         print("No files to run! Exiting...")
