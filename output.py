@@ -6,6 +6,13 @@ import os.path
 import datetime
 import tempfile
 from selenium.common.exceptions import StaleElementReferenceException
+import os
+
+# If we run under multiple docker instances, we want to distinguish between results from different containers
+if os.environ['DOCKER_PART']:
+    docker_part = os.environ['DOCKER_PART']
+else:
+    docker_part = None
 
 OUTPUT_DIR = 'output/'
 TEMPLATES_DIR = 'templates/'
@@ -193,7 +200,10 @@ def write_end_of_section(scenario):
     filter_passed = sum(map(lambda x : 1 if x.passed else 0, scenario.steps))
     percentage_ok = (float(filter_passed) / len(scenario.steps) * 100.0) if scenario.steps else 100.0
     time_total = timedelta_total_seconds(datetime.datetime.now() - world.time_before)
-    index_page = 'index%d.html' % world.idscenario
+    if not docker_part:
+        index_page = 'index{}.html'.format(world.idscenario)
+    else:
+        index_page = 'index-{}-{}.html'.format(docker_part, world.idscenario)
     tags = scenario.tags
 
     # we have to add the steps that haven't been included
@@ -243,8 +253,10 @@ def write_end_of_section(scenario):
     world.idscenario += 1
 
 def get_printscreen(world, full_printscreen):
-
-    filename = "printscreen%d.png" % world.idprintscreen
+    if not docker_part:
+        filename = "printscreen{}.png".format(world.idprintscreen)
+    else:
+        filename = "printscreen-{}-{}.png".format(docker_part, world.idprintscreen)
     path_printscreen = os.path.join(OUTPUT_DIR, filename)
 
     elements = []
