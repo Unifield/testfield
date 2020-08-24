@@ -9,7 +9,7 @@ from selenium.common.exceptions import StaleElementReferenceException
 import os
 
 # If we run under multiple docker instances, we want to distinguish between results from different containers
-if os.environ['DOCKER_PART']:
+if os.environ.get('DOCKER_PART'):
     docker_part = os.environ['DOCKER_PART']
 else:
     docker_part = None
