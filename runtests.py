@@ -168,18 +168,20 @@ def run_preprocessor(path):
 
 
 if __name__ == '__main__':
-    try:
 
-        import argparse
-        parser = argparse.ArgumentParser(description='Run the tests')
-        parser.add_argument('-t', type=str, dest="tags", action='store', nargs=1, help='the tag to select')
-        parser.add_argument('files', type=str, nargs='*', help='the files to execute')
-        args = parser.parse_args()
+    import argparse
+    parser = argparse.ArgumentParser(description='Run the tests')
+    parser.add_argument('-t', type=str, dest="tags", action='store', nargs=1, help='the tag to select')
+    parser.add_argument('files', type=str, nargs='*', help='the files to execute')
+    parser.add_argument('--docker', type=str, action='store', help='Files passed as one long string in docker run',
+                        dest='string_files')
+    args = parser.parse_args()
 
-        if os.path.isdir(FEATURE_DIR):
-            shutil.rmtree(FEATURE_DIR)
-        os.mkdir(FEATURE_DIR)
+    if os.path.isdir(FEATURE_DIR):
+        shutil.rmtree(FEATURE_DIR)
+    os.mkdir(FEATURE_DIR)
 
+    if not args.string_files:
         # we have to extract the filenames if necessary (ends with meta_feature or feature)
         #if args.files:
         filename_only = []
@@ -242,18 +244,55 @@ if __name__ == '__main__':
 
         if args.files:
             args_found += new_args_files_destination
-        
+
         # we can run lettuce now
         lettuce_cmd = ["lettuce", "--verbosity=3", "--no-color"] + args_found
         eprint("runtests.py calling lettuce: ", lettuce_cmd)
         ret = subprocess.call(lettuce_cmd)
         sys.exit(ret)
 
-    except shutil.Error as e:
-        eprint(e)
-        sys.exit(-1)
-    except (OSError, IOError) as e:
-        eprint(e)
-        sys.exit(-1)
+    else:
+        # In this case we have the exact names of files to run, so we don't have to keep directory tree
+        # as in previous case
+        list_of_meta_features = args.string_files.split(',')
+        files_to_run = list()
+        for meta_feature in list_of_meta_features:
+            head, tail = os.path.split(meta_feature)
+            filename, file_ext = os.path.splitext(tail)
+            if file_ext != ".meta_feature":
+                continue
+            from_path = meta_feature
+            to_path = os.path.join(FEATURE_DIR, "{}.feature".format(filename))
 
+            try:
+                print("Converting: %s" % meta_feature)
+
+                content = run_preprocessor(from_path)
+                with open(to_path, 'w') as f:
+                    # remove invalid characters due to bad unifield encodings in test instances
+                    out = []
+                    for a in list(content):
+                        if ord(a) in range(128):
+                            out.append(a)
+                    f.write(''.join(out))
+
+                files_to_run.append(to_path)
+
+            except SyntaxException as e:
+                eprint('SYNTAX FAILURE:%s: %s\n\n' % (filename, e))
+            except DBException as e:
+                eprint('DB FAILURE:%s: %s\n\n' % (filename, e))
+
+
+        for file in files_to_run:
+            print(file)
+            try:
+                lettuce_cmd = ["lettuce", "--verbosity=3", "--no-color"] + ['-f', file]
+                print(lettuce_cmd)
+                eprint("runtests.py calling lettuce: ", lettuce_cmd)
+                ret = subprocess.call(lettuce_cmd)
+            except SyntaxException:
+                continue
+        else:
+            exit()
 

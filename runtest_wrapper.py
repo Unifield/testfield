@@ -18,7 +18,6 @@ import re
 import numpy
 import sys
 from jinja2 import Template
-from pipes import quote
 
 BASE_DIR = "meta_features"
 
@@ -78,6 +77,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     files_to_run = list()
+
+    # If there is no number of workers specified, we assume that tests are supposed to run in one instance
+    if not args.workers:
+        args.workers = 1
 
     if args.tags:
         for path, subdirs, files in os.walk(BASE_DIR):
