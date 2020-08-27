@@ -88,7 +88,7 @@ if __name__ == "__main__":
                 filename, file_ext = os.path.splitext(file)
                 if file_ext != ".meta_feature":
                     continue
-                file_path = os.path.abspath(os.path.join(path, file))
+                file_path = os.path.join(path, file)
                 if has_tags(file_path, args.tags):
                     files_to_run.append(file_path)
 
@@ -102,7 +102,7 @@ if __name__ == "__main__":
                     filename, file_ext = os.path.splitext(file)
                     if file_ext != ".meta_feature":
                         continue
-                    file_path = os.path.abspath(os.path.join(path, file))
+                    file_path = os.path.join(path, file)
                     files_to_run.append(file_path)
 
     if args.files:
@@ -110,7 +110,7 @@ if __name__ == "__main__":
             if not os.path.isfile(file):
                 print("{} is not a valid file".format(file))
                 continue
-            files_to_run.append(os.path.abspath(file))
+            files_to_run.append(file)
 
     if not files_to_run:
         print("No files to run! Exiting...")
