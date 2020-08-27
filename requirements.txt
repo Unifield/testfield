@@ -1,6 +1,5 @@
 OERPLib==0.8.4
 bottle==0.12.9
-lettuce==0.2.21
 numpy==1.11.0
 matplotlib==1.5.1
 selenium==3.141.0
@@ -9,3 +8,5 @@ Pillow==3.2.0
 docker-compose==1.9.0
 credentials
 jinja2
+# We are installing our patched lettuce
+git+https://github.com/Unifield/lettuce.git
