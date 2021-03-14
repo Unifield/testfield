@@ -41,7 +41,10 @@ NAME=${2:-unkown}
 
 SERVERBRANCH=${3:-lp:unifield-server}
 WEBBRANCH=${4:-lp:unifield-web}
+
+if [[ -z ${LETTUCE_PARAMS} ]]; then
 LETTUCE_PARAMS="${*:5}"
+fi
 
 function cleanup()
 {
