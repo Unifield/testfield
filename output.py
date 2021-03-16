@@ -221,7 +221,7 @@ def write_end_of_section(scenario):
     # We then have to update the "ok/ko" flag in the meta file
     #  and color in red or not the line
 
-    world.scenarios.append((all_ok, scenario.name, percentage_ok, time_total, index_page, tags))
+    world.scenarios.append((all_ok, scenario.name, percentage_ok, time_total, index_page, tags, scenario.described_at.file.replace('features/', '').replace('.feature', '.meta_feature')))
 
 
     path_html = os.path.join(OUTPUT_DIR, index_page)

@@ -3,10 +3,10 @@ import os.path
 
 os.environ['MPLCONFIGDIR'] = "/tmp"
 
-path = "~/.myenv/bin/activate_this.py"
-activate_env = os.path.expanduser(path)
-execfile(activate_env, dict(__file__=activate_env))
-
+#path = "~/.myenv/bin/activate_this.py"
+#activate_env = os.path.expanduser(path)
+#execfile(activate_env, dict(__file__=activate_env))
+#exec(open("./filename").read())
 import bottle
 
 sys.path = [os.path.dirname(__file__)] + sys.path

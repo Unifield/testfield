@@ -8,6 +8,7 @@ PERFORMANCE_TESTS = './performances/'
 PAGE_SIZE=15
 
 @route('/')
+@route('/index.html')
 def index():
     redirect("/tests")
 
@@ -33,7 +34,7 @@ def tests():
 
     first_page = 0
     last_page = nbpages
-    for nopage in xrange(1, nbpages+1):
+    for nopage in range(1, nbpages+1):
         pages.append((pagenum == nopage, nopage))
 
     return dict(tests=get_functional_tests(offset=(pagenum-1)*PAGE_SIZE,
@@ -108,7 +109,7 @@ def load_file(filename):
 
         for xs, name in itertools.izip(xs_s, title[1:]):
             ys_values = list(ys)
-            xs_values = map(lambda (x, div) : x / div, zip(xs, divider))
+            xs_values = map(lambda x, div : x / div, zip(xs, divider))
 
             all_xs_values.extend(xs_values)
             all_ys_values.extend(ys_values)
@@ -136,7 +137,7 @@ def load_meta_file(path):
                     value = line[i+1:].strip()
                     tests_meta[name] = value
     except IOError as e:
-        print e
+        print(e)
 
     return tests_meta
 
@@ -230,7 +231,7 @@ def get_performance_tests(path_dir, tests=None):
                     config_by_test[name] = (suites, config)
 
                 except SyntaxError as e:
-                    print e
+                    print(e)
 
             if file_found:
                 versions.add(version_dir)

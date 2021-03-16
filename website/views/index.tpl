@@ -28,7 +28,7 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a class="navbar-brand" href="#">UniField</a>
+                    <a class="navbar-brand" href="index.html">UniField</a>
                 </div>
 
                 <!-- Collect the nav links, forms, and other content for toggling -->
