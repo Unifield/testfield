@@ -1,5 +1,5 @@
 OERPLib==0.8.4
-bottle==0.12.9
+bottle==0.12.19
 lettuce==0.2.21
 numpy==1.11.0
 matplotlib==1.5.1
