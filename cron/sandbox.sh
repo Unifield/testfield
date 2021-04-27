@@ -107,7 +107,7 @@ export PGPASSWORD=$DBPASSWORD
 
 ./scripts/create_db.sh -P ${DBDIR} -D $TMPPATH -s $MINUS_IN_SECOND -p $DBPORT -c $DBUSERNAME $NAME_RUN
 
-for name in VIKTOR AWFA TEMPO SEB MASTERDATA
+for name in LOIC AWFA TEMPO SEB MASTERDATA
 do
 	generate_config $name
 
