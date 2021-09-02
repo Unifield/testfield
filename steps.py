@@ -354,81 +354,34 @@ def go_home_page(step):
 
 
 def log_into(database_name, username, password):
+
     database_name = prefix_db_name(convert_input(world, database_name))
     username = convert_input(world, username)
     password = convert_input(world, password)
 
     # load modules on 1st connection to prevent timeout
-    XMLRPCConnection(database_name)
-    tick = monitor(world.browser, "I cannot login with %s/%s" % (username, password))
+    # XMLRPCConnection(database_name)
+    counter = monitor(world.browser, "I cannot login with %s/%s" % (username, password))
 
-    while True:
-        tick()
+    counter()
 
-        # we would like to get back to the the login page
-        world.browser.delete_all_cookies()
-        world.browser.get(HTTP_URL_SERVER)
+    # we would like to get back to the the login page
+    world.browser.delete_all_cookies()
+    world.browser.get(HTTP_URL_SERVER)
 
-        # select the database chosen by the user
-        elem_selects = get_elements(world.browser, tag_name="select", id_attr="db")
+    # Select the correct database
+    Select(find_element('xpath', '//select[@name="db" and @class="db_user_pass"]')).select_by_value(database_name)
 
-        # we cannot crash because it might be related to a bug when loading the page
-        #  we should connect to it again.
-        if not elem_selects:
-            time.sleep(TIME_TO_SLEEP)
-            continue
-        elem_select = elem_selects[0]
+    username_input = find_element('css selector', 'input#user')
+    password_input = find_element('css selector', 'input#show_password')
+    login_button = find_element('id', 'login')
 
-        elem_options = get_elements(elem_select, tag_name="option", attrs={'value': database_name})
-        username_textinputs = get_elements(world.browser, tag_name="input", id_attr="user")
-        # be careful to handle both 2.1-3 and previous versions
-        password_textinputs = get_elements(world.browser, tag_name="input", id_attr="show_password")
-        if len(password_textinputs) == 0:
-            # it is older than 2.1-3, so look for password
-            password_textinputs = get_elements(world.browser, tag_name="input", id_attr="password")
+    username_input.send_keys(username)
+    password_input.send_keys(password)
+    login_button.click()
 
-        # same for submit_inputs: it is sensitive to version
-        submit_inputs = get_elements(world.browser, tag_name="button", attrs={'type': 'submit'})
-        if len(submit_inputs) == 0:
-            # it is 2.1-3 or after
-            submit_inputs = get_elements(world.browser, tag_name="button", attrs={'onclick': 'disable_save()'})
-
-        if not elem_options or not username_textinputs or not password_textinputs or not submit_inputs:
-            time.sleep(TIME_TO_SLEEP)
-            continue
-
-        elem_options[0].click()
-
-        # fill in the credentials
-        username_textinputs[0].send_keys(username)
-        password_textinputs[0].send_keys(password)
-        submit_inputs[0].click()
-
-        redo = False
-
-        # we have to check
-        while True:
-
-            elements_error = get_elements(world.browser, tag_name="div", class_attr="login_error_message")
-            elements_error = map(lambda x: x.text, elements_error)
-
-            elements_menu = get_elements(world.browser, tag_name="td", id_attr="main_nav")
-            elements_menu = map(lambda x: x.text, elements_menu)
-
-            if elements_menu:
-                redo = False
-                break
-            elif elements_error:
-                redo = True
-                break
-
-            time.sleep(TIME_TO_SLEEP)
-
-        if not redo:
-            break
-
-        ## if you want to open the debugger before starting any action in UniField
-        # world.browser.find_element_by_tag_name('body').send_keys(Keys.COMMAND + Keys.ALT + 's')
+    # Wait for the main page to load before proceeding
+    find_element('id', 'main_nav')
 
     world.current_instance = database_name
 
