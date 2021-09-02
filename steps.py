@@ -360,7 +360,7 @@ def log_into(database_name, username, password):
     password = convert_input(world, password)
 
     # load modules on 1st connection to prevent timeout
-    # XMLRPCConnection(database_name)
+    XMLRPCConnection(database_name)
     counter = monitor(world.browser, "I cannot login with %s/%s" % (username, password))
 
     counter()
