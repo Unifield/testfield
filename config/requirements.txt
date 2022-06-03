@@ -1,5 +1,5 @@
 Babel==2.1.1
-bottle==0.12.9
+bottle==0.12.20
 CherryPy==3.8.0
 cycler==0.10.0
 extras==0.0.3
