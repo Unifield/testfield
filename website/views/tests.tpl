@@ -26,10 +26,11 @@
     }
 </style>
 
-
+<form name="compare" action="compare" method="post" target="_blank" title="show differences between ticked runs"/>
 <table class="table">
     <thead>
         <tr>
+        <th><input type="submit" value="Compare"></th>
             <th>Name</th>
             <th>Description</th>
 
@@ -53,6 +54,7 @@
                     danger
                 %end
                 ">
+                <td><input type="checkbox" name="compare" value="{{test['id']}}" /></td>
                 <td>
                     %if test['valid']:
                         <a href="/test/{{test['id']}}/index.html">
@@ -105,15 +107,15 @@
                 <td>
                     {{test['date']}}
                 </td>
-		<td>
+                <td>
                     {{ ('%s' % datetime.timedelta(seconds=float(test['exec_time']))).split('.')[0] if test.get('exec_time') else '' }}
-		</td>
+                </td>
             </tr>
 
         %end
     </tbody>
 </table>
-
+</form>
 %if len(pages) > 1:
     <div class="row">
         <div class="col-xs-12">

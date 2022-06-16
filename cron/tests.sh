@@ -70,7 +70,8 @@ EOF
 NAME="TRUNK`date +'%d%m%Y'`"
 generate_config "TESTS"
 
-export TEST_DESCRIPTION="Automated tests - Trunk"
+test_type=${LETTUCE_PARAMS:3}
+export TEST_DESCRIPTION="${test_type^^} Automated tests - Trunk"
 export TEST_NAME="Trunk `date +'%d-%m-%Y' -d '+1 day'`"
 
 ./runtests_server.sh setup $NAME_RUN

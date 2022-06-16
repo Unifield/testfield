@@ -3,6 +3,10 @@
 from bottle import route, run, template, view, redirect, static_file, request
 import datetime
 
+from lxml import etree
+import re
+import os
+
 PATH_TESTS = './tests/'
 PERFORMANCE_TESTS = './performances/'
 PAGE_SIZE=15
@@ -390,6 +394,56 @@ def test(name, filename):
 @route('/static/<path:path>')
 def callback(path):
     return static_file(path, root='static/')
+
+@route('/compare', method=['GET', 'POST'])
+@view('compare')
+def compare():
+
+    parser = etree.HTMLParser()
+    list_tests = {}
+    all_results = {}
+    dup = {}
+    for test in sorted(request.forms.getall('compare')):
+        meta_file = os.path.join(PATH_TESTS, test, 'meta')
+        meta_data = {}
+        if os.path.isfile(meta_file):
+            meta_data = load_meta_file(meta_file)
+        list_tests[test] = {'name': '%s (%s/%s)' % (meta_data.get('name', test), meta_data.get('scenario_passed', ''), meta_data.get('scenario_ran', '')), 'date': meta_data.get('date', '')}
+
+
+        tree = etree.parse(open(os.path.join(PATH_TESTS, test,'index.html')), parser=parser)
+        seen = {}
+        for tf_test in tree.xpath("//tr[contains(@class, 'line')]"):
+            failure = 'danger' in  tf_test.attrib['class'] and 'KO' or 'OK'
+
+            link = tf_test[1][0].attrib['href']
+            num = ''
+            num_re = re.match('^index([0-9]+)', link)
+            if num_re:
+                num = num_re.group(1)
+
+            tf_title = tf_test[1][0].text.strip().replace('%s. ' % num, '')
+
+            filename = tf_test[1][1].text.strip()
+            tf_result = {
+                'link': '/test/%s/%s' % (test,tf_test[1][0].attrib['href']),
+                'title_num': tf_test[1][0].text.strip(),
+                'number': num,
+                'tf_title': tf_title,
+                'filename': tf_test[1][1].text.strip(),
+                'failure': failure,
+            }
+            nb_dup = 1
+            while all_results.get(tf_title, {}).get(test):
+                tf_title = '%s DUPLICATE %s' % (tf_title, nb_dup)
+                nb_dup += 1
+
+            all_results.setdefault(tf_title, {}).setdefault(test, {}).update(tf_result)
+            if nb_dup > 1:
+                dup[tf_title] = True
+
+
+    return {'list_tests': list_tests, 'all_results': all_results, 'ordered_tests': sorted(list_tests.keys(), key=lambda a: list_tests[a]['date']), 'dup': dup}
 
 if __name__ == '__main__':
     run(host='0.0.0.0', port=8080)
