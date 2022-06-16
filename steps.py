@@ -646,8 +646,8 @@ def internal_fill_field(fieldname, content, position=0):
     idattr, my_input = get_input(world.browser, fieldname, position=position)
 
     if my_input.tag_name == "select":
-        select = Select(my_input)
-        select.select_by_visible_text(content)
+        #select = Select(my_input)
+        #select.select_by_visible_text(content)
 
         wait_until_no_ajax(world)
 
