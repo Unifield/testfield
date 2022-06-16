@@ -16,7 +16,7 @@ fi
 # shellcheck source=null
 . ~/unifield-venv/bin/activate
 
-
+cp -a /home/testing/testfield/instances/lightweight/* /home/testing/testfield_sandbox/instances/lightweight/
 cd /home/testing/testfield_sandbox
 
 TMPPATH=/home/testing/repo
@@ -107,7 +107,7 @@ export PGPASSWORD=$DBPASSWORD
 
 ./scripts/create_db.sh -P ${DBDIR} -D $TMPPATH -s $MINUS_IN_SECOND -p $DBPORT -c $DBUSERNAME $NAME_RUN
 
-for name in NOUR SARAH TEMPO ANDRES
+for name in LOIC AWFA TEMPO SEB MASTERDATA
 do
 	generate_config $name
 

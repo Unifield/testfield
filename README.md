@@ -202,13 +202,13 @@ python performance.py
 ```
 git clone https://github.com/Unifield/testfield.git
 ```
-* Download and install Python 2.7 (possible the newest release, but there shouldn't be newer that this):
+* Download and install Python 2.7 (possible the newest release, but there shouldn't be newer than this):
     
     https://www.python.org/downloads/release/python-2718/
 
 * Install Microsoft Visual C++ Compiler for Python 2.7:
     
-    https://www.microsoft.com/en-us/download/confirmation.aspx?id=44266
+    https://msfintl.sharepoint.com/sites/grp-msf-unifield-st/Shared%20Documents/IT/Testfield/C++%209.0%20compiler/VCForPython27.msi
 
 * If you installed compiler and still occurring troubles, you can try one of these options:
     * Install compiler for all user, you will probably need to run this in cmd.exe (Win + R => cmd.exe)

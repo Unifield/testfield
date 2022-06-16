@@ -1847,6 +1847,7 @@ def click_on_line_line(step):
 @output.register_for_printscreen
 def set_filter_on_line(step, value):
     refresh_window(world)
+    wait_until_no_ajax(world)
     o2m_tables = get_elements(world.browser, tag_name="table", class_attr="one2many")
     found = False
     for o2m_table in o2m_tables:
