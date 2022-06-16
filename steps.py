@@ -1487,7 +1487,7 @@ def see_window(step, message_to_see):
 @step('I should see the following in the field id "([^"]*)":')
 @handle_delayed_step
 @output.register_for_printscreen
-def see_status(step, textarea_id):
+def textarea_status(step, textarea_id):
     wait_until_not_loading(world.browser)
     tick = monitor(world.browser)
     found = False
