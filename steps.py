@@ -1484,6 +1484,29 @@ def see_window(step, message_to_see):
     # else:
     #    world.browser.switch_to.default_content()
 
+@step('I should see the following in the field id "([^"]*)":')
+@handle_delayed_step
+@output.register_for_printscreen
+def see_status(step, textarea_id):
+    wait_until_not_loading(world.browser)
+    tick = monitor(world.browser)
+    found = False
+
+    reg = create_regex(step.multiline)
+    options = []
+    while not found:
+        elements = get_elements(world.browser, id_attr=textarea_id)
+        for element in elements:
+            if re.match(reg, element.text, flags=re.DOTALL):
+                found = True
+                break
+            else:
+                options.append(element.text)
+
+        if not found:
+            time.sleep(TIME_TO_SLEEP)
+            msg = "No '%s' found among %s" % (step.multiline, ', '.join(options))
+            tick(msg)
 
 # WARNING: Undocumented!
 @step('I should see "([^"]*)" in the section "([^"]*)"$')
