@@ -1356,7 +1356,7 @@ def should_see(step, content, fieldname):
 @handle_delayed_step
 @output.register_for_printscreen
 def see_status(step, message_to_see):
-    wait_until_not_loading(world.browser)
+    wait_until_not_loading(world.browser, wait=False)
     tick = monitor(world.browser)
     found = False
 
