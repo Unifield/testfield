@@ -14,7 +14,7 @@ Mako==1.0.3
 MarkupSafe==0.23
 matplotlib==1.5.1
 mock==2.0.0
-numpy==1.16.6
+numpy==1.22.0
 ordereddict==1.1
 pbr==1.9.1
 pillow==6.2.2
