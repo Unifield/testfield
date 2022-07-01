@@ -9,3 +9,4 @@ Pillow==3.2.0
 docker-compose==1.9.0
 credentials
 jinja2
+lxml==4.9.0
