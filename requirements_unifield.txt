@@ -7,7 +7,7 @@ lxml==2.2.4
 openerp-client-lib==1.0.3
 ordereddict==1.1
 psycopg2==2.0.13
-reportlab==2.4
+reportlab==3.5.55
 simplejson==2.0.9
 bzr==2.7.0
 egenix-mx-base==3.2.9
