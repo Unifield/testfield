@@ -74,9 +74,10 @@ then
 fi
 
 mkdir output
-echo "name=${TEST_NAME-Unknown}" >> output/meta
-echo "description=${TEST_DESCRIPTION-Unknown}" >> output/meta
-echo "date=${TEST_DATE--}" >> output/meta
+echo "name=${TEST_NAME-`date +%Y-%m-%d-%H%M`}" >> output/meta
+echo "description=${TEST_DESCRIPTION-$@}" >> output/meta
+echo "date=${TEST_DATE-`date +%Y/%m/%d`}" >> output/meta
+
 
 if [ $BROWSER = "firefox" ]; then
     # Check the system Firefox first
