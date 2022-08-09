@@ -722,10 +722,10 @@ def internal_fill_field(fieldname, content, position=0):
             my_input.send_keys((100 * Keys.BACKSPACE) + input_text + Keys.TAB)
 
             # world.browser.execute_script("$('#%s').change()" % my_input.get_attribute("id"))
-            wait_until_no_ajax(world)
 
             if my_input.get_attribute("value") == input_text:
                 break
+            wait_until_no_ajax(world)
 
             time.sleep(TIME_TO_SLEEP)
 
