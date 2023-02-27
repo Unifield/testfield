@@ -2019,7 +2019,7 @@ def check_line(step):
     check_that_line(step, True)
 
 
-@step("I shouldn't be able to click \"([^\"]*)\"")
+@step("I shouldn't be able to click \"([^\"]*)\"$")
 @handle_delayed_step
 @output.register_for_printscreen
 def check_not_click_on_line(step, action):
@@ -2053,7 +2053,7 @@ def check_not_click_on_line(step, action):
             break
 
 
-@step("I shouldn't be able to click \"([^\"]*)\" on line:")
+@step("I shouldn't be able to click \"([^\"]*)\" on line:$")
 @handle_delayed_step
 @output.register_for_printscreen
 def check_not_click_on_line(step, action):
