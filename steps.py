@@ -1875,7 +1875,7 @@ def set_filter_on_line(step, value):
     found = False
     for o2m_table in o2m_tables:
         id_name = o2m_table.get_attribute("id").replace('_o2m_', '')
-        select = o2m_table.find_elements_by_xpath(".//select[@id='%s_filter']/option" % id_name)
+        select = o2m_table.find_elements_by_xpath(".//select[contains(@id, '%s_filter')]/option" % id_name)
         for option in select:
             if option.text.lower() == value.lower():
                 option.click()
