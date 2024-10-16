@@ -15,6 +15,10 @@ import os
 import os.path
 import re
 import tempfile
+import openpyxl
+from openpyxl.cell import WriteOnlyCell
+from openpyxl.styles import NamedStyle
+from tempfile import NamedTemporaryFile
 
 RESULTS_DIR = 'results/'
 ENV_DIR = 'instances/'
@@ -891,6 +895,48 @@ def fill_field_table(step, fieldname):
     f.close()
 
     step.given('I fill "%s" with "%s"' % (fieldname, TEMP_FILENAME))
+
+@step('I fill "([^"]*)" with xlsx table:$')
+@handle_delayed_step
+@output.register_for_printscreen
+def fill_field_xlsx_table(step, fieldname):
+    if not step.hashes:
+        raise UniFieldElementException("Why don't you define at least one row?")
+
+    wb = openpyxl.Workbook()
+    sheet = wb.active
+
+    date_style = NamedStyle(name='datetime', number_format='DD/MM/YYYY HH:MM:SS')
+    for row in step.hashes:
+        values = row.items()
+        values.sort()
+
+        line = []
+        for header, cell in values:
+            cell = convert_input(world, cell)  # Replace {{DATA}} by its value
+            # FIXME: Boolean are not take into account (condition: ('1', 'T', 't', 'True', 'true'))
+            if re.match('^\d{4}-\d{2}-\d{2}$', cell) is not None:  # DateTime
+                line_cell = WriteOnlyCell(sheet, value=cell)
+                line_cell.style = date_style
+            elif re.match('^\d+(\.\d+)?$', cell) is not None:  # Number
+                try:
+                    cell = int(cell)
+                except ValueError:
+                    cell = float(cell)
+                line_cell = WriteOnlyCell(sheet, value=cell or 0)
+            else:
+                line_cell = WriteOnlyCell(sheet, value=cell)
+            line.append(line_cell)
+        sheet.append(line)
+
+    base_dir = os.path.dirname(__file__)
+    content_path = os.path.join(base_dir, FILE_DIR)
+    tmp = NamedTemporaryFile(delete=True, dir=content_path, suffix='.xlsx')
+    wb.save(tmp.name)
+    wb.close()
+    tmp.seek(0)
+
+    step.given('I fill "%s" with "%s"' % (fieldname, tmp.name))
 
 
 def validate_variable(variable_name):
