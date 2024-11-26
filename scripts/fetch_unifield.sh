@@ -105,6 +105,8 @@ then
     sed -i.bak "s/FOR UPDATE NOWAIT//g" $SERVERDIR/bin/addons/base/ir/ir_sequence.py
     # random behavior: remove PPS popup
     sed -i.bak "s/th.join(3)/th.join()/g" $SERVERDIR/bin/addons/msf_tools/msf_tools.py
+    sed -i.bak "s/if len(all_prev_reg_ids) > 0:/if False and len(all_prev_reg_ids) > 0:/g" $SERVERDIR/bin/addons/account_period_closing_level/account_period.py
+
 fi
 
 echo "[UniField setup] Done!"

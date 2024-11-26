@@ -24,6 +24,7 @@ bzr revert
 SERVERDIR=/home/$RBUSER/unifield-server
 sed -i "s/FOR UPDATE NOWAIT//g" $SERVERDIR/bin/addons/base/ir/ir_sequence.py
 sed -i "s/th.join(3)/th.join()/g" $SERVERDIR/bin/addons/msf_tools/msf_tools.py
+sed -i "s/if len(all_prev_reg_ids) > 0:/if False and len(all_prev_reg_ids) > 0:/g" $SERVERDIR/bin/addons/account_period_closing_level/account_period.py
 echo "88888888888888888888888888888888
 66f490e4359128c556be7ea2d152e03b 2013-04-27 16:49:56" > $SERVERDIR/bin/unifield-version.txt
 
