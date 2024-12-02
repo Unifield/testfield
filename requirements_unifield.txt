@@ -11,7 +11,7 @@ reportlab==2.4
 simplejson==2.0.9
 bzr==2.7.0
 egenix-mx-base==3.2.9
-PyYAML==3.11
+PyYAML==5.4
 passlib==1.6.5
 python-dateutil==2.5.3
 pylzma==0.4.8
