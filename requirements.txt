@@ -15,7 +15,7 @@ mock==3.0.5
 numpy==1.11.0
 OERPLib==0.8.4
 pbr==5.9.0
-Pillow==6.2.2
+Pillow==10.0.1
 pyparsing==2.4.7
 python-dateutil==2.8.2
 python-Levenshtein==0.10.2
