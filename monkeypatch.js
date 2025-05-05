@@ -244,9 +244,13 @@ if(!window.MONKEY_PATCHING){
                                 context: old_m2m,
                                 data: {
                                     'name': fld_name,
-                                    'model': jQuery(fld).attr('relation'),
-                                    'view_id': jQuery(idSelector(fld_name + '/_terp_view_id')).val(),
-                                    'view_type': jQuery(idSelector(fld_name + '/_terp_view_type')).val(),
+                                    'model': jQuery('#_terp_model').val(),
+                                    'view_id': jQuery('#_terp_view_id').val(),
+                                    'view_type': jQuery('#_terp_view_type').val(),
+                                    'm2m_model': jQuery(idSelector(prefix+k+'/_terp_model')).val(),
+                                    'm2m_view_id': jQuery(idSelector(prefix+k+'/_terp_view_id')).val(),
+                                    'm2m_view_type': jQuery(idSelector(prefix+k+'/_terp_view_type')).val(),
+                                    'm2m_context': jQuery(idSelector(prefix+k+'/_terp_context')).val(),
                                     'ids': fld_val
                                 },
                                 dataType: 'json',
