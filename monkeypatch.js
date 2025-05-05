@@ -230,15 +230,15 @@ if(!window.MONKEY_PATCHING){
                             if(value){
                                 fld_val = '['+ value.join(',') + ']';
                             }
-                            var fld_name = jQuery(fld).attr('name');
                             if (!jQuery(fld).attr('name')) {
                                 // guess we are in editable tree view
                                 jQuery(idSelector(prefix + k)).val(fld_val);
                                 break;
                             }
+                            var fld_name = jQuery(fld).attr('name');
                             var old_m2m = jQuery(idSelector(fld_name)).closest('.list-a');
                             $(idSelector(fld_name+'/_terp_id')).val('');
-                            $(idSelector(fld_name+'/_terp_ids')).val('[]');
+                            $(idSelector(fld_name+'/_terp_ids')).val(fld_val);
                             jQuery.ajax({
                                 url: '/openerp/listgrid/get_m2m',
                                 context: old_m2m,
