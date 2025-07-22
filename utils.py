@@ -626,8 +626,8 @@ def wait_until_element_does_not_exist(browser, get_elem, message=''):
     tick = monitor(browser, message)
 
     while True:
-        tick()
         try:
+            tick()
             # browser.save_screenshot("wait_until_element_does_not_exist.png")
             if not get_elem() or not get_elem().is_displayed():
                 return

@@ -1463,11 +1463,17 @@ def see_popup(step, message_to_see):
                 world.browser.execute_script('$("a#fancybox-close").click();')
 
                 # If the popup is not closed, we try the bad way
-                world.browser.execute_script(
-                    'if($("div#fancybox-wrap").is(":visible")){$("div#fancybox-overlay, div#fancybox-wrap").hide();}')
-
-                wait_until_element_does_not_exist(world.browser, lambda: get_element(world.browser, tag_name="td",
-                                                                                     class_attr="error_message_content"))
+                retry = 0
+                while True:
+                    try:
+                        popup = get_element(world.browser, tag_name="td", class_attr="error_message_content")
+                        if retry > 9 or not popup or not popup.is_displayed():
+                            break
+                        world.browser.execute_script("window.top.jQuery.fancybox.close();")
+                        time.sleep(0.2)
+                        retry += 1
+                    except:
+                        break
 
                 message_found = True
                 break
