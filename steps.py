@@ -367,6 +367,7 @@ def log_into(database_name, username, password):
     tick = monitor(world.browser, "I cannot login with %s/%s" % (username, password))
 
     while True:
+        refresh_window(world)
         tick()
 
         # we would like to get back to the the login page
