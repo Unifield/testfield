@@ -990,6 +990,7 @@ def remember_value_step(step, value, variable):
 
 @step('I store "([^"]*)" in "([^"]*)"$')
 @handle_delayed_step
+@output.register_for_printscreen
 def remember_step(step, fieldname, variable):
     values = get_values(fieldname)
 
@@ -1074,9 +1075,17 @@ def click_until_not_available1(step, button, value, fieldname):
 
 @step('(.*) if a window is open$')
 @handle_delayed_step
+@output.register_for_printscreen
 def if_a_window_is_open(step, nextstep):
     if world.nbframes > 0:
         step.given(nextstep)
+
+    # experimental code to fix "1. CR_IN line from IR to DO flow" supply test
+    # I click on "Process" and close the window if necessary
+    # error: Message: Element is no longer attached to the DOM Stacktrace
+    # http://testfield3.testfield.rb.unifield.org/test/2025-07-22-0735/index1.html
+    refresh_window(world)
+
 
 
 @step('I click on "([^"]*)" and close the window if necessary$')
@@ -1350,6 +1359,7 @@ def toggle_off(step, button):
 # Check messages (error, warning, ...) {%{
 
 def get_values(fieldname):
+    refresh_window(world)
     _, txtinput = get_input(world.browser, fieldname)
 
     # if it's a text that is not changable
