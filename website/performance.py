@@ -174,7 +174,7 @@ def get_functional_tests(path_dir, offset, length):
 
             tests.append(tests_meta)
 
-    tests.sort(key=lambda x : x["date"])
+    tests.sort(key=lambda x :(x["date"], x["id"]))
     tests.reverse()
 
     return tests
