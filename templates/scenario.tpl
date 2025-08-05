@@ -4,7 +4,13 @@
     %for tag in scenario.tags:
         <span class="label label-primary">{{tag}}</span>
     %end
-    <span class="label label-info">{{filename}}</span>
+%if 'fails' in scenario.tags:
+   <% label_color="label-danger" %>
+%else:
+   <% label_color="label-success" %>
+%end
+    Scenario: <span class="label {{label_color}}">{{idscenario}}. {{scenario.name}}</span>
+    Filename : <span class="label label-info">{{filename}}</span>
 </p>
 
 <table class="table">

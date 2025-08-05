@@ -221,7 +221,9 @@ def write_end_of_section(scenario):
     # We then have to update the "ok/ko" flag in the meta file
     #  and color in red or not the line
 
-    world.scenarios.append((all_ok, scenario.name, percentage_ok, time_total, index_page, tags, scenario.described_at.file.replace('features/', '').replace('.feature', '.meta_feature')))
+
+    scenario_file_name = scenario.described_at.file.replace('features/', '').replace('.feature', '.meta_feature')
+    world.scenarios.append((all_ok, scenario.name, percentage_ok, time_total, index_page, tags, scenario_file_name))
 
 
     path_html = os.path.join(OUTPUT_DIR, index_page)
@@ -231,8 +233,7 @@ def write_end_of_section(scenario):
         content = ''.join(f.xreadlines())
 
         mytemplate = SimpleTemplate(content)
-        _, filename = os.path.split(scenario.described_at.file)
-        content = mytemplate.render(printscreens=world.printscreen_to_display, scenario=scenario, filename=filename)
+        content = mytemplate.render(printscreens=world.printscreen_to_display, scenario=scenario, filename=scenario_file_name, idscenario=world.idscenario)
 
         output_index_file = open(path_html, 'w')
         output_index_file.write(content.encode('ascii', 'ignore'))
