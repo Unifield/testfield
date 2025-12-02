@@ -1,9 +1,9 @@
 #!/bin/bash
 
 
-RBUSER=$USER
-PGPORT=14724
-XMLRPCPORT=14723
+RBUSER=$LOGNAME
+PGPORT=19154
+XMLRPCPORT=19153
 . /home/$RBUSER/unifield-venv/bin/activate
 
 
@@ -14,12 +14,11 @@ sudo systemctl stop $RBUSER-web
 cd /home/$RBUSER
 cd unifield-server/
 find . -name '*pyc' -exec rm -f {} \; 
-bzr revert
-#bzr pull lp:unifield-server
-REVNO=$(bzr revno --tree)
-cd ../unifield-web;
-bzr revert
-#bzr pull lp:unifield-web
+
+git reset --hard
+git pull
+REVNO=$(git rev-parse HEAD)
+
 
 SERVERDIR=/home/$RBUSER/unifield-server
 sed -i "s/FOR UPDATE NOWAIT//g" $SERVERDIR/bin/addons/base/ir/ir_sequence.py
@@ -74,6 +73,9 @@ sleep 5
 for x in `psql -h 127.0.0.1 -p $PGPORT  -td template1 -c "SELECT datname FROM pg_database WHERE pg_get_userbyid(datdba) = current_user and datname like 'TESTS_%';"`; do
 	psql  -h 127.0.0.1 -p $PGPORT -d $x -c "update ir_model_data set last_modification='2016-05-25 00:00:00' where last_modification is not null and last_modification>sync_date and touched is null;"
 	psql  -h 127.0.0.1 -p $PGPORT -d $x -c "update product_product set active_change_date='2016-05-25 00:00:00' where active_change_date>'2016-05-25 00:00:00';"
+	psql  -h 127.0.0.1 -p $PGPORT -d $x -c "update res_currency_table set is_for_reval ='t';"
+	psql  -h 127.0.0.1 -p $PGPORT -d $x -c "update sync_client_entity set oc='oca';"
+
 done
 sudo systemctl stop $RBUSER-server
 sudo systemctl stop $RBUSER-psql

@@ -114,39 +114,14 @@ case $ACTION in
             exit 1
         fi
 
-        VERSION_WEB=$(bzr log -r-1  --short $WEBDIR | head -1 | sed -nE 's/[[:space:]]*([[:digit:]]*)[[:space:]]+.*/\1/pg')
-        VERSION_SERVER=$(bzr log -r-1  --short $SERVERDIR | head -1 | sed -nE 's/[[:space:]]*([[:digit:]]*)[[:space:]]+.*/\1/pg')
-
-        TAG_LINE_WEB=$(bzr tags -d "$WEBDIR" --sort=time | grep -v "\?" | tail -1)
-        TAG_LINE_SERVER=$(bzr tags -d "$SERVERDIR" --sort=time | grep -v "\?" | tail -1)
-
-        TAG_NAME_WEB=$(echo $TAG_LINE_WEB | cut -f 1 -d " ")
-        TAG_NAME_SERVER=$(echo $TAG_LINE_SERVER | cut -f 1 -d " ")
-
-        TAG_VERSION_WEB=$(echo $TAG_LINE_WEB | cut -f 2 -d " ")
-        TAG_VERSION_SERVER=$(echo $TAG_LINE_SERVER | cut -f 2 -d " ")
-
-        if [[ "${TAG_NAME_WEB}" == "${TAG_NAME_SERVER}" ]]
-        then
-            if [[ "${TAG_VERSION_WEB}" != ${VERSION_WEB} || "${TAG_VERSION_SERVER}" != "${VERSION_SERVER}" ]]
+        VERSION=$(git -C $SERVERDIR rev-parse HEAD)
+        LAST_TAG=$(git -C $SERVERDIR describe --tags --abbrev=0)
+        TAG_VERSION=$(git -C $SERVERDIR rev-parse tags/$LAST_TAG)
+        if [[ "${TAG_VERSION}" != "${VERSION}" ]]
             then
                 PLUS_VERSION=+
-            fi
-            echo "${TAG_NAME_SERVER} $PLUS_VERSION (S${VERSION_SERVER} W${VERSION_WEB})"
-        else
-
-            if [[ "${TAG_VERSION_WEB}" != ${VERSION_WEB} ]]
-            then
-                PLUS_VERSION_WEB=+
-            fi
-
-            if [[ "${TAG_VERSION_SERVER}" != "${VERSION_SERVER}" ]]
-            then
-                PLUS_VERSION_SERVER=+
-            fi
-
-            echo "${TAG_NAME_SERVER} ${PLUS_VERSION_SERVER} (S${VERSION_SERVER}) ${TAG_NAME_WEB} ${PLUS_VERSION_WEB} (W${VERSION_WEB})"
         fi
+        echo "${LAST_TAG} ${PLUS_VERSION} ${VERSION:0:10}"
 
         exit 0
         ;;
